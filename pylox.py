@@ -3,6 +3,16 @@
 import sys
 from pylox.Scanner.Scanner import Scanner
 
+# usar prompt_toolkit si está disponible
+try:
+    from prompt_toolkit import PromptSession
+    from prompt_toolkit.history import FileHistory
+
+    use_prompt_toolkit = True
+    promptsession = PromptSession(history=FileHistory(".pylox_history"))
+except ImportError:
+    use_prompt_toolkit = False
+
 
 class Pylox:
     def __init__(self):
@@ -30,10 +40,7 @@ class Pylox:
             self.mode = "scanning"
 
         while True:
-            source = input("> ")
-            if not source:
-                return
-
+            source = promptsession.prompt("> ") if use_prompt_toolkit else input("> ")
             self.run(source)
             self.had_error = False
 
