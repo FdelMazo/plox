@@ -58,7 +58,15 @@ class Pylox:
                 self.mode = "parsing"
 
         while True:
-            source = promptsession.prompt("> ") if use_prompt_toolkit else input("> ")
+            try:
+                source = (
+                    promptsession.prompt("> ") if use_prompt_toolkit else input("> ")
+                )
+                if not source:
+                    continue
+            except (EOFError, KeyboardInterrupt):
+                break
+
             self.run(source)
             self.had_error = False
 
