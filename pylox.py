@@ -23,7 +23,7 @@ class Pylox:
         scanner = Scanner(source)
 
         try:
-            tokens = scanner.tokens()
+            tokens = scanner.scan()
         except Exception as e:
             self.had_error = True
             print(f"Scanning Error: {e}")

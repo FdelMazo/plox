@@ -3,7 +3,7 @@ from .Token import Token, TokenType, TokenKeywords
 
 class Scanner(object):
     def __init__(self, source: str):
-        self._tokens = []  # nos vamos a ir guardando los tokens, ya con significado
+        self.tokens = []  # nos vamos a ir guardando los tokens, ya con significado
 
         # El lexema que queremos capturar es el que esta entre el start y el current de source
         self._source = source  # la linea entera de caracteres crudos, sin significado
@@ -11,33 +11,33 @@ class Scanner(object):
         self._current = 0  # caracter donde estamos parados
 
     # Obtiene la lista de tokens escaneados
-    def tokens(self) -> list[Token]:
+    def scan(self) -> list[Token]:
         # recorremos cada linea hasta el final
         while not self._is_at_end():
             # arranca un lexema nuevo
             self._start = self._current
-            self._scan_token()
+            self.scan_token()
 
         # terminamos la lista de tokens con un EOF, para más prolijidad
         self._start = self._current
-        self._add_token(TokenType.EOF)
+        self.add_token(TokenType.EOF)
 
-        return self._tokens
+        return self.tokens
 
     # ---------- Core ---------- #
 
     # Devuelve el lexema actual
-    def _lexeme(self) -> str:
+    def lexeme(self) -> str:
         # el lexema entero es desde el inicio hasta donde estamos parados
         return self._source[self._start : self._current]
 
     # Agrega un token a la lista
-    def _add_token(self, token_type: TokenType, literal=None):
+    def add_token(self, token_type: TokenType, literal=None):
         # nos guardamos el token con el lexema actual
-        self._tokens.append(Token(token_type, lexeme=self._lexeme(), literal=literal))
+        self.tokens.append(Token(token_type, lexeme=self.lexeme(), literal=literal))
 
     # Escanea un token individual
-    def _scan_token(self):
+    def scan_token(self):
         # obtenemos el primer caracter
         c = self._advance()
 
@@ -52,25 +52,25 @@ class Scanner(object):
 
             # tokens de un solo carácter
             case "(":
-                self._add_token(TokenType.LEFT_PAREN)
+                self.add_token(TokenType.LEFT_PAREN)
             case ")":
-                self._add_token(TokenType.RIGHT_PAREN)
+                self.add_token(TokenType.RIGHT_PAREN)
             case "{":
-                self._add_token(TokenType.LEFT_BRACE)
+                self.add_token(TokenType.LEFT_BRACE)
             case "}":
-                self._add_token(TokenType.RIGHT_BRACE)
+                self.add_token(TokenType.RIGHT_BRACE)
             case ",":
-                self._add_token(TokenType.COMMA)
+                self.add_token(TokenType.COMMA)
             case ".":
-                self._add_token(TokenType.DOT)
+                self.add_token(TokenType.DOT)
             case "-":
-                self._add_token(TokenType.MINUS)
+                self.add_token(TokenType.MINUS)
             case "+":
-                self._add_token(TokenType.PLUS)
+                self.add_token(TokenType.PLUS)
             case ";":
-                self._add_token(TokenType.SEMICOLON)
+                self.add_token(TokenType.SEMICOLON)
             case "*":
-                self._add_token(TokenType.STAR)
+                self.add_token(TokenType.STAR)
             case "/":
                 # caso especial para el /
                 # si es un comentario, lo ignoramos
@@ -79,23 +79,23 @@ class Scanner(object):
                     while not self._is_at_end():
                         self._advance()
                 else:
-                    self._add_token(TokenType.SLASH)
+                    self.add_token(TokenType.SLASH)
 
             # tokens de uno o dos caracteres
             case "!":
-                self._add_token(
+                self.add_token(
                     TokenType.BANG_EQUAL if self._match("=") else TokenType.BANG
                 )
             case "=":
-                self._add_token(
+                self.add_token(
                     TokenType.EQUAL_EQUAL if self._match("=") else TokenType.EQUAL
                 )
             case "<":
-                self._add_token(
+                self.add_token(
                     TokenType.LESS_EQUAL if self._match("=") else TokenType.LESS
                 )
             case ">":
-                self._add_token(
+                self.add_token(
                     TokenType.GREATER_EQUAL if self._match("=") else TokenType.GREATER
                 )
 
@@ -107,21 +107,21 @@ class Scanner(object):
 
                 if self._is_at_end():
                     # si llegamos al final de la linea, sin cerrar la cadena, es un error
-                    raise Exception(f"Unterminated string: {self._lexeme()}")
+                    raise Exception(f"Unterminated string: {self.lexeme()}")
 
                 self._advance()  # consumimos el cierre de la cadena
 
                 # la cadena la guardamos sin las comillas
                 value = self._source[self._start + 1 : self._current - 1]
-                self._add_token(TokenType.STRING, literal=value)
+                self.add_token(TokenType.STRING, literal=value)
 
             case _ if c in "0123456789":
                 # consumimos el número hasta que no sea un dígito o un punto para decimales
                 while not self._is_at_end() and self._lookahead() in "0123456789.":
                     self._advance()
 
-                value = float(self._lexeme())
-                self._add_token(TokenType.NUMBER, literal=value)
+                value = float(self.lexeme())
+                self.add_token(TokenType.NUMBER, literal=value)
 
             # identificadores y palabras reservadas
             case _ if is_alpha(c):
@@ -129,12 +129,12 @@ class Scanner(object):
                 while not self._is_at_end() and is_alpha(self._lookahead()):
                     self._advance()
 
-                lexeme = self._lexeme()
+                lexeme = self.lexeme()
 
                 if lexeme in TokenKeywords:
-                    self._add_token(TokenKeywords[lexeme])
+                    self.add_token(TokenKeywords[lexeme])
                 else:
-                    self._add_token(TokenType.IDENTIFIER)
+                    self.add_token(TokenType.IDENTIFIER)
 
             # si no es ninguno de los anteriores, es un error
             case _:
@@ -146,7 +146,7 @@ class Scanner(object):
     def _is_at_end(self) -> bool:
         return self._current >= len(self._source)
 
-    # Devuelve los siguiente N caracteres desde el que esta parado
+    # Devuelve el caracter actual, sin consumirlo
     def _lookahead(self) -> str:
         # si llegamos al final de la linea, no hay nada para mirar
         if self._is_at_end():
