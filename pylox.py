@@ -2,6 +2,7 @@
 
 import sys
 from pylox.Scanner import Scanner
+from pylox.Parser import Parser
 
 # usar prompt_toolkit si está disponible
 try:
@@ -16,10 +17,12 @@ except ImportError:
 
 class Pylox:
     def __init__(self):
-        self.mode = None  # "scanning"
+        self.mode = None  # "scanning" | "parsing"
         self.had_error = False
 
     def run(self, source: str):
+        # IDEA: si esta en un modo particular, que las distintas fases
+        # se pongan en modo debug, y vayan imprimiendo lo que hacen
         scanner = Scanner(source)
 
         try:
@@ -35,9 +38,24 @@ class Pylox:
                 print(f"token {i}: {token}")
             return
 
+        parser = Parser(tokens)
+        try:
+            expression = parser.parse()
+        except Exception as e:
+            self.had_error = True
+            print(f"Parsing Error: {e}")
+            return
+
+        # en modo parsing, imprimimos las expresiones encontradas
+        if self.mode == "parsing":
+            print(expression)
+
     def main(self):
-        if len(sys.argv) > 1 and sys.argv[1] == "--scanning":
-            self.mode = "scanning"
+        if len(sys.argv) > 1:
+            if sys.argv[1] == "--scanning":
+                self.mode = "scanning"
+            if sys.argv[1] == "--parsing":
+                self.mode = "parsing"
 
         while True:
             source = promptsession.prompt("> ") if use_prompt_toolkit else input("> ")
