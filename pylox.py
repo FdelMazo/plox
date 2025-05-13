@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from pylox.Scanner.Scanner import Scanner
+from pylox.Scanner import Scanner
 
 # usar prompt_toolkit si está disponible
 try:

@@ -1,4 +1,4 @@
-from .Token import *
+from .Token import Token, TokenType, TokenKeywords
 
 
 class Scanner(object):
