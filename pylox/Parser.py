@@ -103,11 +103,19 @@ class Parser(object):
         if self._match(TokenType.NUMBER, TokenType.STRING):
             return LiteralExpr(self._previous().literal)
 
-        # Dejamos los parentesis para despues
+        # Si me cruzo un parentesis abierto, quiero parsear la expresion que contiene y
+        # si o si cerrar el parentesis. Si no aparece ese parentesis de cierre, tengo un error
+        if self._match(TokenType.LEFT_PAREN):
+            expr = self.expression()
+            if not self._match(TokenType.RIGHT_PAREN):
+                raise Exception(
+                    f"Expected ')' after expression, got {self._lookahead()} instead"
+                )
+            return GroupingExpr(expr)
 
         # Si llegué aca sin matchear ningun otro token, entonces
         # me quede colgado esperando una expresion del usuario
-        raise Exception(f"Expect expression, got {self._lookahead()} instead")
+        raise Exception(f"Expected expression, got {self._lookahead()} instead")
 
     # ---------- Helpers ---------- #
 
