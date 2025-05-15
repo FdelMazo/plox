@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-from pylox.Scanner import Scanner
-from pylox.Parser import Parser
+from plox.Scanner import Scanner
+from plox.Parser import Parser
 
 # usar prompt_toolkit si está disponible
 try:
@@ -10,12 +10,12 @@ try:
     from prompt_toolkit.history import FileHistory
 
     use_prompt_toolkit = True
-    promptsession = PromptSession(history=FileHistory(".pylox_history"))
+    promptsession = PromptSession(history=FileHistory(".plox_history"))
 except ImportError:
     use_prompt_toolkit = False
 
 
-class Pylox:
+class Plox:
     def __init__(self):
         self.mode = None  # "scanning" | "parsing"
         self.had_error = False
@@ -72,5 +72,5 @@ class Pylox:
 
 
 if __name__ == "__main__":
-    pylox = Pylox()
-    pylox.main()
+    plox = Plox()
+    plox.main()
