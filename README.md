@@ -7,5 +7,6 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements
 chmod +x plox.py
-./plox.py
+ln -sf $(realpath plox.py) ~/.local/bin/plox
+plox
 ```
