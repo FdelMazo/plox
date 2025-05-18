@@ -50,6 +50,7 @@ class Plox:
         # en modo parsing, imprimimos las expresiones encontradas
         if self.mode == "parsing":
             print(expression)
+            return
 
         interpreter = Interpreter()
         try:
