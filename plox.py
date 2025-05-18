@@ -3,6 +3,7 @@
 import sys
 from plox.Scanner import Scanner
 from plox.Parser import Parser
+from plox.Interpreter import Interpreter
 
 # usar prompt_toolkit si está disponible
 try:
@@ -49,6 +50,14 @@ class Plox:
         # en modo parsing, imprimimos las expresiones encontradas
         if self.mode == "parsing":
             print(expression)
+
+        interpreter = Interpreter()
+        try:
+            interpreter.interpret(expression)
+        except Exception as e:
+            self.had_error = True
+            print(f"Runtime Error: {e}")
+            return
 
     def main(self):
         if len(sys.argv) > 1:
