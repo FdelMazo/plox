@@ -107,7 +107,7 @@ class Scanner(object):
 
                 if self._is_at_end():
                     # si llegamos al final de la linea, sin cerrar la cadena, es un error
-                    raise Exception(f"Unterminated string: {self.lexeme()}")
+                    raise Exception(f"Unterminated string: `{self.lexeme()}`")
 
                 self._advance()  # consumimos el cierre de la cadena
 
@@ -138,7 +138,7 @@ class Scanner(object):
 
             # si no es ninguno de los anteriores, es un error
             case _:
-                raise Exception(f"Unexpected character: {c}")
+                raise Exception(f"Unexpected character: `{c}`")
 
     # ---------- Helpers ---------- #
 

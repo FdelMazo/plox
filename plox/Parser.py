@@ -108,14 +108,14 @@ class Parser(object):
         if self._match(TokenType.LEFT_PAREN):
             expr = self.expression()
             if not self._match(TokenType.RIGHT_PAREN):
-                raise Exception(
-                    f"Expected ')' after expression, got {self._lookahead()} instead"
+                raise SyntaxError(
+                    f"Expected ')' after expression, got `{self._lookahead()}` instead"
                 )
             return GroupingExpr(expr)
 
         # Si llegué aca sin matchear ningun otro token, entonces
         # me quede colgado esperando una expresion del usuario
-        raise Exception(f"Expected expression, got {self._lookahead()} instead")
+        raise SyntaxError(f"Expected expression, got `{self._lookahead()}` instead")
 
     # ---------- Helpers ---------- #
 
