@@ -3,7 +3,9 @@ from .Token import Token, TokenType, TokenKeywords
 
 class Scanner(object):
     def __init__(self, source: str):
-        self.tokens = []  # nos vamos a ir guardando los tokens, ya con significado
+        self.tokens: list[Token] = (
+            []
+        )  # nos vamos a ir guardando los tokens, ya con significado
 
         # El lexema que queremos capturar es el que esta entre el start y el current de source
         self._source = source  # la linea entera de caracteres crudos, sin significado

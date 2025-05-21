@@ -7,8 +7,8 @@ class Parser(object):
         self._tokens = tokens  # la lista de tokens ya escaneados
         self._current = 0  # el token en el que estamos parados
 
-    # Obtiene la lista de expresiones parseadas
-    def parse(self) -> list[Expr]:
+    # Obtiene expresion parseada
+    def parse(self) -> Expr:
         return self.expression()
 
     # ---------- Reglas de Producción ---------- #
