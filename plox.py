@@ -47,19 +47,20 @@ class Plox:
 
         parser = Parser(tokens)
         try:
-            expression = parser.parse()
+            statements = parser.parse()
         except Exception as e:
             print(colored(f"Parsing Error: {e}", "light_red"))
             return
 
         # en modo parsing, imprimimos las expresiones encontradas
         if self.mode == "parsing":
-            print(colored(expression, "light_blue"))
+            for i, statement in enumerate(statements):
+                print(colored(statement, "light_blue"))
             return
 
         interpreter = Interpreter()
         try:
-            interpreter.interpret(expression)
+            interpreter.interpret(statements)
         except Exception as e:
             print(colored(f"Runtime Error: {e}", "light_red"))
             return

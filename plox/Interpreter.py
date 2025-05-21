@@ -1,5 +1,6 @@
 from functools import singledispatchmethod
 
+from .Stmt import Stmt, ExpressionStmt, PrintStmt
 from .Expr import Expr, BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr
 from .Token import TokenType
 
@@ -8,10 +9,23 @@ class Interpreter(object):
     def __init__(self):
         pass
 
-    # Interpretar expresiones es evaluarlas e imprimir el resultado
-    def interpret(self, expression: Expr):
-        value = self.evaluate(expression)
-        print(value)
+    # Interpretar es ejecutar la lista de statements que tenemos
+    def interpret(self, statements: list[Stmt]):
+        for statement in statements:
+            self.execute(statement)
+
+    # ---------- Ejecutadores de Statements ---------- #
+
+    def execute(self, statement: Stmt):
+        if isinstance(statement, ExpressionStmt):
+            # Ejecutar un expression statement es solamente evaluar la expresión
+            self.evaluate(statement._expression)
+        elif isinstance(statement, PrintStmt):
+            # Ejecutar un print statement es evaluar la expresión e imprimir el resultado
+            value = self.evaluate(statement._expression)
+            print(value)
+        else:
+            raise RuntimeError(f"Unknown statement type: `{type(statement)}`")
 
     # ---------- Evaluadores de Expresiones ---------- #
 
