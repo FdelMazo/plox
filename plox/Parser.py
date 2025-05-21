@@ -1,5 +1,6 @@
 from .Token import Token, TokenType
 from .Expr import Expr, BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr
+from .Stmt import Stmt, PrintStmt, ExpressionStmt
 
 
 class Parser(object):
@@ -7,11 +8,49 @@ class Parser(object):
         self._tokens = tokens  # la lista de tokens ya escaneados
         self._current = 0  # el token en el que estamos parados
 
-    # Obtiene expresion parseada
-    def parse(self) -> Expr:
-        return self.expression()
+    # Obtiene la lista de statements parseados
+    def parse(self) -> list[Stmt]:
+        statements = []
+        while not self._is_at_end():
+            statements.append(self.statement())
+        return statements
 
-    # ---------- Reglas de Producción ---------- #
+    # ---------- Reglas de Producción de Statements ---------- #
+
+    # statement      → exprStmt | printStmt ;
+    def statement(self) -> Stmt:
+        # si me cruzo un print, parseo un print statement
+        if self._match(TokenType.PRINT):
+            return self.print_statement()
+
+        # si no, parseo una statement de expresión
+        return self.expression_statement()
+
+    # exprStmt       → expression ";" ;
+    def expression_statement(self) -> Stmt:
+        expr = self.expression()
+
+        # los statements terminan sí o sí con un punto y coma
+        if not self._match(TokenType.SEMICOLON):
+            raise SyntaxError(
+                f"Expected ';' after expression, got `{self._lookahead()}` instead"
+            )
+
+        return ExpressionStmt(expr)
+
+    # printStmt      → "print" expression ";" ;
+    def print_statement(self) -> Stmt:
+        value = self.expression()
+
+        # los statements terminan sí o sí con un punto y coma
+        if not self._match(TokenType.SEMICOLON):
+            raise SyntaxError(
+                f"Expected ';' after value to print, got `{self._lookahead()}` instead"
+            )
+
+        return PrintStmt(value)
+
+    # ---------- Reglas de Producción de Expresiones ---------- #
 
     # expression     → equality ;
     def expression(self) -> Expr:
