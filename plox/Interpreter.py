@@ -6,8 +6,7 @@ class Interpreter(object):
     def __init__(self):
         pass
 
-    # Interpretar es evaluar, imprimir el resultado y capturar errores
-    # IDEA: Acá, habría que mapear los errores de Python a errores propios de Lox
+    # Interpretar expresiones es evaluarlas e imprimir el resultado
     def interpret(self, expression: Expr):
         value = self.evaluate(expression)
         print(value)

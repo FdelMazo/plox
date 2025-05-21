@@ -22,8 +22,6 @@ class Plox:
         self.had_error = False
 
     def run(self, source: str):
-        # IDEA: si esta en un modo particular, que las distintas fases
-        # se pongan en modo debug, y vayan imprimiendo lo que hacen
         scanner = Scanner(source)
 
         try:
