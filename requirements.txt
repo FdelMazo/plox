@@ -1,1 +1,2 @@
 prompt_toolkit==3.0.51
+mypy==1.15.0
