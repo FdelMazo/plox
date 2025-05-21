@@ -65,7 +65,7 @@ class Token(object):
         self, token_type: TokenType, *, lexeme: str, literal: TokenLiteralType
     ):
         self.token_type = token_type  # Que tipo de token es
-        self.lexeme = lexeme  # Los caracteres en sí, ya con significado
+        self.lexeme = lexeme  # Los caracteres en sí, crudos
         self.literal = literal  # Si es un literal, aprovechamos y nos almacenamos directamente el valor al que resuelve
 
     def __repr__(self) -> str:
