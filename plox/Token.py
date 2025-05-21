@@ -69,8 +69,7 @@ class Token(object):
         self.literal = literal  # Si es un literal, aprovechamos y nos almacenamos directamente el valor al que resuelve
 
     def __repr__(self) -> str:
-        # IDEA: incluir el token type en vez del número
-        return str(self.__dict__)
+        return f"{self.token_type.name} '{self.lexeme}'"
 
 
 TokenKeywords = {
