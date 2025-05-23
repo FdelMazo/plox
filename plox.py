@@ -29,6 +29,7 @@ except ImportError:
 class Plox:
     def __init__(self):
         self.mode = None  # "scanning" | "parsing"
+        self.interpreter = Interpreter()
 
     def run(self, source: str):
         scanner = Scanner(source)
@@ -58,9 +59,8 @@ class Plox:
                 print(colored(statement, "light_blue"))
             return
 
-        interpreter = Interpreter()
         try:
-            interpreter.interpret(statements)
+            self.interpreter.interpret(statements)
         except Exception as e:
             print(colored(f"Runtime Error: {e}", "light_red"))
             return

@@ -1,6 +1,14 @@
 from .Token import Token, TokenType
-from .Expr import Expr, BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr
-from .Stmt import Stmt, PrintStmt, ExpressionStmt
+from .Expr import (
+    Expr,
+    BinaryExpr,
+    GroupingExpr,
+    LiteralExpr,
+    UnaryExpr,
+    VariableExpr,
+    AssignmentExpr,
+)
+from .Stmt import Stmt, PrintStmt, ExpressionStmt, BlockStmt, VarDecl
 
 
 class Parser(object):
@@ -17,8 +25,16 @@ class Parser(object):
 
     # ---------- Reglas de Producción de Statements ---------- #
 
-    # statement      → exprStmt | printStmt ;
+    # statement      → exprStmt | printStmt | varDecl | blockStmt ;
     def statement(self) -> Stmt:
+        # si me cruzo un var, parseo una variable declaration
+        if self._match(TokenType.VAR):
+            return self.variable_declaration()
+
+        # si me cruzo una llave, busco un block statement
+        if self._match(TokenType.LEFT_BRACE):
+            return self.block_statement()
+
         # si me cruzo un print, parseo un print statement
         if self._match(TokenType.PRINT):
             return self.print_statement()
@@ -50,14 +66,66 @@ class Parser(object):
 
         return PrintStmt(value)
 
+    # blockStmt       → "{" statement* "}" ;
+    def block_statement(self) -> Stmt:
+        statements = []
+        while (
+            not self._is_at_end()
+            and self._lookahead().token_type is not TokenType.RIGHT_BRACE
+        ):
+            statements.append(self.statement())
+
+        if not self._match(TokenType.RIGHT_BRACE):
+            raise SyntaxError(
+                f"Expected '}}' after block statement, got `{self._lookahead()}` instead"
+            )
+
+        return BlockStmt(statements)
+
+    # varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+    def variable_declaration(self) -> Stmt:
+        if not self._match(TokenType.IDENTIFIER):
+            raise SyntaxError(
+                f"Expected variable declaration, got `{self._lookahead()}` instead"
+            )
+
+        variable_name = self._previous()
+
+        # Si no se especifica un valor para la variable, se le asigna Nil
+        if self._match(TokenType.EQUAL):  # var x = valor;
+            variable_value = self.expression()
+        else:  # var x;
+            variable_value = None
+
+        # los statements terminan sí o sí con un punto y coma
+        if not self._match(TokenType.SEMICOLON):
+            raise SyntaxError(
+                f"Expected ';' after variable declaration, got `{self._lookahead()}` instead"
+            )
+
+        return VarDecl(variable_name, variable_value)
+
     # ---------- Reglas de Producción de Expresiones ---------- #
 
-    # expression     → equality ;
+    # expression     → assignment ;
     def expression(self) -> Expr:
-        if self._is_at_end():
-            # Si no tenemos tokens, devolvemos Nil
-            return LiteralExpr(None)
-        return self.equality()
+        return self.assignment()
+
+    # assignment     → IDENTIFIER "=" assignment | equality ;
+    def assignment(self) -> Expr:
+        expr = self.equality()
+
+        # Solo se puede asignar sobre variables. Si no, es un error
+        if self._match(TokenType.EQUAL):
+            if not isinstance(expr, VariableExpr):
+                raise SyntaxError(
+                    f"Invalid assignment target, got `{self._lookahead()}` instead"
+                )
+
+            value = self.assignment()
+            return AssignmentExpr(expr._name, value)
+
+        return expr
 
     # equality       → comparison ( ( "!=" | "==" ) comparison )* ;
     def equality(self) -> Expr:
@@ -131,7 +199,8 @@ class Parser(object):
         # Si no tuve recursividad de unarios, entonces tengo un primario
         return self.primary()
 
-    # primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+    # primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER ;
+    # Nuestro átomo más chico es un literal, un identificador, o una expresión entre paréntesis
     def primary(self) -> Expr:
         # Si es un token literal, lo convertimos en una expresión literal
         if self._match(TokenType.FALSE):
@@ -144,6 +213,10 @@ class Parser(object):
         # Si es un token literal, lo convertimos en una expresión literal con el valor del token
         if self._match(TokenType.NUMBER, TokenType.STRING):
             return LiteralExpr(self._previous().literal)
+
+        # Si es un token de un identificador, lo convertimos en una expresión de una variable
+        if self._match(TokenType.IDENTIFIER):
+            return VariableExpr(self._previous())
 
         # Si me cruzo un parentesis abierto, quiero parsear la expresion que contiene y
         # si o si cerrar el parentesis. Si no aparece ese parentesis de cierre, tengo un error

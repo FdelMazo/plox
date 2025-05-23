@@ -1,13 +1,22 @@
 from functools import singledispatchmethod
 
-from .Stmt import Stmt, ExpressionStmt, PrintStmt
-from .Expr import Expr, BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr
+from .Stmt import Stmt, ExpressionStmt, PrintStmt, VarDecl, BlockStmt
+from .Expr import (
+    Expr,
+    BinaryExpr,
+    GroupingExpr,
+    LiteralExpr,
+    UnaryExpr,
+    VariableExpr,
+    AssignmentExpr,
+)
 from .Token import TokenType
+from .Env import Env
 
 
 class Interpreter(object):
     def __init__(self):
-        pass
+        self.env = Env()
 
     # Interpretar es ejecutar la lista de statements que tenemos
     def interpret(self, statements: list[Stmt]):
@@ -24,8 +33,28 @@ class Interpreter(object):
             # Ejecutar un print statement es evaluar la expresión e imprimir el resultado
             value = self.evaluate(statement._expression)
             print(value)
+        elif isinstance(statement, VarDecl):
+            # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
+            if statement._initializer is not None:
+                self.env.define(
+                    statement._name.lexeme, self.evaluate(statement._initializer)
+                )
+            else:
+                self.env.define(statement._name.lexeme, statement._initializer)
+        elif isinstance(statement, BlockStmt):
+            return self.execute_block(statement._statements, Env(enclosing=self.env))
         else:
             raise RuntimeError(f"Unknown statement type: `{type(statement)}`")
+
+    def execute_block(self, statements: list[Stmt], block_env: Env):
+        # Para ejecutar un bloque de statements, tenemos que crear un nuevo entorno
+        # y ejecutar los statements ahí
+        # Tenemos que guardarnos el entorno del bloque, y después acordarnos de volver al previo
+        previous_env = self.env
+        self.env = block_env
+        for s in statements:
+            self.execute(s)
+        self.env = previous_env
 
     # ---------- Evaluadores de Expresiones ---------- #
 
@@ -33,6 +62,16 @@ class Interpreter(object):
     @singledispatchmethod
     def evaluate(self, expression: Expr):
         raise RuntimeError(f"Unknown expression type: `{type(expression)}`")
+
+    @evaluate.register
+    def _(self, expression: VariableExpr):
+        return self.env.get(expression._name.lexeme)
+
+    @evaluate.register
+    def _(self, expression: AssignmentExpr):
+        value = self.evaluate(expression._value)
+        self.env.assign(expression._name.lexeme, value)
+        return value
 
     @evaluate.register
     def _(self, expression: LiteralExpr):
