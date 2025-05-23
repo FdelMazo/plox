@@ -45,3 +45,22 @@ class UnaryExpr(Expr):
 
     def __repr__(self) -> str:
         return f"Unary: [{self._operator.lexeme} {self._right}]"
+
+
+# variable       → IDENTIFIER ;
+class VariableExpr(Expr):
+    def __init__(self, name: Token):
+        self._name = name
+
+    def __repr__(self) -> str:
+        return f"Variable: {self._name.lexeme}"
+
+
+# assignment    → IDENTIFIER "=" expression ;
+class AssignmentExpr(Expr):
+    def __init__(self, name: Token, value: Expr):
+        self._name = name
+        self._value = value
+
+    def __repr__(self) -> str:
+        return f"Assignment: {self._name.lexeme} = {self._value}"
