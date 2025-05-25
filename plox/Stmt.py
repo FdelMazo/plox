@@ -41,3 +41,24 @@ class VarDecl(Stmt):
 
     def __repr__(self) -> str:
         return f"Variable Declaration: {self._name.lexeme} = {self._initializer};"
+
+
+# ifStmt        → "if" "(" expression ")" statement ( "else" statement )? ;
+class IfStmt(Stmt):
+    def __init__(self, condition: Expr, thenBranch: Stmt, elseBranch: Stmt | None):
+        self._condition = condition
+        self._thenBranch = thenBranch
+        self._elseBranch = elseBranch
+
+    def __repr__(self) -> str:
+        return f"If Statement: if {self._condition} then {self._thenBranch} else {self._elseBranch};"
+
+
+# whileStmt     → "while" "(" expression ")" statement ;
+class WhileStmt(Stmt):
+    def __init__(self, condition: Expr, body: Stmt):
+        self._condition = condition
+        self._body = body
+
+    def __repr__(self) -> str:
+        return f"While Statement: while {self._condition} do {self._body};"

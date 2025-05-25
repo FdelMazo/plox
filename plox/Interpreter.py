@@ -1,6 +1,6 @@
 from functools import singledispatchmethod
 
-from .Stmt import Stmt, ExpressionStmt, PrintStmt, VarDecl, BlockStmt
+from .Stmt import Stmt, ExpressionStmt, PrintStmt, VarDecl, BlockStmt, IfStmt, WhileStmt
 from .Expr import (
     Expr,
     BinaryExpr,
@@ -9,6 +9,7 @@ from .Expr import (
     UnaryExpr,
     VariableExpr,
     AssignmentExpr,
+    LogicExpr,
 )
 from .Token import TokenType
 from .Env import Env
@@ -41,6 +42,19 @@ class Interpreter(object):
                 )
             else:
                 self.env.define(statement._name.lexeme, statement._initializer)
+        elif isinstance(statement, IfStmt):
+            # El if se implementa con... un if
+            # Si la condición resuelve a verdadero, ejecuto el bloque del then
+            # si no, ejecuto el bloque del else
+            if self.is_truthy(self.evaluate(statement._condition)):
+                self.execute(statement._thenBranch)
+            elif statement._elseBranch is not None:
+                # Si la condición es falsa y hay un bloque de else, lo ejecuto
+                self.execute(statement._elseBranch)
+        elif isinstance(statement, WhileStmt):
+            # El while se implementa con... un while
+            while self.is_truthy(self.evaluate(statement._condition)):
+                self.execute(statement._body)
         elif isinstance(statement, BlockStmt):
             return self.execute_block(statement._statements, Env(enclosing=self.env))
         else:
@@ -189,6 +203,26 @@ class Interpreter(object):
                 return left != right
             case _:
                 raise RuntimeError(f"Unknown binary operator: `{expression._operator}`")
+
+    @evaluate.register
+    def _(self, expression: LogicExpr):
+        # Tanto en el or como en el and, empezamos por evaluar el primer operando
+        left = self.evaluate(expression._left)
+
+        # En un or, si el primer operando es truthy, lo devolvemos
+        # sin evaluar el segundo
+        if expression._operator.token_type == TokenType.OR:
+            if self.is_truthy(left):
+                return left
+
+        # En cambio, en los and, si el primer operando no es truthy,
+        # ya debemos corto-circuitear y devolverlo
+        if expression._operator.token_type == TokenType.AND:
+            if not self.is_truthy(left):
+                return left
+
+        # En ambos casos, si no cortocircuitamos, evaluamos el segundo operando
+        return self.evaluate(expression._right)
 
     # ---------- Helpers ---------- #
 
