@@ -7,8 +7,9 @@ from .Expr import (
     UnaryExpr,
     VariableExpr,
     AssignmentExpr,
+    LogicExpr,
 )
-from .Stmt import Stmt, PrintStmt, ExpressionStmt, BlockStmt, VarDecl
+from .Stmt import Stmt, PrintStmt, ExpressionStmt, BlockStmt, VarDecl, IfStmt, WhileStmt
 
 
 class Parser(object):
@@ -25,11 +26,23 @@ class Parser(object):
 
     # ---------- Reglas de Producción de Statements ---------- #
 
-    # statement      → exprStmt | printStmt | varDecl | blockStmt ;
+    # statement      → exprStmt | printStmt | varDecl | blockStmt | ifStmt | whileStmt | forStmt ;
     def statement(self) -> Stmt:
         # si me cruzo un var, parseo una variable declaration
         if self._match(TokenType.VAR):
             return self.variable_declaration()
+
+        # si me cruzo un if, parseo un if statement
+        if self._match(TokenType.IF):
+            return self.if_statement()
+
+        # si me cruzo un while, parseo un while statement
+        if self._match(TokenType.WHILE):
+            return self.while_statement()
+
+        # si me cruzo un for, parseo un for statement
+        if self._match(TokenType.FOR):
+            return self.for_statement()
 
         # si me cruzo una llave, busco un block statement
         if self._match(TokenType.LEFT_BRACE):
@@ -82,6 +95,116 @@ class Parser(object):
 
         return BlockStmt(statements)
 
+    # whileStmt     → "while" "(" expression ")" statement ;
+    def while_statement(self) -> Stmt:
+        # Después de un while, espero un paréntesis abierto
+        if not self._match(TokenType.LEFT_PAREN):
+            raise SyntaxError(
+                f"Expected '(' after 'while', got `{self._lookahead()}` instead"
+            )
+
+        condition = self.expression()
+
+        # Tengo que cerrar el paréntesis abierto
+        if not self._match(TokenType.RIGHT_PAREN):
+            raise SyntaxError(
+                f"Expected ')' after condition, got `{self._lookahead()}` instead"
+            )
+
+        body = self.statement()
+
+        return WhileStmt(condition, body)
+
+    # ifStmt        → "if" "(" expression ")" statement ( "else" statement )? ;
+    def if_statement(self) -> Stmt:
+        # Después de un if, espero un paréntesis abierto
+        if not self._match(TokenType.LEFT_PAREN):
+            raise SyntaxError(
+                f"Expected '(' after 'if', got `{self._lookahead()}` instead"
+            )
+
+        condition = self.expression()
+
+        # Tengo que cerrar el paréntesis abierto
+        if not self._match(TokenType.RIGHT_PAREN):
+            raise SyntaxError(
+                f"Expected ')' after condition, got `{self._lookahead()}` instead"
+            )
+
+        then_branch = self.statement()
+
+        # Si me cruzo un else, parseo el statement que sigue
+        if self._match(TokenType.ELSE):
+            else_branch = self.statement()
+        else:
+            else_branch = None
+
+        return IfStmt(condition, then_branch, else_branch)
+
+    # forStmt        → "for" "(" ( varDecl | expressionStmt | ";") expression? ";" expression? ")" statement ;
+    def for_statement(self) -> Stmt:
+        # El for se compone de 3 cláusulas: un inicializador, una condición y un incremento
+        # Y estas 3 cláusulas son opcionales!
+
+        # En vez de agregar un statement a nuestra gramática, vamos a reutilizar lo que ya tenemos:
+        # implementamos el for como un syntactic sugar de un while.
+        # Parseamos el inicializador, la condición y el incremento, y los agrupamos en un bloque que sea
+        # { inicializador; while (condición) { cuerpo; incremento; } }
+
+        # Después de un for, espero un paréntesis abierto
+        if not self._match(TokenType.LEFT_PAREN):
+            raise SyntaxError(
+                f"Expected '(' after 'for', got `{self._lookahead()}` instead"
+            )
+
+        # Si ya me cruzo un punto y coma, me saltee el inicializaodr
+        if self._match(TokenType.SEMICOLON):
+            initializer = None
+        elif self._match(TokenType.VAR):
+            initializer = self.variable_declaration()
+        else:
+            initializer = self.expression_statement()
+
+        # Después del inicializador, espero una expresión de condicion, y un ;
+        if not self._lookahead().token_type == TokenType.SEMICOLON:
+            condition = self.expression()
+        else:
+            condition = None
+        if not self._match(TokenType.SEMICOLON):
+            raise SyntaxError(
+                f"Expected ';' after for loop condition, got `{self._lookahead()}` instead"
+            )
+
+        # Y después de la condición, espero una expresión de incremento, y un )
+        if not self._lookahead().token_type == TokenType.RIGHT_PAREN:
+            increment = self.expression()
+        else:
+            increment = None
+        if not self._match(TokenType.RIGHT_PAREN):
+            raise SyntaxError(
+                f"Expected ')' after for loop clauses, got `{self._lookahead()}` instead"
+            )
+
+        # Tomamos el cuerpo del form
+        body = self.statement()
+
+        # Si tengo un incremento, lo agrego al final del cuerpo que voy a ejecutar en cada iteración
+        if increment is not None:
+            body = BlockStmt([body, ExpressionStmt(increment)])
+
+        # Si no tengo una condición, la reemplazo por un literal que siempre evalue a verdadero
+        if condition is None:
+            condition = LiteralExpr(True)
+
+        body = WhileStmt(condition, body)
+
+        # Si tengo un inicializador, entonces reemplazo los statements que tengo por un
+        # bloque que arranque por el inicializador, y después interprete el while
+        if initializer is not None:
+            body = BlockStmt([initializer, body])
+
+        return body
+
     # varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
     def variable_declaration(self) -> Stmt:
         if not self._match(TokenType.IDENTIFIER):
@@ -111,9 +234,9 @@ class Parser(object):
     def expression(self) -> Expr:
         return self.assignment()
 
-    # assignment     → IDENTIFIER "=" assignment | equality ;
+    # assignment     → IDENTIFIER "=" assignment | logic_or ;
     def assignment(self) -> Expr:
-        expr = self.equality()
+        expr = self.logic_or()
 
         # Solo se puede asignar sobre variables. Si no, es un error
         if self._match(TokenType.EQUAL):
@@ -124,6 +247,30 @@ class Parser(object):
 
             value = self.assignment()
             return AssignmentExpr(expr._name, value)
+
+        return expr
+
+    # logic_or      → logic_and ( "or" logic_and )* ;
+    def logic_or(self) -> Expr:
+        expr = self.logic_and()
+
+        # mientras nos crucemos or, seguimos parseando
+        while not self._is_at_end() and self._match(TokenType.OR):
+            operator = self._previous()
+            right = self.logic_and()
+            expr = LogicExpr(expr, operator, right)
+
+        return expr
+
+    # logic_and     → equality ( "and" equality )* ;
+    def logic_and(self) -> Expr:
+        expr = self.equality()
+
+        # mientras nos crucemos and, seguimos parseando
+        while not self._is_at_end() and self._match(TokenType.AND):
+            operator = self._previous()
+            right = self.equality()
+            expr = LogicExpr(expr, operator, right)
 
         return expr
 

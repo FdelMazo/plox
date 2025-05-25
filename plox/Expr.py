@@ -64,3 +64,14 @@ class AssignmentExpr(Expr):
 
     def __repr__(self) -> str:
         return f"Assignment: {self._name.lexeme} = {self._value}"
+
+
+# logic         → expression (("and" | "or") expression )* ;
+class LogicExpr(Expr):
+    def __init__(self, left: Expr, operator: Token, right: Expr):
+        self._left = left
+        self._operator = operator
+        self._right = right
+
+    def __repr__(self) -> str:
+        return f"Logic: [{self._left}  {self._operator.lexeme} {self._right}]"
