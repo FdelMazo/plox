@@ -16,7 +16,10 @@ chmod +x .git/hooks/pre-commit
 chmod +x plox.py
 ln -sf $(realpath plox.py) ~/.local/bin/plox
 
-# Run plox!
+# Run a lox script!
+plox ./examples/hello.lox
+
+# Run plox prompt!
 plox
 ```
 

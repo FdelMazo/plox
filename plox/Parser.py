@@ -15,6 +15,9 @@ class Parser(object):
 
     # expression     → equality ;
     def expression(self) -> Expr:
+        if self._is_at_end():
+            # Si no tenemos tokens, devolvemos Nil
+            return LiteralExpr(None)
         return self.equality()
 
     # equality       → comparison ( ( "!=" | "==" ) comparison )* ;

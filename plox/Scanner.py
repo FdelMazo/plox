@@ -48,7 +48,7 @@ class Scanner(object):
 
         match c:
             # descartamos los whitespaces
-            case " " | "\r" | "\t":
+            case " " | "\r" | "\t" | "\n":
                 pass
 
             # tokens de un solo carácter
