@@ -1,23 +1,23 @@
 // run in --parsing mode
 // expresiones literales
-true
-false
-nil
+true;
+false;
+nil;
 // expresiones unaria
--1
-!true
+-1;
+!true;
 // expresiones binarias
-2 * 2
-2 / 2
-2 - 2
-2 + 2
-5 >= 2
-1 < 4
-3 == 3
-"a" != "b"
+2 * 2;
+2 / 2;
+2 - 2;
+2 + 2;
+5 >= 2;
+1 < 4;
+3 == 3;
+"a" != "b";
 // agrupamientos
-(true)
-(1 + 5)
+(true);
+(1 + 5);
 // expresiones invalidas
-1 +
-( 2 + 2
+1 +;
+( 2 + 2;
