@@ -1,0 +1,30 @@
+if (true) print "if dió true!";
+if (false) print "no me imprimas nunca";
+
+print "";
+
+// usando --parsing te das cuenta que este while y este for se parsean como los mismos statements
+print "hagamos 3 iteraciones con un while";
+var x = 0;
+while (x < 3) { print "* nueva iteración"; x = x + 1; }
+
+print "hagamos 3 iteraciones con un for";
+for (var y = 0 ; y < 3 ; y = y + 1) { print "* nueva iteración"; }
+
+print "";
+
+// se evaluan todos los operandos y devuelve el último
+var x = false or "variable con or";
+print x;
+
+// se evalua solo el primer operando. como si se cumple, directamente lo devuelve
+var x = true or "nunca me resolvió";
+print x;
+
+// se evaluan todos los operandos y devuelve el último
+var x = true and "variable con and";
+print x;
+
+// se evalua solo el primer operando. como no se cumple, directamente lo devuelve
+var x = false and "nunca me resolvió";
+print x;
