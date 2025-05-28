@@ -1,0 +1,3 @@
+print "hello"; // print statement
+1 + 2; // no imprime nada, solo se ejecuta
+print 1 + 2; // expression binaria adentro de print statement
