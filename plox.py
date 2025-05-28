@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+from termcolor import colored
 from plox.Scanner import Scanner
 from plox.Parser import Parser
 from plox.Interpreter import Interpreter
@@ -29,13 +30,13 @@ class Plox:
             tokens = scanner.scan()
         except Exception as e:
             self.had_error = True
-            print(f"Scanning Error: {e}")
+            print(colored(f"Scanning Error: {e}", "light_red"))
             return
 
         # en modo scanning, solo imprimimos los tokens
         if self.mode == "scanning":
             for i, token in enumerate(tokens):
-                print(f"token {i}: {token}")
+                print(colored(f"token {i}: {token}", "light_blue"))
             return
 
         parser = Parser(tokens)
@@ -43,12 +44,12 @@ class Plox:
             expression = parser.parse()
         except Exception as e:
             self.had_error = True
-            print(f"Parsing Error: {e}")
+            print(colored(f"Parsing Error: {e}", "light_red"))
             return
 
         # en modo parsing, imprimimos las expresiones encontradas
         if self.mode == "parsing":
-            print(expression)
+            print(colored(expression, "light_blue"))
             return
 
         interpreter = Interpreter()
@@ -56,7 +57,7 @@ class Plox:
             interpreter.interpret(expression)
         except Exception as e:
             self.had_error = True
-            print(f"Runtime Error: {e}")
+            print(colored(f"Runtime Error: {e}", "light_red"))
             return
 
     def main(self):
