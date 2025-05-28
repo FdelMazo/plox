@@ -92,7 +92,8 @@ class Plox:
                 # Acá estamos haciendo uso de que Python ya sabe dividir archivos en lineas,
                 # pero lo correcto sería manejar correctamente los \n en el scanner de lox
                 for line in file:
-                    print(f"> {line.strip()}")
+                    if self.mode:
+                        print(f"> {line.strip()}")
                     self.run(line.strip())
             return
 
