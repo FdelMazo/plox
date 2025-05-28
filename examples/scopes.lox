@@ -1,0 +1,34 @@
+print "declaro x";
+var x = 0;
+print x;
+x = 1;
+print "asigno x a un nuevo valor";
+print x;
+
+print "";
+
+print "intento acceder a una variables no definida";
+print z;
+print "intento asignar a una variables no definida";
+y = 3;
+
+print "";
+
+{ print "entro a un bloque"; var z = 2; print "imprimo la x global y la z local"; print x; print z; print "salgo del bloque"; }
+
+print "lo definido adentro del bloque ya no existe";
+print z;
+
+print "";
+
+{ print "entro a un bloque"; var x = 2; print "shadoweo x global con x local"; print x; print "salgo del bloque"; }
+
+print "x global nunca cambió! es la misma de antes del bloque";
+print x;
+
+print "";
+
+{ print "entro a un bloque"; x = 2; print "le asigno un valor nuevo a x global"; print x; print "salgo del bloque"; }
+
+print "x fue modificada adentro del bloque";
+print x;
