@@ -2,19 +2,29 @@
 
 import sys
 import argparse
-from termcolor import colored
 from plox.Scanner import Scanner
 from plox.Parser import Parser
 from plox.Interpreter import Interpreter
 
-# usar prompt_toolkit si está disponible
+# usar prompt_toolkit y termcolor si están disponibles
 try:
     from prompt_toolkit import PromptSession
     from prompt_toolkit.history import FileHistory
+    from termcolor import colored
 
-    use_prompt_toolkit = True
     promptsession = PromptSession(history=FileHistory(".plox_history"))
+
+    def prompt_input():
+        return promptsession.prompt("> ")
+
 except ImportError:
+
+    def colored(text, _):
+        return text
+
+    def prompt_input():
+        return input("> ")
+
     use_prompt_toolkit = False
 
 
@@ -94,9 +104,7 @@ class Plox:
 
         while True:
             try:
-                source = (
-                    promptsession.prompt("> ") if use_prompt_toolkit else input("> ")
-                )
+                source = prompt_input()
             except (EOFError, KeyboardInterrupt):
                 break
 
