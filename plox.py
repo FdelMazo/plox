@@ -25,13 +25,10 @@ except ImportError:
     def prompt_input():
         return input("> ")
 
-    use_prompt_toolkit = False
-
 
 class Plox:
     def __init__(self):
         self.mode = None  # "scanning" | "parsing"
-        self.had_error = False
 
     def run(self, source: str):
         scanner = Scanner(source)
@@ -39,7 +36,6 @@ class Plox:
         try:
             tokens = scanner.scan()
         except Exception as e:
-            self.had_error = True
             print(colored(f"Scanning Error: {e}", "light_red"))
             return
 
@@ -53,7 +49,6 @@ class Plox:
         try:
             expression = parser.parse()
         except Exception as e:
-            self.had_error = True
             print(colored(f"Parsing Error: {e}", "light_red"))
             return
 
@@ -66,7 +61,6 @@ class Plox:
         try:
             interpreter.interpret(expression)
         except Exception as e:
-            self.had_error = True
             print(colored(f"Runtime Error: {e}", "light_red"))
             return
 
@@ -109,7 +103,6 @@ class Plox:
                 break
 
             self.run(source)
-            self.had_error = False
 
 
 if __name__ == "__main__":
