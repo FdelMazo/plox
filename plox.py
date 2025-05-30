@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
+import traceback
 import argparse
 from plox.Scanner import Scanner
 from plox.Parser import Parser
@@ -28,6 +28,7 @@ except ImportError:
 
 class Plox:
     def __init__(self):
+        self.debug = False
         self.mode = None  # "scanning" | "parsing"
         self.interpreter = Interpreter()
 
@@ -37,6 +38,8 @@ class Plox:
         try:
             tokens = scanner.scan()
         except Exception as e:
+            if self.debug:
+                traceback.print_exc()
             print(colored(f"Scanning Error: {e}", "light_red"))
             return
 
@@ -50,6 +53,8 @@ class Plox:
         try:
             statements = parser.parse()
         except Exception as e:
+            if self.debug:
+                traceback.print_exc()
             print(colored(f"Parsing Error: {e}", "light_red"))
             return
 
@@ -62,6 +67,8 @@ class Plox:
         try:
             self.interpreter.interpret(statements)
         except Exception as e:
+            if self.debug:
+                traceback.print_exc()
             print(colored(f"Runtime Error: {e}", "light_red"))
             return
 
@@ -70,6 +77,12 @@ class Plox:
             prog="plox",
             description="Lox interpreter in Python",
         )
+        parser.add_argument(
+            "--debug",
+            action="store_true",
+            help="Print error stack traces",
+        )
+
         options = parser.add_mutually_exclusive_group()
         options.add_argument(
             "--scanning", action="store_true", help="Run in scanning mode"
@@ -82,6 +95,9 @@ class Plox:
         )
 
         args = parser.parse_args()
+
+        if args.debug:
+            self.debug = True
 
         if args.scanning:
             self.mode = "scanning"
