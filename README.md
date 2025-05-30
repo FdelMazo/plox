@@ -21,6 +21,9 @@ plox ./examples/hello.lox
 
 # Run plox prompt!
 plox
+
+# See full options
+plox --help
 ```
 
 En cada branch del repo hay distintas implementaciones de Lox:
