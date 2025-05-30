@@ -56,7 +56,7 @@ class Parser(object):
         return self.expression_statement()
 
     # exprStmt       → expression ";" ;
-    def expression_statement(self) -> Stmt:
+    def expression_statement(self) -> ExpressionStmt:
         expr = self.expression()
 
         # los statements terminan sí o sí con un punto y coma
@@ -68,7 +68,7 @@ class Parser(object):
         return ExpressionStmt(expr)
 
     # printStmt      → "print" expression ";" ;
-    def print_statement(self) -> Stmt:
+    def print_statement(self) -> PrintStmt:
         value = self.expression()
 
         # los statements terminan sí o sí con un punto y coma
@@ -80,7 +80,7 @@ class Parser(object):
         return PrintStmt(value)
 
     # blockStmt       → "{" statement* "}" ;
-    def block_statement(self) -> Stmt:
+    def block_statement(self) -> BlockStmt:
         statements = []
         while (
             not self._is_at_end()
@@ -96,7 +96,7 @@ class Parser(object):
         return BlockStmt(statements)
 
     # whileStmt     → "while" "(" expression ")" statement ;
-    def while_statement(self) -> Stmt:
+    def while_statement(self) -> WhileStmt:
         # Después de un while, espero un paréntesis abierto
         if not self._match(TokenType.LEFT_PAREN):
             raise SyntaxError(
@@ -116,7 +116,7 @@ class Parser(object):
         return WhileStmt(condition, body)
 
     # ifStmt        → "if" "(" expression ")" statement ( "else" statement )? ;
-    def if_statement(self) -> Stmt:
+    def if_statement(self) -> IfStmt:
         # Después de un if, espero un paréntesis abierto
         if not self._match(TokenType.LEFT_PAREN):
             raise SyntaxError(
@@ -157,6 +157,7 @@ class Parser(object):
                 f"Expected '(' after 'for', got `{self._lookahead()}` instead"
             )
 
+        initializer: None | VarDecl | ExpressionStmt = None
         # Si ya me cruzo un punto y coma, me saltee el inicializaodr
         if self._match(TokenType.SEMICOLON):
             initializer = None
@@ -206,7 +207,7 @@ class Parser(object):
         return body
 
     # varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
-    def variable_declaration(self) -> Stmt:
+    def variable_declaration(self) -> VarDecl:
         if not self._match(TokenType.IDENTIFIER):
             raise SyntaxError(
                 f"Expected variable declaration, got `{self._lookahead()}` instead"
