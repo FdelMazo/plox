@@ -372,7 +372,7 @@ class Parser(object):
             expr = self.expression()
             if not self._match(TokenType.RIGHT_PAREN):
                 raise SyntaxError(
-                    f"Expected ')' after expression, got `{self._lookahead()}` instead"
+                    f"Expected ')' after grouping expression, got `{self._lookahead()}` instead"
                 )
             return GroupingExpr(expr)
 
