@@ -43,6 +43,27 @@ class VarDecl(Stmt):
         return f"Variable Declaration: {self._name.lexeme} = {self._initializer};"
 
 
+# funDecl        → "fun" IDENTIFIER "(" parameters? ")" blockStmt ;
+class FunDecl(Stmt):
+    def __init__(self, name: Token, parameters: list[Token], body: BlockStmt):
+        self._name = name
+        self._parameters = parameters
+        self._body = body
+
+    def __repr__(self) -> str:
+        params = ", ".join(param.lexeme for param in self._parameters)
+        return f"Function Declaration: {self._name.lexeme}({params}) {self._body};"
+
+
+# returnStmt     → "return" expression? ";" ;
+class ReturnStmt(Stmt):
+    def __init__(self, value: Expr | None):
+        self._value = value
+
+    def __repr__(self) -> str:
+        return f"Return Statement: return {self._value};"
+
+
 # ifStmt        → "if" "(" expression ")" statement ( "else" statement )? ;
 class IfStmt(Stmt):
     def __init__(self, condition: Expr, thenBranch: Stmt, elseBranch: Stmt | None):
