@@ -1,6 +1,16 @@
 from functools import singledispatchmethod
 
-from .Stmt import Stmt, ExpressionStmt, PrintStmt, VarDecl, BlockStmt, IfStmt, WhileStmt
+from .Stmt import (
+    Stmt,
+    ExpressionStmt,
+    PrintStmt,
+    VarDecl,
+    FunDecl,
+    BlockStmt,
+    IfStmt,
+    WhileStmt,
+    ReturnStmt,
+)
 from .Expr import (
     Expr,
     BinaryExpr,
@@ -10,14 +20,17 @@ from .Expr import (
     VariableExpr,
     AssignmentExpr,
     LogicExpr,
+    CallExpr,
 )
+from .Function import Function, ReturnValue
 from .Token import TokenType
 from .Env import Env
 
 
 class Interpreter(object):
     def __init__(self):
-        self.env = Env()
+        self.globals = Env()
+        self.env = self.globals
 
     # Interpretar es ejecutar la lista de statements que tenemos
     def interpret(self, statements: list[Stmt]):
@@ -42,6 +55,16 @@ class Interpreter(object):
                 )
             else:
                 self.env.define(statement._name.lexeme, statement._initializer)
+        elif isinstance(statement, FunDecl):
+            # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
+            self.env.define(statement._name.lexeme, Function(statement, self.env))
+        elif isinstance(statement, ReturnStmt):
+            return_value = None
+            if statement._value is not None:
+                # Si hay un valor de retorno, lo evaluamos y lo lanzamos cual error
+                return_value = self.evaluate(statement._value)
+
+            raise ReturnValue(return_value)
         elif isinstance(statement, IfStmt):
             # El if se implementa con... un if
             # Si la condición resuelve a verdadero, ejecuto el bloque del then
@@ -223,6 +246,28 @@ class Interpreter(object):
 
         # En ambos casos, si no cortocircuitamos, evaluamos el segundo operando
         return self.evaluate(expression._right)
+
+    @evaluate.register
+    def _(self, expression: CallExpr):
+        # Evaluamos al llamado a la función, que puede ser cualquier cosa
+        callee = self.evaluate(expression._callee)
+
+        # Evaluamos cada argumento de la llamada
+        arguments = []
+        for arg in expression._arguments:
+            arguments.append(self.evaluate(arg))
+
+        # Si el llamado no es una función, levantamos un error
+        if not callable(callee):
+            raise RuntimeError(f"Cannot call non-callable object: `{callee}`")
+
+        # Si no se cumple la aridad, levantamos un error
+        if len(arguments) != callee.arity:
+            raise RuntimeError(
+                f"Expected {callee.arity} arguments, got {len(arguments)}"
+            )
+
+        return callee(self, arguments)
 
     # ---------- Helpers ---------- #
 

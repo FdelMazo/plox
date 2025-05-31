@@ -8,8 +8,19 @@ from .Expr import (
     VariableExpr,
     AssignmentExpr,
     LogicExpr,
+    CallExpr,
 )
-from .Stmt import Stmt, PrintStmt, ExpressionStmt, BlockStmt, VarDecl, IfStmt, WhileStmt
+from .Stmt import (
+    Stmt,
+    PrintStmt,
+    ExpressionStmt,
+    BlockStmt,
+    VarDecl,
+    FunDecl,
+    IfStmt,
+    WhileStmt,
+    ReturnStmt,
+)
 
 
 class Parser(object):
@@ -26,11 +37,19 @@ class Parser(object):
 
     # ---------- Reglas de Producción de Statements ---------- #
 
-    # statement      → exprStmt | printStmt | varDecl | blockStmt | ifStmt | whileStmt | forStmt ;
+    # statement      → exprStmt | printStmt | varDecl | funDecl | blockStmt | ifStmt | whileStmt | forStmt ;
     def statement(self) -> Stmt:
         # si me cruzo un var, parseo una variable declaration
         if self._match(TokenType.VAR):
             return self.variable_declaration()
+
+        # si me cruzo un fun, parseo una function declaration
+        if self._match(TokenType.FUN):
+            return self.function_declaration()
+
+        # si me cruzo un return, parseo un return statement
+        if self._match(TokenType.RETURN):
+            return self.return_statement()
 
         # si me cruzo un if, parseo un if statement
         if self._match(TokenType.IF):
@@ -206,6 +225,71 @@ class Parser(object):
 
         return body
 
+    # returnStmt     → "return" expression? ";" ;
+    def return_statement(self) -> ReturnStmt:
+        value = None
+
+        # Si no me cruzo un punto y coma, parseo la expresión que me
+        # da el valor de retorno
+        if not self._lookahead().token_type == TokenType.SEMICOLON:
+            value = self.expression()
+
+        # Después de eso, si o sí tengo que encontrar un punto y coma
+        if not self._match(TokenType.SEMICOLON):
+            raise SyntaxError(
+                f"Expected ';' after return statement, got `{self._lookahead()}` instead"
+            )
+
+        return ReturnStmt(value)
+
+    # funDecl        → "fun" IDENTIFIER "(" parameters? ")" blockStmt ;
+    def function_declaration(self) -> FunDecl:
+        # Después del fun, viene el nombre de la función
+        if not self._match(TokenType.IDENTIFIER):
+            raise SyntaxError(
+                f"Expected function declaration, got `{self._lookahead()}` instead"
+            )
+
+        function_name = self._previous()
+        parameters: list[Token] = []
+
+        # Después del nombre de la función, vienen los argumentos entre paréntesis
+        if not self._match(TokenType.LEFT_PAREN):
+            raise SyntaxError(
+                f"Expected '(' after function name, got `{self._lookahead()}` instead"
+            )
+
+        # Mientras no me cruce un paréntesis de cierre, sigo parseando argumentos
+        while (
+            not self._is_at_end()
+            and self._lookahead().token_type != TokenType.RIGHT_PAREN
+        ):
+            if not self._match(TokenType.IDENTIFIER):
+                raise SyntaxError(
+                    f"Expected parameter name, got `{self._lookahead()}` instead"
+                )
+
+            parameters.append(self._previous())
+
+            # Si me cruzo una coma, sigo parseando parámetros
+            if not self._match(TokenType.COMMA):
+                break
+
+        # Si no me cruce un paréntesis de cierre, tengo un error
+        if not self._match(TokenType.RIGHT_PAREN):
+            raise SyntaxError(
+                f"Expected ')' after function parameters, got `{self._lookahead()}` instead"
+            )
+
+        # Después de los parámetros, viene el cuerpo de la función
+        if not self._match(TokenType.LEFT_BRACE):
+            raise SyntaxError(
+                f"Expected '{{' after function parameters, got `{self._lookahead()}` instead"
+            )
+
+        body = self.block_statement()
+        return FunDecl(function_name, parameters, body)
+
     # varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
     def variable_declaration(self) -> VarDecl:
         if not self._match(TokenType.IDENTIFIER):
@@ -334,7 +418,7 @@ class Parser(object):
 
         return expr
 
-    # unary          → ( "!" | "-" ) unary | primary ;
+    # unary          → ( "!" | "-" ) unary | call ;
     def unary(self) -> Expr:
         # a diferencia de las reglas de expresiones binarias,
         # acá el operador es un prefijo.
@@ -344,8 +428,39 @@ class Parser(object):
             right = self.unary()
             return UnaryExpr(operator, right)
 
-        # Si no tuve recursividad de unarios, entonces tengo un primario
-        return self.primary()
+        # Si no tuve recursividad de unarios, entonces tengo una llamada a una función
+        return self.call()
+
+    # call           → primary ( "(" arguments? ")" )* ;
+    # arguments      → expression ( "," expression )* ;
+    def call(self) -> Expr:
+        expr = self.primary()
+        arguments: list[Expr] = []
+
+        # Si me cruzo un paréntesis abierto, tengo una llamada a función
+        # y tengo que parsear los argumentos
+        while self._match(TokenType.LEFT_PAREN):
+            # Mientras no me cruce un paréntesis de cierre, sigo parseando argumentos
+            while (
+                not self._is_at_end()
+                and self._lookahead().token_type != TokenType.RIGHT_PAREN
+            ):
+                # Consumo el primer argumento
+                arguments.append(self.expression())
+
+                # Consumo un argumento por cada coma que tengo adelante
+                while not self._is_at_end() and self._match(TokenType.COMMA):
+                    arguments.append(self.expression())
+
+            # Si o sí tengo que cerrar el paréntesis abierto
+            if not self._match(TokenType.RIGHT_PAREN):
+                raise SyntaxError(
+                    f"Expected ')' after function arguments, got `{self._lookahead()}` instead"
+                )
+
+            expr = CallExpr(expr, arguments)
+
+        return expr
 
     # primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER ;
     # Nuestro átomo más chico es un literal, un identificador, o una expresión entre paréntesis

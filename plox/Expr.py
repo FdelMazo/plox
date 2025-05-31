@@ -47,6 +47,18 @@ class UnaryExpr(Expr):
         return f"Unary: [{self._operator.lexeme} {self._right}]"
 
 
+# call          → primary "(" arguments? ")" ;
+# arguments     → expression ("," expression)* ;
+class CallExpr(Expr):
+    def __init__(self, callee: Expr, arguments: list[Expr]):
+        self._callee = callee
+        self._arguments = arguments
+
+    def __repr__(self) -> str:
+        args = ", ".join(str(arg) for arg in self._arguments)
+        return f"Function Call: {self._callee}({args})"
+
+
 # variable       → IDENTIFIER ;
 class VariableExpr(Expr):
     def __init__(self, name: Token):
