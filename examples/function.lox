@@ -1,0 +1,51 @@
+print "Función sin argumentos";
+fun returnthree() { return 3; }
+print returnthree;
+print returnthree();
+
+print "";
+
+print "Función sin return";
+fun noreturn() { }
+print noreturn;
+print noreturn();
+
+print "";
+
+print "Función con return vacio";
+fun emptyreturn() { return ; }
+print emptyreturn;
+print emptyreturn();
+
+print "";
+
+print "Función normal: suma 3 numeros";
+fun add(a, b, c) { return a + b + c; }
+print "Sumar 1 + 2 + 3";
+print add;
+print add(1, 2, 3);
+
+print "";
+
+print "Errores de aridad";
+add(1,2,3,4);
+add(1,2);
+
+print "";
+
+print "Intentar llamar algo que no es una función";
+var x = "x";
+x();
+
+print "";
+
+print "Un poco de currying";
+fun fn() { print "soy un callback!"; }
+fun get_fn() { return fn; }
+get_fn()();
+
+print "";
+
+print "Un poco de anidados";
+fun nest() { fun nested() { print "soy una funcion interna!"; } nested(); }
+nest();

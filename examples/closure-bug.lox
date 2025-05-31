@@ -1,0 +1,20 @@
+// El intérprete tiene un bug: un scope que debería ser léxico terminó siendo dinámico
+// En este ejemplo, se debería imprimir "global" las dos veces, porque cuando se declaró
+// la función, el entorno era a=global _al momento de declarar la función_
+
+// Después de eso, ese entorno no debería modificarse más. Debería frizarse.
+// Sin embargo, al declarar de nuevo la variable a, se re-definio el entorno global
+// y al intentar referenciarlo de nuevo, se usó la versión actualizada.
+
+// var a = "global";
+// {
+// fun showA() {
+//   print a;
+// }
+//
+// showA();
+// var a = "block";
+// showA();
+// }
+
+var a = "global" ; { fun showA() { print a; } showA(); var a = "block"; showA();  }
