@@ -1,4 +1,5 @@
-// El intérprete tiene un bug: un scope que debería ser léxico terminó siendo dinámico
+// El intérprete del branch tree-walk tiene un bug (que acá ya esta arreglado):
+// Un scope que debería ser léxico terminó siendo dinámico
 // En este ejemplo, se debería imprimir "global" las dos veces, porque cuando se declaró
 // la función, el entorno era a=global _al momento de declarar la función_
 

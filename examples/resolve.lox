@@ -1,0 +1,10 @@
+// run in --resolve mode
+var g = 1; print g; // las variables globales no se suman al intérprete
+{ print g; } // como no fue definida localmente, sigue sin agregarse al intérprete. va a ser resuelta dinámicamente
+{ var x = 2; } // no hubo referencia a x, solo se definió. no se suma al intérprete!
+{ var y = 3; print y; } // esta variable se referencia en su mismo scope
+{ var z = 4; { print z; } } // referencia al scope anterior
+{ fun empty() { } empty(); } // las funciones también se almacenan en la tabla
+{ print w; var w = 3; } // estoy intentando referenciar a una variable que no esta en el scope. no se agrega a la tabla!
+{ var u = 5; { u = 6; } } // nos guardamos en la tabla que cuando querramos asignar un valor, lo tenemos que hacer en el entorno padre
+{ var zz = zz ;} // intentar referenciar una variable en su misma definición devuelve un error en la resolución de scope
