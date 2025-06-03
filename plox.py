@@ -4,6 +4,7 @@ import traceback
 import argparse
 from plox.Scanner import Scanner
 from plox.Parser import Parser
+from plox.Resolver import Resolver
 from plox.Interpreter import Interpreter
 
 # usar prompt_toolkit y termcolor si están disponibles
@@ -29,7 +30,7 @@ except ImportError:
 class Plox:
     def __init__(self):
         self.debug = False
-        self.mode = None  # "scanning" | "parsing"
+        self.mode = None  # "scanning" | "parsing" | "resolve"
         self.interpreter = Interpreter()
 
     def run(self, source: str):
@@ -64,6 +65,25 @@ class Plox:
                 print(colored(statement, "light_blue"))
             return
 
+        resolver = Resolver(self.interpreter)
+        for statement in statements:
+            try:
+                resolver.resolve(statement)
+            except Exception as e:
+                if self.debug:
+                    traceback.print_exc()
+                print(colored(f"Resolve Error: {e}", "light_red"))
+
+        # en modo resolve, imprimimos los scopes locales del intérprete
+        if self.mode == "resolve":
+            print(
+                colored(
+                    f"Interpreter Locals: {self.interpreter.local_scope_depths}",
+                    "light_blue",
+                )
+            )
+            return
+
         try:
             self.interpreter.interpret(statements)
         except Exception as e:
@@ -90,6 +110,9 @@ class Plox:
         options.add_argument(
             "--parsing", action="store_true", help="Run in parsing mode"
         )
+        options.add_argument(
+            "--resolve", action="store_true", help="Run in resolve mode"
+        )
         parser.add_argument(
             "file", nargs="?", help="Interpret a file instead of running the REPL"
         )
@@ -103,6 +126,8 @@ class Plox:
             self.mode = "scanning"
         elif args.parsing:
             self.mode = "parsing"
+        elif args.resolve:
+            self.mode = "resolve"
 
         if args.file:
             with open(args.file, "r") as file:

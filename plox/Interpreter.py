@@ -32,10 +32,24 @@ class Interpreter(object):
         self.globals = Env()
         self.env = self.globals
 
+        # De mano del resolvedor (Resolver.py), ahora el intérprete sabe
+        # a qué profundidad hay que buscar cada expresión
+        # de variable o asignación.
+        # Por ejemplo, saber si `print x;` tiene que buscar el x
+        # en el entorno local actual (depth 0), en el entorno padre (depth 1),
+        # o en el entorno global (directamente no esta en el dict).
+        self.local_scope_depths: dict[VariableExpr | AssignmentExpr, int] = {}
+
     # Interpretar es ejecutar la lista de statements que tenemos
     def interpret(self, statements: list[Stmt]):
         for statement in statements:
             self.execute(statement)
+
+    # Guarda la profundidad en la que buscar una variable o asignación
+    # Es llamado por el resolvedor de scopes para poblar el diccionario
+    # antes de la ejecución del programa
+    def resolve_depth(self, expression: VariableExpr | AssignmentExpr, depth: int):
+        self.local_scope_depths[expression] = depth
 
     # ---------- Ejecutadores de Statements ---------- #
 
@@ -123,12 +137,28 @@ class Interpreter(object):
 
     @evaluate.register
     def _(self, expression: VariableExpr):
-        return self.env.get(expression._name.lexeme)
+        # Si la variable se encuentra en nuestro diccionario de scope local,
+        # la buscamos con esa profundidad.
+        if expression in self.local_scope_depths:
+            depth = self.local_scope_depths[expression]
+            return self.env.get(expression._name.lexeme, depth)
+
+        # Si no, la buscamos dinámicamente en el entorno global
+        return self.globals.get(expression._name.lexeme)
 
     @evaluate.register
     def _(self, expression: AssignmentExpr):
         value = self.evaluate(expression._value)
-        self.env.assign(expression._name.lexeme, value)
+
+        # Si la variable se encuentra en nuestro diccionario de scope local,
+        # la asignamos en esa profundidad.
+        if expression in self.local_scope_depths:
+            depth = self.local_scope_depths[expression]
+            self.env.assign(expression._name.lexeme, value, depth)
+            return value
+
+        # Si no, la asignamos en el entorno global
+        self.globals.assign(expression._name.lexeme, value)
         return value
 
     @evaluate.register
