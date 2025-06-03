@@ -39,49 +39,65 @@ class Interpreter(object):
 
     # ---------- Ejecutadores de Statements ---------- #
 
+    @singledispatchmethod
     def execute(self, statement: Stmt):
-        if isinstance(statement, ExpressionStmt):
-            # Ejecutar un expression statement es solamente evaluar la expresión
-            self.evaluate(statement._expression)
-        elif isinstance(statement, PrintStmt):
-            # Ejecutar un print statement es evaluar la expresión e imprimir el resultado
-            value = self.evaluate(statement._expression)
-            print(value)
-        elif isinstance(statement, VarDecl):
-            # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
-            if statement._initializer is not None:
-                self.env.define(
-                    statement._name.lexeme, self.evaluate(statement._initializer)
-                )
-            else:
-                self.env.define(statement._name.lexeme, statement._initializer)
-        elif isinstance(statement, FunDecl):
-            # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
-            self.env.define(statement._name.lexeme, Function(statement, self.env))
-        elif isinstance(statement, ReturnStmt):
-            return_value = None
-            if statement._value is not None:
-                # Si hay un valor de retorno, lo evaluamos y lo lanzamos cual error
-                return_value = self.evaluate(statement._value)
+        raise RuntimeError(f"Unknown statement type: `{type(statement)}`")
 
-            raise ReturnValue(return_value)
-        elif isinstance(statement, IfStmt):
-            # El if se implementa con... un if
-            # Si la condición resuelve a verdadero, ejecuto el bloque del then
-            # si no, ejecuto el bloque del else
-            if self.is_truthy(self.evaluate(statement._condition)):
-                self.execute(statement._thenBranch)
-            elif statement._elseBranch is not None:
-                # Si la condición es falsa y hay un bloque de else, lo ejecuto
-                self.execute(statement._elseBranch)
-        elif isinstance(statement, WhileStmt):
-            # El while se implementa con... un while
-            while self.is_truthy(self.evaluate(statement._condition)):
-                self.execute(statement._body)
-        elif isinstance(statement, BlockStmt):
-            return self.execute_block(statement._statements, Env(enclosing=self.env))
+    @execute.register
+    def _(self, statement: ExpressionStmt):
+        # Ejecutar un expression statement es solamente evaluar la expresión
+        self.evaluate(statement._expression)
+
+    @execute.register
+    def _(self, statement: PrintStmt):
+        # Ejecutar un print statement es evaluar la expresión e imprimir el resultado
+        value = self.evaluate(statement._expression)
+        print(value)
+
+    @execute.register
+    def _(self, statement: VarDecl):
+        # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
+        if statement._initializer is not None:
+            self.env.define(
+                statement._name.lexeme, self.evaluate(statement._initializer)
+            )
         else:
-            raise RuntimeError(f"Unknown statement type: `{type(statement)}`")
+            self.env.define(statement._name.lexeme, statement._initializer)
+
+    @execute.register
+    def _(self, statement: FunDecl):
+        # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
+        self.env.define(statement._name.lexeme, Function(statement, self.env))
+
+    @execute.register
+    def _(self, statement: ReturnStmt):
+        return_value = None
+        if statement._value is not None:
+            # Si hay un valor de retorno, lo evaluamos y lo lanzamos cual error
+            return_value = self.evaluate(statement._value)
+
+        raise ReturnValue(return_value)
+
+    @execute.register
+    def _(self, statement: IfStmt):
+        # El if se implementa con... un if
+        # Si la condición resuelve a verdadero, ejecuto el bloque del then
+        # si no, ejecuto el bloque del else
+        if self.is_truthy(self.evaluate(statement._condition)):
+            self.execute(statement._thenBranch)
+        elif statement._elseBranch is not None:
+            # Si la condición es falsa y hay un bloque de else, lo ejecuto
+            self.execute(statement._elseBranch)
+
+    @execute.register
+    def _(self, statement: WhileStmt):
+        # El while se implementa con... un while
+        while self.is_truthy(self.evaluate(statement._condition)):
+            self.execute(statement._body)
+
+    @execute.register
+    def _(self, statement: BlockStmt):
+        return self.execute_block(statement._statements, Env(enclosing=self.env))
 
     def execute_block(self, statements: list[Stmt], block_env: Env):
         # Para ejecutar un bloque de statements, tenemos que crear un nuevo entorno
