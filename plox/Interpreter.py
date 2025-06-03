@@ -1,3 +1,5 @@
+from functools import singledispatchmethod
+
 from .Expr import Expr, BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr
 from .Token import TokenType
 
@@ -14,23 +16,22 @@ class Interpreter(object):
     # ---------- Evaluadores de Expresiones ---------- #
 
     # Evalua cualquier expresión y devuelve su valor
+    @singledispatchmethod
     def evaluate(self, expression: Expr):
-        if isinstance(expression, LiteralExpr):
-            # Evaluar literales es tan sencillo que ni requiere su propio método
-            return expression._value
-        elif isinstance(expression, GroupingExpr):
-            # Para evaluar expresiones agrupadas, solo hay que evaluar la expresión
-            # que contiene
-            return self.evaluate(expression._expression)
-        elif isinstance(expression, UnaryExpr):
-            return self.evaluate_unary(expression)
-        elif isinstance(expression, BinaryExpr):
-            return self.evaluate_binary(expression)
-        else:
-            raise RuntimeError(f"Unknown expression type: `{type(expression)}`")
+        raise RuntimeError(f"Unknown expression type: `{type(expression)}`")
 
-    # Evalua expresiones unarias
-    def evaluate_unary(self, expression: UnaryExpr):
+    @evaluate.register
+    def _(self, expression: LiteralExpr):
+        # Evaluar expresiones literales es solamente devolver el valor  ya escaneado
+        return expression._value
+
+    @evaluate.register
+    def _(self, expression: GroupingExpr):
+        # Para evaluar expresiones agrupadas, solo hay que evaluar la expresión contenida
+        return self.evaluate(expression._expression)
+
+    @evaluate.register
+    def _(self, expression: UnaryExpr):
         right = self.evaluate(expression._right)
 
         match expression._operator.token_type:
@@ -47,8 +48,8 @@ class Interpreter(object):
             case _:
                 raise RuntimeError(f"Unknown unary operator: `{expression._operator}`")
 
-    # Evalua expresiones binarias
-    def evaluate_binary(self, expression: BinaryExpr):
+    @evaluate.register
+    def _(self, expression: BinaryExpr):
         # En expresiones binarias, Lox evalua primero el operando
         # izquierdo, luego el derecho, y después aplicamos el operador
 
