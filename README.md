@@ -1,6 +1,6 @@
 # plox
 
-Intérprete de Lox (Crafting Interpreters), hecho en Python, para enseñar Lenguajes y Compiladores I (FIUBA)
+Intérprete de [Lox](https://craftinginterpreters.com/) hecho en Python, para enseñar Lenguajes y Compiladores I (FIUBA)
 
 ```sh
 # Create virtual environment and install deps
@@ -28,7 +28,7 @@ plox --help
 
 En cada branch del repo hay distintas implementaciones de Lox:
 
-- `main` -> Versión Final
+- `main` -> Versión Final. Solamente apunta a la última branch.
 - `barebones` -> Intérprete mínimo de expresiones (números, booleanos, no mucho más), con lo visto hasta el capítulo 7 de Crafting Interpreters.
 - `tree-walk` -> Intérprete completo de statements. Es lo que hay en `barebones` más lo visto en los capítulos 8 a 10 del libro.
 - `full-tree-walk` -> Intérprete completo de statements, con resolvedor de scopes estáticos antes de la ejecución. Es lo que hay en `tree-walk` más lo visto en el capítulo 11 del libro.
