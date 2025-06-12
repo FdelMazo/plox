@@ -100,6 +100,12 @@ class Parser(object):
 
     # blockStmt       → "{" statement* "}" ;
     def block_statement(self) -> BlockStmt:
+        return BlockStmt(self.block())
+
+    # Parsea una lista de statements hasta el siguiente }
+    # sin agregarle la semántica de que es un statement de bloque:
+    # de eso se ocupa el llamador
+    def block(self) -> list[Stmt]:
         statements = []
         while (
             not self._is_at_end()
@@ -109,10 +115,10 @@ class Parser(object):
 
         if not self._match(TokenType.RIGHT_BRACE):
             raise SyntaxError(
-                f"Expected '}}' after block statement, got `{self._lookahead()}` instead"
+                f"Expected '}}' after statements, got `{self._lookahead()}` instead"
             )
 
-        return BlockStmt(statements)
+        return statements
 
     # whileStmt     → "while" "(" expression ")" statement ;
     def while_statement(self) -> WhileStmt:
@@ -287,7 +293,7 @@ class Parser(object):
                 f"Expected '{{' after function parameters, got `{self._lookahead()}` instead"
             )
 
-        body = self.block_statement()
+        body = self.block()
         return FunDecl(function_name, parameters, body)
 
     # varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;

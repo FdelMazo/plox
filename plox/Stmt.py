@@ -45,7 +45,7 @@ class VarDecl(Stmt):
 
 # funDecl        → "fun" IDENTIFIER "(" parameters? ")" blockStmt ;
 class FunDecl(Stmt):
-    def __init__(self, name: Token, parameters: list[Token], body: BlockStmt):
+    def __init__(self, name: Token, parameters: list[Token], body: list[Stmt]):
         self._name = name
         self._parameters = parameters
         self._body = body

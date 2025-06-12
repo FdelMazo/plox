@@ -35,7 +35,7 @@ class Function(object):
 
         # Ejecutamos el cuerpo de la función y devolvemos el return value que salte
         try:
-            interpreter.execute_block(self.declaration._body._statements, function_env)
+            interpreter.execute_block(self.declaration._body, function_env)
         except ReturnValue as return_value:
             return return_value.value
         # Si no hubo return, devolvemos None
