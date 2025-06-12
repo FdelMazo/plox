@@ -105,9 +105,14 @@ class Interpreter(object):
         # Tenemos que guardarnos el entorno del bloque, y después acordarnos de volver al previo
         previous_env = self.env
         self.env = block_env
-        for s in statements:
-            self.execute(s)
-        self.env = previous_env
+        # Ojo con los returns! Hacemos un try/finally para asegurarnos de
+        # recuperar el entorno previo pase lo que pase
+        try:
+            self.env = block_env
+            for s in statements:
+                self.execute(s)
+        finally:
+            self.env = previous_env
 
     # ---------- Evaluadores de Expresiones ---------- #
 
