@@ -113,16 +113,16 @@ class Scanner(object):
                 self._advance()  # consumimos el cierre de la cadena
 
                 # la cadena la guardamos sin las comillas
-                value = self._source[self._start + 1 : self._current - 1]
-                self.add_token(TokenType.STRING, literal=value)
+                str_value = self._source[self._start + 1 : self._current - 1]
+                self.add_token(TokenType.STRING, literal=str_value)
 
             case _ if c in "0123456789":
                 # consumimos el número hasta que no sea un dígito o un punto para decimales
                 while not self._is_at_end() and self._lookahead() in "0123456789.":
                     self._advance()
 
-                value = float(self.lexeme())
-                self.add_token(TokenType.NUMBER, literal=value)
+                num_value = float(self.lexeme())
+                self.add_token(TokenType.NUMBER, literal=num_value)
 
             # identificadores y palabras reservadas
             case _ if is_alpha(c):
