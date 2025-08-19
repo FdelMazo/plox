@@ -118,8 +118,18 @@ class Scanner(object):
 
             case _ if c in "0123456789":
                 # consumimos el número hasta que no sea un dígito o un punto para decimales
+
+                scanned_dots = 0  # contador de puntos escaneados
+
                 while not self._is_at_end() and self._lookahead() in "0123456789.":
+                    if self._lookahead() == ".":
+                        scanned_dots += 1
+
                     self._advance()
+
+                if scanned_dots > 1:
+                    # si hay más de un punto en el número, es un error
+                    raise Exception(f"Multiple dots in number: `{self.lexeme()}`")
 
                 num_value = float(self.lexeme())
                 self.add_token(TokenType.NUMBER, literal=num_value)
