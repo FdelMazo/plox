@@ -6,7 +6,9 @@
 ! se interpreta distinto a !=
 "string literal"
 "string sin terminar
-321 1.5 // numeros literales
+321 1.5 // números literales
+1..2 // número inválido con múltiples puntos consecutivos
+1.5.2 // número inválidos con múltiples puntos
 var true false nil // palabras reservadas
 trueman xxx yyy // identificadores
 ` // caracter invalido
