@@ -16,3 +16,5 @@ var /* comentario \n en \n varias \n lineas */ 123
 1 + /* este comentario no se cierra
 1 /* **** ****** * */ 2
 1/*c*/+/*d*/2
+1 /* nested /* asd */ comments */ 2
+/* nested /* sin */ cerrar 
