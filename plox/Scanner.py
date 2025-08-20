@@ -79,11 +79,13 @@ class Scanner(object):
                     # consumimos el resto de la linea
                     while not self._is_at_end():
                         self._advance()
+                # si es un comentario multilinea, lo ignoramos
                 elif self._match("*"):
                     while not self._is_at_end():
                         if self._match("*") and self._match("/"):
                             return
                         self._advance()
+                    # si llegamos al final de la linea, sin cerrar el comentario, es un error
                     raise Exception(f"Unterminated comment: `{self.lexeme()}`")
                 else:
                     self.add_token(TokenType.SLASH)
