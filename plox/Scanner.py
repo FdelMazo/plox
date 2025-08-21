@@ -72,6 +72,8 @@ class Scanner(object):
                 self.add_token(TokenType.SEMICOLON)
             case "*":
                 self.add_token(TokenType.STAR)
+            case "%":
+                self.add_token(TokenType.MODULO)
             case "/":
                 # caso especial para el /
                 # si es un comentario, lo ignoramos
@@ -81,6 +83,7 @@ class Scanner(object):
                         self._advance()
                 else:
                     self.add_token(TokenType.SLASH)
+            
 
             # tokens de uno o dos caracteres
             case "!":

@@ -14,6 +14,7 @@ class TokenType(Enum):
     PLUS = auto()
     SEMICOLON = auto()
     STAR = auto()
+    MODULO = auto()
 
     # en particular, el / es un token de un solo caracter, pero tambien puede
     # ser el comienzo de un comentario cuando es //
