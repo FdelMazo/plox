@@ -83,7 +83,6 @@ class Scanner(object):
                         self._advance()
                 else:
                     self.add_token(TokenType.SLASH)
-            
 
             # tokens de uno o dos caracteres
             case "!":
