@@ -128,8 +128,8 @@ class Scanner(object):
                     self._advance()
 
                 if scanned_dots > 1:
-                    # si hay más de un punto en el número, es un error
-                    raise Exception(f"Multiple dots in number: `{self.lexeme()}`")
+                    # un número no puede tener más de un punto decimal
+                    raise Exception(f"Invalid number: `{self.lexeme()}`")
 
                 num_value = float(self.lexeme())
                 self.add_token(TokenType.NUMBER, literal=num_value)
