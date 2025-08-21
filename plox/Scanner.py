@@ -122,9 +122,10 @@ class Scanner(object):
                 )
 
             # literales
-            case '"':
-                # consumimos la cadena hasta el proximo "
-                while not self._is_at_end() and not self._lookahead() == '"':
+            case '"' | '\'':
+                delimiter = c
+                # consumimos la cadena hasta el proximo delimitador
+                while not self._is_at_end() and not self._lookahead() == delimiter:
                     self._advance()
 
                 if self._is_at_end():
