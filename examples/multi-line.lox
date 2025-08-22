@@ -1,4 +1,4 @@
-// run in --scanning mode with --ml flag
+// run in --scanning mode
 // los comentarios no se toman como tokens
 1 + 2 // expresión simple
 ( ) { } , . // un par de tokens

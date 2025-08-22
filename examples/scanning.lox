@@ -1,4 +1,4 @@
-// run in --scanning mode
+// run in --scanning and --line-by-line modes!!
 // los comentarios no se toman como tokens
 1 + 2 // expresión simple
 1 + // expresión invalida

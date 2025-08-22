@@ -1,4 +1,4 @@
-// run in --parsing mode
+// run in --parsing and --line-by-line modes!!
 // expresiones literales
 true;
 false;
