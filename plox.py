@@ -31,11 +31,11 @@ class Plox:
     def __init__(self):
         self.debug = False
         self.mode = None  # "scanning" | "parsing" | "resolve"
+        self.multi_line = False
         self.interpreter = Interpreter()
 
     def run(self, source: str):
         scanner = Scanner(source)
-
         try:
             tokens = scanner.scan()
         except Exception as e:
@@ -114,6 +114,9 @@ class Plox:
             "--resolve", action="store_true", help="Run in resolve mode"
         )
         parser.add_argument(
+            "--ml", action="store_true", help="Run in multi-line mode"
+        )
+        parser.add_argument(
             "file", nargs="?", help="Interpret a file instead of running the REPL"
         )
 
@@ -129,14 +132,22 @@ class Plox:
         elif args.resolve:
             self.mode = "resolve"
 
+        if args.ml:
+            self.multi_line = True
+
         if args.file:
             with open(args.file, "r") as file:
+                if self.multi_line:
+                    source = file.read()
+                    print(source)
+                    self.run(source)
                 # Acá estamos haciendo uso de que Python ya sabe dividir archivos en lineas,
                 # pero lo correcto sería manejar correctamente los \n en el scanner de lox
-                for line in file:
-                    if self.mode:
-                        print(f"> {line.strip()}")
-                    self.run(line.strip())
+                else:
+                    for line in file:
+                        if self.mode:
+                            print(f"> {line.strip()}")
+                        self.run(line)
             return
 
         while True:

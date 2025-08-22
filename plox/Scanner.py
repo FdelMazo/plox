@@ -77,7 +77,7 @@ class Scanner(object):
                 # si es un comentario, lo ignoramos
                 if self._match("/"):
                     # consumimos el resto de la linea
-                    while not self._is_at_end():
+                    while not self._match("\n") and not self._is_at_end():
                         self._advance()
                 # si es un comentario multilinea, lo ignoramos
                 elif self._match("*"):
