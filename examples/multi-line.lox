@@ -1,19 +1,21 @@
-// run in --scanning mode
+// run in --scanning mode with --ml flag
 // los comentarios no se toman como tokens
 1 + 2 // expresión simple
-1 + // expresión invalida
 ( ) { } , . // un par de tokens
 ! se interpreta distinto a !=
 "string literal"
-"string sin terminar
 321 1.5 // numeros literales
 var true false nil // palabras reservadas
 trueman xxx yyy // identificadores
-` // caracter invalido
 1 + 2 /* comentario multilinea */
 /* comentario al inicio */ var x = 10
-1 + /* este comentario no se cierra
 1 /* **** ****** * */ 2
 1/*c*/+/*d*/2
-1 /* nested /* asd */ comments */ 2
-/* nested /* sin */ cerrar 
+
+
+var = /* comentario 
+/* 
+multi */ 
+linea 
+*/ 
+2

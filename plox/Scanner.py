@@ -83,20 +83,21 @@ class Scanner(object):
                     while not self._lookahead() == "\n" and not self._is_at_end():
                         self._advance()
                 # si es un comentario multilinea, lo ignoramos
+                # se permiten comentarios anidados de n niveles del estilo /* /* ... */ */
                 elif self._match("*"):
                     level = 1
                     while level > 0 and not self._is_at_end():
                         if self._match("\n"):
                             self._line += 1
                             continue
-                        if self._match("*") and self._match("/"):
+                        if self._match("*") and self._match("/"):  # cierre de comentario
                             level -= 1
                             continue
-                        if self._match("/") and self._match("*"):
+                        if self._match("/") and self._match("*"):  # apertura de comentario
                             level += 1
                             continue
                         self._advance()
-                    # si llegamos al final de la linea, sin cerrar el comentario, es un error
+                    # si llegamos al final del archivo, sin cerrar el comentario, es un error
                     if level > 0:
                         raise Exception(f"Unterminated comment: `{self.lexeme()}`")
                 else:
