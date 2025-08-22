@@ -45,8 +45,8 @@ class Plox:
 
         # en modo scanning, solo imprimimos los tokens
         if self.mode == "scanning":
-            for i, token in enumerate(tokens):
-                print(colored(f"line {token.line} | {token}", "light_blue"))
+            for token in enumerate(tokens):
+                print(colored(token, "light_blue"))
             return
 
         parser = Parser(tokens)
@@ -137,14 +137,13 @@ class Plox:
                 # Acá estamos haciendo uso de que Python ya sabe dividir archivos en lineas
                 if args.line_by_line:
                     for line in file:
-                        if self.mode:
-                            print(f"> {line.strip()}")
+                        print(f"> {line.strip()}")
                         self.run(line)
                 # modo multi-linea por default
                 else:
                     source = file.read()
                     self.run(source)
-                    
+
             return
 
         while True:
