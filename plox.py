@@ -34,7 +34,6 @@ class Plox:
 
     def run(self, source: str):
         scanner = Scanner(source)
-
         try:
             tokens = scanner.scan()
         except Exception as e:
@@ -46,7 +45,7 @@ class Plox:
         # en modo scanning, solo imprimimos los tokens
         if self.mode == "scanning":
             for i, token in enumerate(tokens):
-                print(colored(f"token {i}: {token}", "light_blue"))
+                print(colored(f"line {token.line} | {token}", "light_blue"))
             return
 
         parser = Parser(tokens)
@@ -91,6 +90,9 @@ class Plox:
             "--parsing", action="store_true", help="Run in parsing mode"
         )
         parser.add_argument(
+            "--line-by-line", action="store_true", help="Run in line-by-line mode"
+        )
+        parser.add_argument(
             "file", nargs="?", help="Interpret a file instead of running the REPL"
         )
 
@@ -106,12 +108,18 @@ class Plox:
 
         if args.file:
             with open(args.file, "r") as file:
-                # Acá estamos haciendo uso de que Python ya sabe dividir archivos en lineas,
-                # pero lo correcto sería manejar correctamente los \n en el scanner de lox
-                for line in file:
-                    if self.mode:
-                        print(f"> {line.strip()}")
-                    self.run(line.strip())
+                # Modo line by line, sin tener en cuenta los saltos de linea
+                # Acá estamos haciendo uso de que Python ya sabe dividir archivos en lineas
+                if args.line_by_line:
+                    for line in file:
+                        if self.mode:
+                            print(f"> {line.strip()}")
+                        self.run(line)
+                # modo multi-linea por default
+                else:
+                    source = file.read()
+                    self.run(source)
+                    
             return
 
         while True:
