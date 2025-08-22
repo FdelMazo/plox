@@ -10,6 +10,7 @@ class Scanner(object):
         self._source = source  # la linea entera de caracteres crudos, sin significado
         self._start = 0  # caracter desde el que empezamos a leer un nuevo lexema
         self._current = 0  # caracter donde estamos parados
+        self._line = 1 # linea donde estamos parados
 
     # Obtiene la lista de tokens escaneados
     def scan(self) -> list[Token]:
@@ -35,7 +36,7 @@ class Scanner(object):
     # Agrega un token a la lista
     def add_token(self, token_type: TokenType, literal=None):
         # nos guardamos el token con el lexema actual
-        self.tokens.append(Token(token_type, lexeme=self.lexeme(), literal=literal))
+        self.tokens.append(Token(token_type, lexeme=self.lexeme(), literal=literal, line=self._line))
 
     # Escanea un token individual
     def scan_token(self):
@@ -48,8 +49,10 @@ class Scanner(object):
 
         match c:
             # descartamos los whitespaces
-            case " " | "\r" | "\t" | "\n":
+            case " " | "\r" | "\t":
                 pass
+            case "\n":
+                self._line += 1
 
             # tokens de un solo carácter
             case "(":
@@ -77,12 +80,15 @@ class Scanner(object):
                 # si es un comentario, lo ignoramos
                 if self._match("/"):
                     # consumimos el resto de la linea
-                    while not self._match("\n") and not self._is_at_end():
+                    while not self._lookahead() == "\n" and not self._is_at_end():
                         self._advance()
                 # si es un comentario multilinea, lo ignoramos
                 elif self._match("*"):
                     level = 1
                     while level > 0 and not self._is_at_end():
+                        if self._match("\n"):
+                            self._line += 1
+                            continue
                         if self._match("*") and self._match("/"):
                             level -= 1
                             continue
