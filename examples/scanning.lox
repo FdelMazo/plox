@@ -6,6 +6,8 @@
 ! se interpreta distinto a !=
 "string literal"
 "string sin terminar
+'string con comillas simples'
+'string sin terminar
 321 1.5 // numeros literales
 var true false nil // palabras reservadas
 trueman xxx yyy // identificadores
