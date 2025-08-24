@@ -121,15 +121,29 @@ class Scanner(object):
                     TokenType.GREATER_EQUAL if self._match("=") else TokenType.GREATER
                 )
 
-            # literales
-            case '"' | '\'':
-                delimiter = c
-                # consumimos la cadena hasta el delimitador de cierre
-                while not self._is_at_end() and not self._lookahead() == delimiter:
+            case '\'':
+                # consumimos la cadena hasta el proximo ' o hasta el fin de linea
+                while not self._is_at_end() and not self._lookahead() == '\'' and not self._lookahead() == "\n":
+                    self._advance()
+
+                if self._is_at_end() or self._lookahead() == "\n":
+                    # si llegamos al final de la linea, sin cerrar la cadena, es un error
+                    raise Exception(f"Unterminated string: `{self.lexeme()}`")
+
+                self._advance()  # consumimos el cierre de la cadena
+
+                # la cadena la guardamos sin las comillas
+                str_value = self._source[self._start + 1 : self._current - 1]
+                self.add_token(TokenType.STRING, literal=str_value)
+
+            # string multilinea
+            case '"':
+                # consumimos la cadena hasta el proximo "
+                while not self._is_at_end() and not self._lookahead() == '"':
                     self._advance()
 
                 if self._is_at_end():
-                    # si llegamos al final de la linea, sin cerrar la cadena, es un error
+                    # si llegamos al final del archivo, sin cerrar la cadena, es un error
                     raise Exception(f"Unterminated string: `{self.lexeme()}`")
 
                 self._advance()  # consumimos el cierre de la cadena
