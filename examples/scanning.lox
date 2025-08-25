@@ -9,6 +9,7 @@
 321 1.5 // números literales
 1..2 // número inválido con múltiples puntos consecutivos
 1.5.2 // número inválidos con múltiples puntos
+1. // número inválido terminando en punto
 var true false nil // palabras reservadas
 trueman xxx yyy // identificadores
 ` // caracter invalido

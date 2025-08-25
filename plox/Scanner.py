@@ -131,6 +131,10 @@ class Scanner(object):
                     # un número no puede tener más de un punto decimal
                     raise Exception(f"Invalid number: `{self.lexeme()}`")
 
+                if self.lexeme().endswith("."):
+                    # un número no puede terminar en punto
+                    raise Exception(f"Invalid number: `{self.lexeme()}`")
+
                 num_value = float(self.lexeme())
                 self.add_token(TokenType.NUMBER, literal=num_value)
 
