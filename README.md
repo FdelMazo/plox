@@ -6,7 +6,7 @@ Intérprete de [Lox](https://craftinginterpreters.com/) hecho en Python, para en
 # Create virtual environment and install deps
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements
+pip install -r requirements.txt
 
 # Set up a simple type checking pre-commit hook
 cp pre-commit.sh .git/hooks/pre-commit
