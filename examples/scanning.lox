@@ -5,7 +5,9 @@
 ( ) { } , . // un par de tokens
 ! se interpreta distinto a !=
 "string literal"
+'string con comillas simples'
 "string sin terminar
+'string sin terminar
 321 1.5 // números literales
 1..2 // número inválido con múltiples puntos consecutivos
 1.5.2 // número inválidos con múltiples puntos
