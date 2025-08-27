@@ -70,11 +70,7 @@ class Token(object):
         self.line = line # Numero de linea donde se encuentra el caracter para devolver errores mas especificos
 
     def __repr__(self) -> str:
-        lexeme = self.lexeme
-        if self.token_type == TokenType.STRING:
-            # Replace newline with "\n"
-            lexeme = self.lexeme.replace("\n", "\\n")
-        return f"{self.line} | {self.token_type.name} '{lexeme}'"
+        return f"{self.line} | {self.token_type.name} {repr(self.lexeme)}"
 
 
 TokenKeywords = {

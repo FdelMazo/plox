@@ -167,7 +167,7 @@ class Scanner(object):
                     # un número no puede tener más de un punto decimal
                     raise Exception(f"Invalid number: `{self.lexeme()}`")
 
-                if self._source[self._current - 1] == ".":
+                if self._previous() == ".":
                     # un número no puede terminar en punto
                     raise Exception(f"Invalid number: `{self.lexeme()}`")
 
@@ -210,6 +210,10 @@ class Scanner(object):
         lookahead = self._lookahead()
         self._current += 1
         return lookahead
+
+    # Devuelve el caracter anterior, ya consumido
+    def _previous(self) -> str:
+        return self._source[self._current - 1]
 
     # Devuelve si el siguiente caracter es el esperado, y lo consume
     # Es solo una combinación de advance y lookahead
