@@ -70,7 +70,13 @@ class Scanner(object):
             case "-":
                 self.add_token(TokenType.MINUS)
             case "+":
-                self.add_token(TokenType.PLUS)
+                # caso especial para el +
+                # si es ++, es un token PLUS_PLUS
+                if self._match("+"):
+                    self.add_token(TokenType.PLUS_PLUS)
+                # si no, es un token PLUS
+                else:
+                    self.add_token(TokenType.PLUS)
             case ";":
                 self.add_token(TokenType.SEMICOLON)
             case "*":
