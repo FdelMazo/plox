@@ -12,6 +12,7 @@ class TokenType(Enum):
     DOT = auto()
     MINUS = auto()
     PLUS = auto()
+    PLUS_PLUS = auto()
     SEMICOLON = auto()
     STAR = auto()
 
