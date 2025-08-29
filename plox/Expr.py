@@ -87,3 +87,13 @@ class LogicExpr(Expr):
 
     def __repr__(self) -> str:
         return f"Logic: [{self._left}  {self._operator.lexeme} {self._right}]"
+
+
+# postfix         → expression "++" ;
+class PostfixExpr(Expr):
+    def __init__(self, operator: Token, left: Expr):
+        self._left = left
+        self._operator = operator
+
+    def __repr__(self) -> str:
+        return f"Postfix: [{self._left} {self._operator.lexeme}]"
