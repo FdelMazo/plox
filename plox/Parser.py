@@ -448,7 +448,7 @@ class Parser(object):
         # ejemplo: x++, func()++
         while not self._is_at_end() and self._match(TokenType.PLUS_PLUS):
             operator = self._previous()
-            expr = PostfixExpr(operator, expr)
+            expr = PostfixExpr(expr, operator)
 
         return expr
 

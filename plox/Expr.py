@@ -91,7 +91,7 @@ class LogicExpr(Expr):
 
 # postfix         → expression "++" ;
 class PostfixExpr(Expr):
-    def __init__(self, operator: Token, left: Expr):
+    def __init__(self, left: Expr, operator: Token):
         self._left = left
         self._operator = operator
 
