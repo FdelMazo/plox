@@ -69,8 +69,6 @@ class Scanner(object):
                 self.add_token(TokenType.DOT)
             case "-":
                 self.add_token(TokenType.MINUS)
-            case "+":
-                self.add_token(TokenType.PLUS)
             case ";":
                 self.add_token(TokenType.SEMICOLON)
             case "*":
@@ -104,6 +102,10 @@ class Scanner(object):
                     self.add_token(TokenType.SLASH)
 
             # tokens de uno o dos caracteres
+            case "+":
+                self.add_token(
+                    TokenType.PLUS_PLUS if self._match("+") else TokenType.PLUS
+                )
             case "!":
                 self.add_token(
                     TokenType.BANG_EQUAL if self._match("=") else TokenType.BANG

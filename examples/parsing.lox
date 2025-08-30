@@ -18,6 +18,10 @@ nil;
 // agrupamientos
 (true);
 (1 + 5);
+// expresiones postfix
+x++;
+func()++;
+-x++;
 // expresiones invalidas
 1 +;
 ( 2 + 2;
