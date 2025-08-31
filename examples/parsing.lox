@@ -1,4 +1,4 @@
-// run in --parsing mode
+// run in --parsing and --line-by-line modes!!
 // expresiones literales
 true;
 false;
@@ -21,6 +21,10 @@ nil;
 (1 + 5);
 (1 + 5) % 4;
 1 + 5 % 4;
+// expresiones postfix
+x++;
+func()++;
+-x++;
 // expresiones invalidas
 1 +;
 ( 2 + 2;

@@ -1,0 +1,24 @@
+// run in --scanning mode
+// los comentarios no se toman como tokens
+1 + 2 // expresión simple
+( ) { } , . // un par de tokens
+! se interpreta distinto a !=
+"string literal"
+321 1.5 // numeros literales
+var true false nil // palabras reservadas
+trueman xxx yyy // identificadores
+1 + 2 /* comentario multilinea */
+/* comentario al inicio */ var x = 10
+1 /* **** ****** * */ 2
+1/*c*/+/*d*/2
+
+
+var = /* comentario 
+/* 
+multi */ 
+linea 
+*/ 
+2
+
+"string
+multilinea"

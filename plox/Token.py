@@ -11,7 +11,6 @@ class TokenType(Enum):
     COMMA = auto()
     DOT = auto()
     MINUS = auto()
-    PLUS = auto()
     SEMICOLON = auto()
     STAR = auto()
     PERCENT = auto()
@@ -22,6 +21,8 @@ class TokenType(Enum):
     SLASH = auto()
 
     # tokens de uno o dos caracteres
+    PLUS = auto()
+    PLUS_PLUS = auto()
     BANG = auto()
     BANG_EQUAL = auto()
     EQUAL = auto()
@@ -63,14 +64,15 @@ TokenLiteralType = Union[float, str, bool, None]
 
 class Token(object):
     def __init__(
-        self, token_type: TokenType, *, lexeme: str, literal: TokenLiteralType
+        self, token_type: TokenType, *, lexeme: str, literal: TokenLiteralType, line: int
     ):
         self.token_type = token_type  # Que tipo de token es
         self.lexeme = lexeme  # Los caracteres en sí, crudos
         self.literal = literal  # Si es un literal, aprovechamos y nos almacenamos directamente el valor al que resuelve
+        self.line = line # Numero de linea donde se encuentra el caracter para devolver errores mas especificos
 
     def __repr__(self) -> str:
-        return f"{self.token_type.name} '{self.lexeme}'"
+        return f"{self.line} | {self.token_type.name} {repr(self.lexeme)}"
 
 
 TokenKeywords = {

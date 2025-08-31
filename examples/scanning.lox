@@ -1,4 +1,4 @@
-// run in --scanning mode
+// run in --scanning and --line-by-line modes!!
 // los comentarios no se toman como tokens
 1 + 2 // expresión simple
 1 + // expresión invalida
@@ -6,8 +6,22 @@
 + - * / % // tokens de operadores aritmeticos
 ! se interpreta distinto a !=
 "string literal"
+'string con comillas simples'
 "string sin terminar
-321 1.5 // numeros literales
+'string sin terminar
+321 1.5 // números literales
+++ // operador de incremento
+x++ // identificador y operador de incremento
+1..2 // número inválido con múltiples puntos consecutivos
+1.5.2 // número inválidos con múltiples puntos
+1. // número inválido terminando en punto
 var true false nil // palabras reservadas
 trueman xxx yyy // identificadores
 ` // caracter invalido
+1 + 2 /* comentario multilinea */
+/* comentario al inicio */ var x = 10
+1 + /* este comentario no se cierra
+1 /* **** ****** * */ 2
+1/*c*/+/*d*/2
+1 /* nested /* asd */ comments */ 2
+/* nested /* sin */ cerrar 

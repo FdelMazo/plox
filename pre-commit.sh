@@ -1,5 +1,7 @@
 #!/bin/bash
 
+python3 -m pytest -v
+
 mypy . --explicit-package-bases --check-untyped-defs --exclude 'bytecode/'
 if [ $? -ne 0 ]; then
   exit 1
