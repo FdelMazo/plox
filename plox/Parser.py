@@ -411,13 +411,13 @@ class Parser(object):
 
         return expr
 
-    # factor         → unary ( ( "/" | "*" ) unary )* ;
+    # factor         → unary ( ( "/" | "*" | "%" ) unary )* ;
     def factor(self) -> Expr:
         expr = self.unary()
 
-        # mientras nos crucemos * o /, seguimos parseando
-        # la secuencia de multiplicaciones o divisiones
-        while not self._is_at_end() and self._match(TokenType.STAR, TokenType.SLASH):
+        # mientras nos crucemos *, / o %, seguimos parseando
+        # la secuencia de multiplicaciones, divisiones o modulos
+        while not self._is_at_end() and self._match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT):
             operator = self._previous()
             right = self.unary()
             expr = BinaryExpr(expr, operator, right)
