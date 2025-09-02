@@ -3,6 +3,7 @@
 1 + 2 // expresión simple
 1 + // expresión invalida
 ( ) { } , . // un par de tokens
++ - * / % // tokens de operadores aritmeticos
 ! se interpreta distinto a !=
 "string literal"
 'string con comillas simples'
