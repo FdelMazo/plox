@@ -1,5 +1,7 @@
-from ast import Expr
-from plox.Expr import (
+from functools import singledispatchmethod
+
+from .Expr import (
+    Expr,
     AssignmentExpr,
     BinaryExpr,
     CallExpr,
@@ -35,38 +37,98 @@ class PrettyPrinter:
 
         return "".join(padding)
 
-    def accept_binary(self, expr: BinaryExpr) -> str:
+    @singledispatchmethod
+    def accept(self, expression: Expr) -> str:
+        raise RuntimeError(f"Unknown expression type: `{type(expression)}`")
+
+    @accept.register
+    def _(self, expression: BinaryExpr) -> str:
         padding = self.make_padding()
-        s = f"{padding}{expr._operator}"
+        line = f"{padding}{expression._operator}"
 
         self.path.append(1)
-        l = expr._right.accept(self)
+        r = self.accept(expression._right)
+        self.path.pop()
 
-        return ""
+        self.path.append(0)
+        l = self.accept(expression._left)
+        self.path.pop()
 
-    def accept_grouping(self, expr: GroupingExpr) -> str:
-        return ""
+        return line + r + l
 
-    def accept_literal(self, expr: LiteralExpr):
-        return ""
+    @accept.register
+    def _(self, expression: GroupingExpr) -> str:
+        return self.accept(expression._expression)
 
-    def accept_unary(self, expr: UnaryExpr):
-        return ""
+    @accept.register
+    def _(self, expression: LiteralExpr) -> str:
+        padding = self.make_padding()
+        return f"{padding}{expression._value}"
 
-    def accept_call(self, expr: CallExpr):
-        return ""
+    @accept.register
+    def _(self, expression: UnaryExpr) -> str:
+        padding = self.make_padding()
+        line = f"{padding}{expression._operator}"
 
-    def accept_variable(self, expr: VariableExpr):
-        return ""
+        self.path.append(0)
+        r = self.accept(expression._right)
+        self.path.pop()
 
-    def accept_assignment(self, expr: AssignmentExpr):
-        return ""
+        return line + r
 
-    def accept_logic(self, expr: LogicExpr):
-        return ""
+    @accept.register
+    def _(self, expression: CallExpr) -> str:
+        padding = self.make_padding()
 
-    def accept_postfix(self, expr: PostfixExpr):
-        return ""
+        line = f"{padding}{expression._callee}"
+
+        self.path.append(0)
+        rest = "".join(self.accept(arg) for arg in expression._arguments)
+        self.path.pop()
+
+        return line + rest
+
+    @accept.register
+    def _(self, expression: VariableExpr) -> str:
+        padding = self.make_padding()
+        return f"{padding}{expression._name}"
+
+    @accept.register
+    def _(self, expression: AssignmentExpr) -> str:
+        padding = self.make_padding()
+        line = f"{padding}{expression._name}"
+
+        self.path.append(0)
+        rest = self.accept(expression._value)
+        self.path.pop()
+
+        return line + rest
+
+    @accept.register
+    def _(self, expression: LogicExpr) -> str:
+        padding = self.make_padding()
+        line = f"{padding}{expression._operator}"
+
+        self.path.append(1)
+        r = self.accept(expression._right)
+        self.path.pop()
+
+        self.path.append(0)
+        l = self.accept(expression._left)
+        self.path.pop()
+
+        return line + r + l
+
+    @accept.register
+    def _(self, expression: PostfixExpr) -> str:
+        padding = self.make_padding()
+        line = f"{padding}{expression._operator}"
+
+        self.path.append(0)
+        l = self.accept(expression._left)
+        self.path.pop()
+
+        return line + l
 
     def print(self):
-        print(a := self.root.accept(self))
+        print(self.accept(self.root))

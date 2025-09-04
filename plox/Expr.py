@@ -1,10 +1,7 @@
-from typing import override
-
 from .Token import Token, TokenLiteralType
-from .Visitor import Visitable, Visitor
 
 
-class Expr(Visitable):
+class Expr(object):
     pass
 
 
@@ -16,10 +13,6 @@ class BinaryExpr(Expr):
         self._operator = operator
         self._right = right
 
-    @override
-    def accept[R](self, visitor: Visitor[R]) -> R:
-        return visitor.accept_binary(self)
-
     def __repr__(self) -> str:
         return f"Binary: [{self._left}  {self._operator.lexeme} {self._right}]"
 
@@ -29,10 +22,6 @@ class GroupingExpr(Expr):
     def __init__(self, expression: Expr):
         self._expression = expression
 
-    @override
-    def accept(self, visitor):
-        visitor.accept_grouping(self)
-
     def __repr__(self) -> str:
         return f"Grouping: ({self._expression})"
 
@@ -41,10 +30,6 @@ class GroupingExpr(Expr):
 class LiteralExpr(Expr):
     def __init__(self, value: TokenLiteralType):
         self._value = value
-
-    @override
-    def accept(self, visitor):
-        visitor.accept_literal(self)
 
     def __repr__(self) -> str:
         if isinstance(self._value, str):
@@ -58,10 +43,6 @@ class UnaryExpr(Expr):
         self._operator = operator
         self._right = right
 
-    @override
-    def accept(self, visitor):
-        visitor.accept_unary(self)
-
     def __repr__(self) -> str:
         return f"Unary: [{self._operator.lexeme} {self._right}]"
 
@@ -73,10 +54,6 @@ class CallExpr(Expr):
         self._callee = callee
         self._arguments = arguments
 
-    @override
-    def accept(self, visitor):
-        visitor.accept_call(self)
-
     def __repr__(self) -> str:
         args = ", ".join(str(arg) for arg in self._arguments)
         return f"Function Call: {self._callee}({args})"
@@ -87,10 +64,6 @@ class VariableExpr(Expr):
     def __init__(self, name: Token):
         self._name = name
 
-    @override
-    def accept(self, visitor):
-        visitor.accept_variable(self)
-
     def __repr__(self) -> str:
         return f"Variable: {self._name.lexeme}"
 
@@ -100,10 +73,6 @@ class AssignmentExpr(Expr):
     def __init__(self, name: Token, value: Expr):
         self._name = name
         self._value = value
-
-    @override
-    def accept(self, visitor):
-        visitor.accept_assignment(self)
 
     def __repr__(self) -> str:
         return f"Assignment: {self._name.lexeme} = {self._value}"
@@ -116,10 +85,6 @@ class LogicExpr(Expr):
         self._operator = operator
         self._right = right
 
-    @override
-    def accept(self, visitor):
-        visitor.accept_logic(self)
-
     def __repr__(self) -> str:
         return f"Logic: [{self._left}  {self._operator.lexeme} {self._right}]"
 
@@ -129,10 +94,6 @@ class PostfixExpr(Expr):
     def __init__(self, left: Expr, operator: Token):
         self._left = left
         self._operator = operator
-
-    @override
-    def accept(self, visitor):
-        visitor.accept_postfix(self)
 
     def __repr__(self) -> str:
         return f"Postfix: [{self._left} {self._operator.lexeme}]"
