@@ -2,10 +2,12 @@
 
 import traceback
 import argparse
+from plox.PrettyPrinter import PrettyPrinter
 from plox.Scanner import Scanner
 from plox.Parser import Parser
 from plox.Resolver import Resolver
 from plox.Interpreter import Interpreter
+from plox.Stmt import ExpressionStmt
 
 # usar prompt_toolkit y termcolor si están disponibles
 try:
@@ -60,8 +62,10 @@ class Plox:
 
         # en modo parsing, imprimimos las expresiones encontradas
         if self.mode == "parsing":
-            for i, statement in enumerate(statements):
-                print(colored(statement, "light_blue"))
+            for statement in statements:
+                if isinstance(statement, ExpressionStmt):
+                    printer = PrettyPrinter(statement._expression)
+                    printer.print(lambda ast: colored(ast, "light_blue"))
             return
 
         resolver = Resolver(self.interpreter)
