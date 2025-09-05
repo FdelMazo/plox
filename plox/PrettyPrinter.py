@@ -1,3 +1,4 @@
+from enum import Enum, auto
 from functools import singledispatchmethod
 from typing import Callable
 from .Token import Token, TokenType
@@ -15,29 +16,117 @@ from .Expr import (
 )
 
 
+# Indica una dirección, con una lista de ellas se puede reconstruir
+# el camino que atraveso el printer para llegar a cada expresión.
+class Dir(Enum):
+    LEFT = auto()
+    RIGHT = auto()
+
+
 class PrettyPrinter:
     def __init__(self, expr: Expr):
-        self._root = expr
-        self._path = []
+        self._path: list[Dir] = []
+        self._root: Expr = expr
 
+    # Printear por stdout el ast de forma más legible
+    def print(self, f: Callable[[str], str] = lambda x: x):
+        print(f(self._accept(self._root)))
+
+    # ---------- Printers de Expresiones ---------- #
+
+    @singledispatchmethod
+    def _accept(self, expr: Expr) -> str:
+        raise RuntimeError(f"Unknown expression type: `{type(expr)}`")
+
+    @_accept.register
+    def _(self, expr: BinaryExpr | LogicExpr) -> str:
+        padding = self._make_padding()
+        symbol = self._pretty_token(expr._operator)
+        line = f"{padding}{symbol}\n"
+
+        r = self._branch(Dir.RIGHT, lambda: self._accept(expr._right))
+        l = self._branch(Dir.LEFT, lambda: self._accept(expr._left))
+        return line + r + l
+
+    @_accept.register
+    def _(self, expr: GroupingExpr) -> str:
+        return self._accept(expr._expression)
+
+    @_accept.register
+    def _(self, expr: LiteralExpr) -> str:
+        padding = self._make_padding()
+        return f"{padding}{expr._value}\n"
+
+    @_accept.register
+    def _(self, expr: UnaryExpr) -> str:
+        padding = self._make_padding()
+        symbol = self._pretty_token(expr._operator)
+        line = f"{padding}{symbol}\n"
+        return line + self._branch(Dir.LEFT, lambda: self._accept(expr._right))
+
+    @_accept.register
+    def _(self, expr: CallExpr) -> str:
+        line = self._accept(expr._callee)
+        args = expr._arguments
+        rest = last = ""
+
+        if args:
+            rest = self._branch(
+                Dir.RIGHT, lambda: "".join(self._accept(arg) for arg in args[:-1])
+            )
+            last = self._branch(Dir.LEFT, lambda: self._accept(args[-1]))
+
+        return line + rest + last
+
+    @_accept.register
+    def _(self, expr: VariableExpr) -> str:
+        padding = self._make_padding()
+        symbol = self._pretty_token(expr._name)
+        return f"{padding}{symbol}\n"
+
+    @_accept.register
+    def _(self, expr: AssignmentExpr) -> str:
+        padding = self._make_padding()
+        symbol = self._pretty_token(expr._name)
+        line = f"{padding}{symbol}\n"
+        return line + self._branch(Dir.LEFT, lambda: self._accept(expr._value))
+
+    @_accept.register
+    def _(self, expr: PostfixExpr) -> str:
+        padding = self._make_padding()
+        symbol = self._pretty_token(expr._operator)
+        line = f"{padding}{symbol}\n"
+        return line + self._branch(Dir.LEFT, lambda: self._accept(expr._left))
+
+    # ---------- Helpers ---------- #
+
+    # Evalua la función pasada por parametro habiendose movido en cierta dirección
+    def _branch(self, direction: Dir, f: Callable[[], str]) -> str:
+        self._path.append(direction)
+        s = f()
+        self._path.pop()
+        return s
+
+    # Arma el padding para una cierta rama del ast
     def _make_padding(self) -> str:
         padding = []
 
         if self._path:
-            for x in self._path[:-1]:
-                if x == 1:
+            for dir in self._path[:-1]:
+                if dir == Dir.RIGHT:
                     padding.append("│   ")
                 else:
                     padding.append("    ")
 
             last = self._path[-1]
-            if last == 1:
+            if last == Dir.RIGHT:
                 padding.append("├── ")
             else:
                 padding.append("└── ")
 
         return "".join(padding)
 
+    # Devuelve una representación en string más compacta de los tokens
     def _pretty_token(self, token: Token) -> str:
         match token.token_type:
             case TokenType.MINUS:
@@ -82,84 +171,3 @@ class PrettyPrinter:
                 return "true"
 
         raise RuntimeError(f"Unknown token type: `{token.token_type}`")
-
-    @singledispatchmethod
-    def _accept(self, expression: Expr) -> str:
-        raise RuntimeError(f"Unknown expression type: `{type(expression)}`")
-
-    @_accept.register
-    def _(self, expression: BinaryExpr | LogicExpr) -> str:
-        padding = self._make_padding()
-        line = f"{padding}{self._pretty_token(expression._operator)}\n"
-
-        self._path.append(1)
-        r = self._accept(expression._right)
-        self._path.pop()
-
-        self._path.append(0)
-        l = self._accept(expression._left)
-        self._path.pop()
-
-        return line + r + l
-
-    @_accept.register
-    def _(self, expression: GroupingExpr) -> str:
-        return self._accept(expression._expression)
-
-    @_accept.register
-    def _(self, expression: LiteralExpr) -> str:
-        padding = self._make_padding()
-        return f"{padding}{expression._value}\n"
-
-    @_accept.register
-    def _(self, expression: UnaryExpr) -> str:
-        padding = self._make_padding()
-        line = f"{padding}{self._pretty_token(expression._operator)}\n"
-
-        self._path.append(0)
-        r = self._accept(expression._right)
-        self._path.pop()
-
-        return line + r
-
-    @_accept.register
-    def _(self, expression: CallExpr) -> str:
-        padding = self._make_padding()
-        name = self._accept(expression._callee)
-        line = f"{padding}{name}"
-
-        self._path.append(0)
-        rest = "".join(self._accept(arg) for arg in expression._arguments)
-        self._path.pop()
-
-        return line + rest
-
-    @_accept.register
-    def _(self, expression: VariableExpr) -> str:
-        padding = self._make_padding()
-        return f"{padding}{self._pretty_token(expression._name)}\n"
-
-    @_accept.register
-    def _(self, expression: AssignmentExpr) -> str:
-        padding = self._make_padding()
-        line = f"{padding}{self._pretty_token(expression._name)}\n"
-
-        self._path.append(0)
-        rest = self._accept(expression._value)
-        self._path.pop()
-
-        return line + rest
-
-    @_accept.register
-    def _(self, expression: PostfixExpr) -> str:
-        padding = self._make_padding()
-        line = f"{padding}{self._pretty_token(expression._operator)}\n"
-
-        self._path.append(0)
-        l = self._accept(expression._left)
-        self._path.pop()
-
-        return line + l
-
-    def print(self, f: Callable[[str], str] = lambda x: x):
-        print(f(self._accept(self._root)))
