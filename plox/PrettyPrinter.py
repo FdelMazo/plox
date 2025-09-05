@@ -12,7 +12,6 @@ from .Stmt import (
     VarDecl,
     WhileStmt,
 )
-from .Token import Token, TokenType
 from .Expr import (
     Expr,
     AssignmentExpr,
@@ -68,13 +67,13 @@ class PrettyPrinter:
         if stmt._initializer is None:
             return ""
 
-        tag = self._pretty_token(stmt._name)
+        tag = stmt._name.lexeme
         return self._shifted(tag, lambda: self._eval(stmt._initializer))
 
     @_exec.register
     def _(self, stmt: FunDecl) -> str:
-        name = self._pretty_token(stmt._name)
-        parameters = ",".join(self._pretty_token(p) for p in stmt._parameters)
+        name = stmt._name.lexeme
+        parameters = ",".join(p.lexeme for p in stmt._parameters)
         tag = f"{name}({parameters})"
         return self._shifted(tag, lambda: "\n".join(self._exec(s) for s in stmt._body))
 
@@ -111,7 +110,7 @@ class PrettyPrinter:
     @_eval.register
     def _(self, expr: BinaryExpr | LogicExpr) -> str:
         padding = self._make_padding()
-        symbol = self._pretty_token(expr._operator)
+        symbol = expr._operator.lexeme
         line = f"{padding}{symbol}\n"
         r = self._branch(Dir.RIGHT, lambda: self._eval(expr._right))
         l = self._branch(Dir.LEFT, lambda: self._eval(expr._left))
@@ -133,7 +132,7 @@ class PrettyPrinter:
     @_eval.register
     def _(self, expr: UnaryExpr) -> str:
         padding = self._make_padding()
-        symbol = self._pretty_token(expr._operator)
+        symbol = expr._operator.lexeme
         line = f"{padding}{symbol}\n"
         return line + self._branch(Dir.LEFT, lambda: self._eval(expr._right))
 
@@ -155,20 +154,20 @@ class PrettyPrinter:
     @_eval.register
     def _(self, expr: VariableExpr) -> str:
         padding = self._make_padding()
-        symbol = self._pretty_token(expr._name)
+        symbol = expr._name.lexeme
         return f"{padding}{symbol}\n"
 
     @_eval.register
     def _(self, expr: AssignmentExpr) -> str:
         padding = self._make_padding()
-        symbol = self._pretty_token(expr._name)
+        symbol = expr._name.lexeme
         line = f"{padding}{symbol}\n"
         return line + self._branch(Dir.LEFT, lambda: self._eval(expr._value))
 
     @_eval.register
     def _(self, expr: PostfixExpr) -> str:
         padding = self._make_padding()
-        symbol = self._pretty_token(expr._operator)
+        symbol = expr._operator.lexeme
         line = f"{padding}{symbol}\n"
         return line + self._branch(Dir.LEFT, lambda: self._eval(expr._left))
 
@@ -208,49 +207,3 @@ class PrettyPrinter:
                 padding.append("└── ")
 
         return " " * (4 * self._shift) + "".join(padding)
-
-    # Devuelve una representación en string más compacta de los tokens
-    def _pretty_token(self, token: Token) -> str:
-        match token.token_type:
-            case TokenType.MINUS:
-                return "-"
-            case TokenType.STAR:
-                return "*"
-            case TokenType.SLASH:
-                return "/"
-            case TokenType.PLUS:
-                return "+"
-            case TokenType.PLUS_PLUS:
-                return "++"
-            case TokenType.BANG:
-                return "!"
-            case TokenType.BANG_EQUAL:
-                return "!="
-            case TokenType.EQUAL_EQUAL:
-                return "=="
-            case TokenType.GREATER:
-                return ">"
-            case TokenType.GREATER_EQUAL:
-                return ">="
-            case TokenType.LESS:
-                return "<"
-            case TokenType.LESS_EQUAL:
-                return "<="
-            case TokenType.IDENTIFIER:
-                return token.lexeme
-            case TokenType.STRING:
-                return token.lexeme
-            case TokenType.NUMBER:
-                return token.lexeme
-            case TokenType.AND:
-                return "and"
-            case TokenType.FALSE:
-                return "false"
-            case TokenType.NIL:
-                return "nil"
-            case TokenType.OR:
-                return "or"
-            case TokenType.TRUE:
-                return "true"
-
-        raise RuntimeError(f"Unknown token type: `{token.token_type}`")
