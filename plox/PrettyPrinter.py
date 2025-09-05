@@ -57,7 +57,7 @@ class PrettyPrinter:
 
     @_exec.register
     def _(self, stmt: PrintStmt) -> str:
-        return self._shifted("print:", lambda: self._eval(stmt._expression))
+        return self._shifted("print", lambda: self._eval(stmt._expression))
 
     @_exec.register
     def _(self, stmt: BlockStmt) -> str:
@@ -69,42 +69,37 @@ class PrettyPrinter:
             return ""
 
         tag = self._pretty_token(stmt._name)
-        return self._shifted(f"{tag}:", lambda: self._eval(stmt._initializer))
+        return self._shifted(tag, lambda: self._eval(stmt._initializer))
 
     @_exec.register
     def _(self, stmt: FunDecl) -> str:
         name = self._pretty_token(stmt._name)
         parameters = ",".join(self._pretty_token(p) for p in stmt._parameters)
         tag = f"{name}({parameters})"
-
-        return self._shifted(
-            f"{tag}:", lambda: "\n".join(self._exec(s) for s in stmt._body)
-        )
+        return self._shifted(tag, lambda: "\n".join(self._exec(s) for s in stmt._body))
 
     @_exec.register
     def _(self, stmt: ReturnStmt) -> str:
         if stmt._value is None:
             return ""
 
-        return self._shifted("return:", lambda: self._eval(stmt._value))
+        return self._shifted("return", lambda: self._eval(stmt._value))
 
     @_exec.register
     def _(self, stmt: IfStmt) -> str:
-        condition = self._shifted("if:", lambda: self._eval(stmt._condition))
-        then_branch = self._shifted("then:", lambda: self._exec(stmt._thenBranch))
-        else_branch = ""
+        condition = self._shifted("if", lambda: self._eval(stmt._condition))
+        then_branch = self._shifted("then", lambda: self._exec(stmt._thenBranch))
+        parts = condition + "\n" + then_branch
 
         if stmt._elseBranch:
-            else_branch = self._shifted("else:", lambda: self._exec(stmt._elseBranch))
+            parts += "\n" + self._shifted("else", lambda: self._exec(stmt._elseBranch))
 
-        return (
-            condition + "\n" + then_branch + ("\n" + else_branch if else_branch else "")
-        )
+        return parts
 
     @_exec.register
     def _(self, stmt: WhileStmt) -> str:
-        condition = self._shifted("while:", lambda: self._eval(stmt._condition))
-        body = self._shifted("do:", lambda: self._exec(stmt._body))
+        condition = self._shifted("while", lambda: self._eval(stmt._condition))
+        body = self._shifted("do", lambda: self._exec(stmt._body))
         return condition + "\n" + body
 
     # ---------- Printers de Expresiones ---------- #
@@ -179,14 +174,14 @@ class PrettyPrinter:
 
     # ---------- Helpers ---------- #
 
-    # Mueve el subárbol hacia la derecha por el largo de `prefix` y devuelve la concatenación
-    # entre `prefix` y el subarbol generado
-    def _shifted(self, prefix: str, f: Callable[[], str]) -> str:
+    # Mueve el subárbol hacia la derecha en una unidad de offset y devuelve
+    # la concatenación entre `tag` y el subarbol generado
+    def _shifted(self, tag: str, f: Callable[[], str]) -> str:
         self._shift += 1
         s = f()
         self._shift -= 1
         padding = self._make_padding()
-        return padding + prefix + "\n" + s
+        return f"{padding}{tag}:\n{s}"
 
     # Evalua la función pasada por parametro habiendose movido en cierta dirección
     def _branch(self, direction: Dir, f: Callable[[], str]) -> str:
