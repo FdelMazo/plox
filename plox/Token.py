@@ -73,6 +73,8 @@ class Token(object):
     def __repr__(self) -> str:
         return f"{self.line} | {self.token_type.name} {repr(self.lexeme)}"
 
+    def __str__(self) -> str:
+        return f"{self.token_type.name} {repr(self.lexeme)}"
 
 TokenKeywords = {
     "and": TokenType.AND,
