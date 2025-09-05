@@ -68,15 +68,16 @@ class PrettyPrinter:
     def _(self, expr: CallExpr) -> str:
         line = self._accept(expr._callee)
         args = expr._arguments
-        rest = last = ""
+        first = rest = ""
 
         if args:
+            first = self._branch(Dir.LEFT, lambda: self._accept(args[0]))
             rest = self._branch(
-                Dir.RIGHT, lambda: "".join(self._accept(arg) for arg in args[:-1])
+                Dir.RIGHT,
+                lambda: "".join(self._accept(arg) for arg in reversed(args[1:])),
             )
-            last = self._branch(Dir.LEFT, lambda: self._accept(args[-1]))
 
-        return line + rest + last
+        return line + rest + first
 
     @_accept.register
     def _(self, expr: VariableExpr) -> str:
