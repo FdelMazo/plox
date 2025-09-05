@@ -62,10 +62,8 @@ class Plox:
 
         # en modo parsing, imprimimos las expresiones encontradas
         if self.mode == "parsing":
-            for statement in statements:
-                if isinstance(statement, ExpressionStmt):
-                    printer = PrettyPrinter(statement._expression)
-                    printer.print(lambda ast: colored(ast, "light_blue"))
+            printer = PrettyPrinter(statements)
+            printer.print(lambda ast: colored(ast, "light_blue"))
             return
 
         resolver = Resolver(self.interpreter)

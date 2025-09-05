@@ -1,6 +1,17 @@
 from enum import Enum, auto
 from functools import singledispatchmethod
 from typing import Callable
+from .Stmt import (
+    BlockStmt,
+    ExpressionStmt,
+    FunDecl,
+    IfStmt,
+    PrintStmt,
+    ReturnStmt,
+    Stmt,
+    VarDecl,
+    WhileStmt,
+)
 from .Token import Token, TokenType
 from .Expr import (
     Expr,
@@ -24,82 +35,158 @@ class Dir(Enum):
 
 
 class PrettyPrinter:
-    def __init__(self, expr: Expr):
+    def __init__(self, stmts: list[Stmt]):
+        self._stmts: list[Stmt] = stmts
         self._path: list[Dir] = []
-        self._root: Expr = expr
+        self._shift: int = 0
 
     # Printear por stdout el ast de forma más legible
     def print(self, f: Callable[[str], str] = lambda x: x):
-        print(f(self._accept(self._root)))
+        for stmt in self._stmts:
+            print(f(self._exec(stmt)))
+
+    # ---------- Printers de Statements ---------- #
+
+    @singledispatchmethod
+    def _exec(self, stmt: Stmt) -> str:
+        raise RuntimeError(f"Unknown statement type: `{type(stmt)}`")
+
+    @_exec.register
+    def _(self, stmt: ExpressionStmt) -> str:
+        return self._eval(stmt._expression)
+
+    @_exec.register
+    def _(self, stmt: PrintStmt) -> str:
+        return self._shifted("print:", lambda: self._eval(stmt._expression))
+
+    @_exec.register
+    def _(self, stmt: BlockStmt) -> str:
+        return "\n".join(self._exec(s) for s in stmt._statements)
+
+    @_exec.register
+    def _(self, stmt: VarDecl) -> str:
+        if stmt._initializer is None:
+            return ""
+
+        tag = self._pretty_token(stmt._name)
+        return self._shifted(f"{tag}:", lambda: self._eval(stmt._initializer))
+
+    @_exec.register
+    def _(self, stmt: FunDecl) -> str:
+        name = self._pretty_token(stmt._name)
+        parameters = ",".join(self._pretty_token(p) for p in stmt._parameters)
+        tag = f"{name}({parameters})"
+
+        return self._shifted(
+            f"{tag}:", lambda: "\n".join(self._exec(s) for s in stmt._body)
+        )
+
+    @_exec.register
+    def _(self, stmt: ReturnStmt) -> str:
+        if stmt._value is None:
+            return ""
+
+        return self._shifted("return:", lambda: self._eval(stmt._value))
+
+    @_exec.register
+    def _(self, stmt: IfStmt) -> str:
+        condition = self._shifted("if:", lambda: self._eval(stmt._condition))
+        then_branch = self._shifted("then:", lambda: self._exec(stmt._thenBranch))
+        else_branch = ""
+
+        if stmt._elseBranch:
+            else_branch = self._shifted("else:", lambda: self._exec(stmt._elseBranch))
+
+        return (
+            condition + "\n" + then_branch + ("\n" + else_branch if else_branch else "")
+        )
+
+    @_exec.register
+    def _(self, stmt: WhileStmt) -> str:
+        condition = self._shifted("while:", lambda: self._eval(stmt._condition))
+        body = self._shifted("do:", lambda: self._exec(stmt._body))
+        return condition + "\n" + body
 
     # ---------- Printers de Expresiones ---------- #
 
     @singledispatchmethod
-    def _accept(self, expr: Expr) -> str:
+    def _eval(self, expr: Expr) -> str:
         raise RuntimeError(f"Unknown expression type: `{type(expr)}`")
 
-    @_accept.register
+    @_eval.register
     def _(self, expr: BinaryExpr | LogicExpr) -> str:
         padding = self._make_padding()
         symbol = self._pretty_token(expr._operator)
         line = f"{padding}{symbol}\n"
-
-        r = self._branch(Dir.RIGHT, lambda: self._accept(expr._right))
-        l = self._branch(Dir.LEFT, lambda: self._accept(expr._left))
+        r = self._branch(Dir.RIGHT, lambda: self._eval(expr._right))
+        l = self._branch(Dir.LEFT, lambda: self._eval(expr._left))
         return line + r + l
 
-    @_accept.register
+    @_eval.register
     def _(self, expr: GroupingExpr) -> str:
-        return self._accept(expr._expression)
+        return self._eval(expr._expression)
 
-    @_accept.register
+    @_eval.register
     def _(self, expr: LiteralExpr) -> str:
         padding = self._make_padding()
+
+        if isinstance(expr._value, str):
+            return f'{padding}"{expr._value}"\n'
+
         return f"{padding}{expr._value}\n"
 
-    @_accept.register
+    @_eval.register
     def _(self, expr: UnaryExpr) -> str:
         padding = self._make_padding()
         symbol = self._pretty_token(expr._operator)
         line = f"{padding}{symbol}\n"
-        return line + self._branch(Dir.LEFT, lambda: self._accept(expr._right))
+        return line + self._branch(Dir.LEFT, lambda: self._eval(expr._right))
 
-    @_accept.register
+    @_eval.register
     def _(self, expr: CallExpr) -> str:
-        line = self._accept(expr._callee)
+        line = self._eval(expr._callee)
         args = expr._arguments
         first = rest = ""
 
         if args:
-            first = self._branch(Dir.LEFT, lambda: self._accept(args[0]))
+            first = self._branch(Dir.LEFT, lambda: self._eval(args[0]))
             rest = self._branch(
                 Dir.RIGHT,
-                lambda: "".join(self._accept(arg) for arg in reversed(args[1:])),
+                lambda: "".join(self._eval(arg) for arg in reversed(args[1:])),
             )
 
         return line + rest + first
 
-    @_accept.register
+    @_eval.register
     def _(self, expr: VariableExpr) -> str:
         padding = self._make_padding()
         symbol = self._pretty_token(expr._name)
         return f"{padding}{symbol}\n"
 
-    @_accept.register
+    @_eval.register
     def _(self, expr: AssignmentExpr) -> str:
         padding = self._make_padding()
         symbol = self._pretty_token(expr._name)
         line = f"{padding}{symbol}\n"
-        return line + self._branch(Dir.LEFT, lambda: self._accept(expr._value))
+        return line + self._branch(Dir.LEFT, lambda: self._eval(expr._value))
 
-    @_accept.register
+    @_eval.register
     def _(self, expr: PostfixExpr) -> str:
         padding = self._make_padding()
         symbol = self._pretty_token(expr._operator)
         line = f"{padding}{symbol}\n"
-        return line + self._branch(Dir.LEFT, lambda: self._accept(expr._left))
+        return line + self._branch(Dir.LEFT, lambda: self._eval(expr._left))
 
     # ---------- Helpers ---------- #
+
+    # Mueve el subárbol hacia la derecha por el largo de `prefix` y devuelve la concatenación
+    # entre `prefix` y el subarbol generado
+    def _shifted(self, prefix: str, f: Callable[[], str]) -> str:
+        self._shift += 1
+        s = f()
+        self._shift -= 1
+        padding = self._make_padding()
+        return padding + prefix + "\n" + s
 
     # Evalua la función pasada por parametro habiendose movido en cierta dirección
     def _branch(self, direction: Dir, f: Callable[[], str]) -> str:
@@ -125,7 +212,7 @@ class PrettyPrinter:
             else:
                 padding.append("└── ")
 
-        return "".join(padding)
+        return " " * (4 * self._shift) + "".join(padding)
 
     # Devuelve una representación en string más compacta de los tokens
     def _pretty_token(self, token: Token) -> str:
