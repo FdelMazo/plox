@@ -253,19 +253,14 @@ class PrettyPrinter:
     # que guardó durante el recorrido por el árbol
     def _prettify(self) -> str:
         entries = []
-        max_len_branch, max_len_cls_name = 0, 0
+        max_len_cls_name = 0
 
         for entry in self._entries:
             branch, cls_name = self._apply(*entry)
-            max_len_branch = max(max_len_branch, len(branch))
             max_len_cls_name = max(max_len_cls_name, len(cls_name))
             entries.append((branch, cls_name))
 
-        ast = "\n".join(
-            f"{c.ljust(max_len_cls_name)}  {b.ljust(max_len_branch)}"
-            for b, c in entries
-        )
-
+        ast = "\n".join(f"{c.ljust(max_len_cls_name)}  {b}" for b, c in entries)
         return ast
 
     # Limpia el arreglo de entries, esto se hace
