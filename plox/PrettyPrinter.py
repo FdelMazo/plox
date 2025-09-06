@@ -34,176 +34,224 @@ class Dir(Enum):
 
 
 class PrettyPrinter:
-    def __init__(self, stmts: list[Stmt]):
-        self._stmts: list[Stmt] = stmts
-        self._path: list[Dir] = []
-        self._shift: int = 0
+    # Aplica funciones distintas a los distintos tipos de nodos. Aplica:
+    #   - branch_f: Al padding que tiene las ramas de los arboles de expresiones
+    #   - expr_f:   A los nodos de expresiones
+    #   - stmt_f:   A los nodos de statements
+    #   - type_f:   A la lista de tipos de nodo, en caso de ser None, utiliza su
+    #               respectivo expr_f o stmt_f
+    def __init__(
+        self,
+        branch_f: Callable[[str], str] = lambda x: x,
+        expr_f: Callable[[str], str] = lambda x: x,
+        stmt_f: Callable[[str], str] = lambda x: x,
+        type_f: Callable[[str], str] | None = None,
+    ):
+        self._path = []
+        self._shift = 0
+        self._branch_f = branch_f
+        self._expr_f = expr_f
+        self._stmt_f = stmt_f
+        self._type_f = type_f
+
+        # Reseted
+        self._entries: list[tuple[str, str, str, Callable[[str], str]]] = []
 
     # Printear por stdout el ast de forma más legible
-    def print(self, f: Callable[[str], str] = lambda x: x):
-        for stmt in self._stmts:
-            print(f(self._accept(stmt)))
+    def print(self, stmts: list[Stmt]):
+        for stmt in stmts:
+            self._reset()
+            self._accept(stmt)
+
+            entries, max_length = [], 0
+
+            for entry in self._entries:
+                padding, tag, cls_name = self._apply(*entry)
+                max_length = max(max_length, len(padding) + len(tag))
+                entries.append((padding, tag, cls_name))
+
+            s = "\n".join(f"{(p + t).ljust(max_length)}  {c}" for p, t, c in entries)
+            print(s, end="\n\n")
+
+    def _reset(self):
+        self._entries.clear()
 
     @singledispatchmethod
-    def _accept(self, obj: Expr | Stmt) -> str:
+    def _accept(self, obj: Expr | Stmt) -> None:
         raise RuntimeError(f"Unknown object type: `{type(obj)}`")
 
     # ---------- Printers de Statements ---------- #
 
     @_accept.register
-    def _(self, stmt: ExpressionStmt) -> str:
-        return self._accept(stmt._expression)
+    def _(self, stmt: ExpressionStmt):
+        self._accept(stmt._expression)
 
     @_accept.register
-    def _(self, stmt: PrintStmt) -> str:
-        return self._shifted("print", lambda: self._accept(stmt._expression))
+    def _(self, stmt: PrintStmt):
+        self._shifted("print", stmt, lambda: self._accept(stmt._expression))
 
     @_accept.register
-    def _(self, stmt: BlockStmt) -> str:
-        return "\n".join(self._accept(s) for s in stmt._statements)
+    def _(self, stmt: BlockStmt):
+        for s in stmt._statements:
+            self._accept(s)
 
     @_accept.register
-    def _(self, stmt: VarDecl) -> str:
+    def _(self, stmt: VarDecl):
         if stmt._initializer is None:
-            return ""
+            return
 
         tag = stmt._name.lexeme
-        return self._shifted(tag, lambda: self._accept(stmt._initializer))
+        self._shifted(tag, stmt, lambda: self._accept(stmt._initializer))
 
     @_accept.register
-    def _(self, stmt: FunDecl) -> str:
+    def _(self, stmt: FunDecl):
         name = stmt._name.lexeme
         parameters = ",".join(p.lexeme for p in stmt._parameters)
         tag = f"{name}({parameters})"
-        return self._shifted(
-            tag, lambda: "\n".join(self._accept(s) for s in stmt._body)
-        )
+
+        def shifted():
+            for s in stmt._body:
+                self._accept(s)
+
+        self._shifted(tag, stmt, shifted)
 
     @_accept.register
-    def _(self, stmt: ReturnStmt) -> str:
+    def _(self, stmt: ReturnStmt):
         if stmt._value is None:
-            return ""
+            return
 
-        return self._shifted("return", lambda: self._accept(stmt._value))
+        self._shifted("return", stmt, lambda: self._accept(stmt._value))
 
     @_accept.register
-    def _(self, stmt: IfStmt) -> str:
-        condition = self._shifted("if", lambda: self._accept(stmt._condition))
-        then_branch = self._shifted("then", lambda: self._accept(stmt._thenBranch))
-        parts = condition + "\n" + then_branch
+    def _(self, stmt: IfStmt):
+        self._shifted("if", stmt, lambda: self._accept(stmt._condition))
+        self._shifted("then", stmt._thenBranch, lambda: self._accept(stmt._thenBranch))
 
         if stmt._elseBranch:
-            parts += "\n" + self._shifted(
-                "else", lambda: self._accept(stmt._elseBranch)
+            self._shifted(
+                "else",
+                stmt,
+                lambda: self._accept(stmt._elseBranch),
             )
 
-        return parts
-
     @_accept.register
-    def _(self, stmt: WhileStmt) -> str:
-        condition = self._shifted("while", lambda: self._accept(stmt._condition))
-        body = self._shifted("do", lambda: self._accept(stmt._body))
-        return condition + "\n" + body
+    def _(self, stmt: WhileStmt):
+        self._shifted("while", stmt, lambda: self._accept(stmt._condition))
+        self._shifted("do", stmt, lambda: self._accept(stmt._body))
 
     # ---------- Printers de Expresiones ---------- #
 
     @_accept.register
-    def _(self, expr: BinaryExpr | LogicExpr) -> str:
-        padding = self._make_padding()
-        symbol = expr._operator.lexeme
-        line = f"{padding}{symbol}\n"
-        r = self._branch(Dir.RIGHT, lambda: self._accept(expr._right))
-        l = self._branch(Dir.LEFT, lambda: self._accept(expr._left))
-        return line + r + l
+    def _(self, expr: BinaryExpr | LogicExpr):
+        tag = expr._operator.lexeme
+        self._format(tag, expr)
+        self._branch(Dir.RIGHT, lambda: self._accept(expr._right))
+        self._branch(Dir.LEFT, lambda: self._accept(expr._left))
 
     @_accept.register
-    def _(self, expr: GroupingExpr) -> str:
+    def _(self, expr: GroupingExpr):
         return self._accept(expr._expression)
 
     @_accept.register
-    def _(self, expr: LiteralExpr) -> str:
-        padding = self._make_padding()
-
+    def _(self, expr: LiteralExpr):
         if isinstance(expr._value, str):
-            return f'{padding}"{expr._value}"\n'
+            tag = f'"{expr._value}"'
+        else:
+            tag = str(expr._value)
 
-        return f"{padding}{expr._value}\n"
-
-    @_accept.register
-    def _(self, expr: UnaryExpr) -> str:
-        padding = self._make_padding()
-        symbol = expr._operator.lexeme
-        line = f"{padding}{symbol}\n"
-        return line + self._branch(Dir.LEFT, lambda: self._accept(expr._right))
+        self._format(tag, expr)
 
     @_accept.register
-    def _(self, expr: CallExpr) -> str:
-        line = self._accept(expr._callee)
-        args = expr._arguments
-        first = rest = ""
-
-        if args:
-            first = self._branch(Dir.LEFT, lambda: self._accept(args[0]))
-            rest = self._branch(
-                Dir.RIGHT,
-                lambda: "".join(self._accept(arg) for arg in reversed(args[1:])),
-            )
-
-        return line + rest + first
+    def _(self, expr: UnaryExpr):
+        tag = expr._operator.lexeme
+        self._format(tag, expr)
+        self._branch(Dir.LEFT, lambda: self._accept(expr._right))
 
     @_accept.register
-    def _(self, expr: VariableExpr) -> str:
-        padding = self._make_padding()
-        symbol = expr._name.lexeme
-        return f"{padding}{symbol}\n"
+    def _(self, expr: CallExpr):
+        self._accept(expr._callee)
+
+        # Como el nombre de la función es una expresión hay
+        # cambiarle el tipo a callee de `VariableExpr` a `CallExpr`
+        padding, tag, _, f = self._entries[-1]
+        cls_name = expr.__class__.__name__
+        self._entries[-1] = padding, tag, cls_name, f
+
+        def shifted():
+            for arg in reversed(args[1:]):
+                self._accept(arg)
+
+        if args := expr._arguments:
+            self._branch(Dir.RIGHT, shifted)
+            self._branch(Dir.LEFT, lambda: self._accept(args[0]))
 
     @_accept.register
-    def _(self, expr: AssignmentExpr) -> str:
-        padding = self._make_padding()
-        symbol = expr._name.lexeme
-        line = f"{padding}{symbol}\n"
-        return line + self._branch(Dir.LEFT, lambda: self._accept(expr._value))
+    def _(self, expr: VariableExpr):
+        tag = expr._name.lexeme
+        self._format(tag, expr)
 
     @_accept.register
-    def _(self, expr: PostfixExpr) -> str:
-        padding = self._make_padding()
-        symbol = expr._operator.lexeme
-        line = f"{padding}{symbol}\n"
-        return line + self._branch(Dir.LEFT, lambda: self._accept(expr._left))
+    def _(self, expr: AssignmentExpr):
+        tag = expr._name.lexeme
+        self._format(tag, expr)
+        self._branch(Dir.LEFT, lambda: self._accept(expr._value))
+
+    @_accept.register
+    def _(self, expr: PostfixExpr):
+        tag = expr._operator.lexeme
+        self._format(tag, expr)
+        self._branch(Dir.LEFT, lambda: self._accept(expr._left))
 
     # ---------- Helpers ---------- #
 
+    def _format(self, tag: str, obj: Expr | Stmt):
+        padding = self._branch_f(self._make_padding())
+        cls_name = obj.__class__.__name__
+
+        if isinstance(obj, Expr):
+            f = self._expr_f
+        else:
+            tag = f"{tag}:"
+            f = self._stmt_f
+
+        self._entries.append((padding, tag, cls_name, f))
+
     # Mueve el subárbol hacia la derecha en una unidad de offset y devuelve
     # la concatenación entre `tag` y el subarbol generado
-    def _shifted(self, tag: str, f: Callable[[], str]) -> str:
+    def _shifted(self, tag: str, stmt: Stmt, f: Callable[[], None]):
+        self._format(tag, stmt)
         self._shift += 1
-        s = f()
+        f()
         self._shift -= 1
-        padding = self._make_padding()
-        return f"{padding}{tag}:\n{s}"
 
     # Evalua la función pasada por parametro habiendose movido en cierta dirección
-    def _branch(self, direction: Dir, f: Callable[[], str]) -> str:
+    def _branch(self, direction: Dir, f: Callable[[], None]):
         self._path.append(direction)
-        s = f()
+        f()
         self._path.pop()
-        return s
 
     # Arma el padding para una cierta rama del ast
     def _make_padding(self) -> str:
-        padding = []
+        parts = []
 
         if self._path:
             for dir in self._path[:-1]:
                 if dir == Dir.RIGHT:
-                    padding.append("│   ")
+                    parts.append("│   ")
                 else:
-                    padding.append("    ")
+                    parts.append("    ")
 
             last = self._path[-1]
             if last == Dir.RIGHT:
-                padding.append("├── ")
+                parts.append("├── ")
             else:
-                padding.append("└── ")
+                parts.append("└── ")
 
-        return " " * (4 * self._shift) + "".join(padding)
+        return " " * (4 * self._shift) + "".join(parts)
+
+    # Aplica las funciones provistas en el constructuor a un entry
+    def _apply(self, padding: str, tag: str, cls_name: str, f: Callable[[str], str]):
+        padding = self._branch_f(padding)
+        tag = f(tag)
+        cls_name = self._type_f(cls_name) if self._type_f else f(cls_name)
+        return padding, tag, cls_name

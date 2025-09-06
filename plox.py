@@ -7,7 +7,6 @@ from plox.Scanner import Scanner
 from plox.Parser import Parser
 from plox.Resolver import Resolver
 from plox.Interpreter import Interpreter
-from plox.Stmt import ExpressionStmt
 
 # usar prompt_toolkit y termcolor si están disponibles
 try:
@@ -34,6 +33,12 @@ class Plox:
         self.debug = False
         self.mode = None  # "scanning" | "parsing" | "resolve"
         self.interpreter = Interpreter()
+        self.printer = PrettyPrinter(
+            branch_f=lambda s: colored(s, "white"),
+            expr_f=lambda s: colored(s, "light_yellow"),
+            stmt_f=lambda s: colored(s, "red"),
+            type_f=lambda s: colored(s, "light_blue"),
+        )
 
     def run(self, source: str):
         scanner = Scanner(source)
@@ -62,8 +67,7 @@ class Plox:
 
         # en modo parsing, imprimimos las expresiones encontradas
         if self.mode == "parsing":
-            printer = PrettyPrinter(statements)
-            printer.print(lambda ast: colored(ast, "light_blue"))
+            self.printer.print(statements)
             return
 
         resolver = Resolver(self.interpreter)
