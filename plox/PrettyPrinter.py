@@ -62,34 +62,14 @@ class PrettyPrinter:
         for stmt in stmts:
             self._reset()
             self._accept(stmt)
-            ast = self._build_tree()
+            ast = self._prettify()
             print(ast, end="\n\n")
-
-    def _build_tree(self) -> str:
-        entries = []
-        max_len_branch, max_len_cls_name = 0, 0
-
-        for entry in self._entries:
-            branch, cls_name = self._apply(*entry)
-            max_len_branch = max(max_len_branch, len(branch))
-            max_len_cls_name = max(max_len_cls_name, len(cls_name))
-            entries.append((branch, cls_name))
-
-        ast = "\n".join(
-            f"{c.ljust(max_len_cls_name)}  {b.ljust(max_len_branch)}"
-            for b, c in entries
-        )
-
-        return ast
-
-    def _reset(self):
-        self._entries.clear()
 
     @singledispatchmethod
     def _accept(self, obj: Expr | Stmt) -> None:
         raise RuntimeError(f"Unknown object type: `{type(obj)}`")
 
-    # ---------- Printers de Statements ---------- #
+    # ---------- Handlers de Statements ---------- #
 
     @_accept.register
     def _(self, stmt: ExpressionStmt):
@@ -153,7 +133,7 @@ class PrettyPrinter:
         self._shifted("while", stmt, lambda: self._accept(stmt._condition))
         self._shifted("do", stmt._body, lambda: self._accept(stmt._body))
 
-    # ---------- Printers de Expresiones ---------- #
+    # ---------- Handlers de Expresiones ---------- #
 
     @_accept.register
     def _(self, expr: BinaryExpr | LogicExpr):
@@ -222,13 +202,13 @@ class PrettyPrinter:
         if isinstance(obj, Expr):
             f = self._expr_f
         else:
-            tag = f"{tag}:"
+            tag += ":"
             f = self._stmt_f
 
         self._entries.append((padding, tag, cls_name, f))
 
-    # Mueve el subárbol hacia la derecha en una unidad de offset y devuelve
-    # la concatenación entre `tag` y el subarbol generado
+    # Guarda el nodo actual, mueve el arbol hacia la derecha en una unidad
+    # de offset y evalua la función pasada como argumento
     def _shifted(self, tag: str, stmt: Stmt, f: Callable[[], None]):
         self._store(tag, stmt)
         self._shift += 1
@@ -268,3 +248,27 @@ class PrettyPrinter:
         tag = f(tag)
         cls_name = self._type_f(cls_name) if self._type_f else f(cls_name)
         return padding + tag, cls_name
+
+    # Arma el string del ast usando las lineas
+    # que guardó durante el recorrido por el árbol
+    def _prettify(self) -> str:
+        entries = []
+        max_len_branch, max_len_cls_name = 0, 0
+
+        for entry in self._entries:
+            branch, cls_name = self._apply(*entry)
+            max_len_branch = max(max_len_branch, len(branch))
+            max_len_cls_name = max(max_len_cls_name, len(cls_name))
+            entries.append((branch, cls_name))
+
+        ast = "\n".join(
+            f"{c.ljust(max_len_cls_name)}  {b.ljust(max_len_branch)}"
+            for b, c in entries
+        )
+
+        return ast
+
+    # Limpia el arreglo de entries, esto se hace
+    # por cada statement que devolvió el parser
+    def _reset(self):
+        self._entries.clear()
