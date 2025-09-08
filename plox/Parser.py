@@ -456,11 +456,12 @@ class Parser(object):
     # arguments      → expression ( "," expression )* ;
     def call(self) -> Expr:
         expr = self.primary()
-        arguments: list[Expr] = []
 
         # Si me cruzo un paréntesis abierto, tengo una llamada a función
         # y tengo que parsear los argumentos
         while self._match(TokenType.LEFT_PAREN):
+            arguments: list[Expr] = []
+
             # Mientras no me cruce un paréntesis de cierre, sigo parseando argumentos
             while (
                 not self._is_at_end()
