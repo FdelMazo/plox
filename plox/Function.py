@@ -38,7 +38,8 @@ class Function(object):
             interpreter.execute_block(self.declaration._body, function_env)
         except ReturnValue as return_value:
             return return_value.value
-        # Si no hubo return, devolvemos None
+
+        # Si no hubo return, devolvemos nil
         return None
 
     def __repr__(self) -> str:

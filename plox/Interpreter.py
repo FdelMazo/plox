@@ -80,8 +80,11 @@ class Interpreter(object):
 
     @execute.register
     def _(self, statement: FunDecl):
-        # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
-        self.env.define(statement._name.lexeme, Function(statement, self.env))
+        # Ejecutar una declaración de una variable es solamente...
+        # 1. Construir la función
+        fun = Function(statement, self.env)
+        # 2. Atarla a su nombre
+        self.env.define(statement._name.lexeme, fun)
 
     @execute.register
     def _(self, statement: ReturnStmt):

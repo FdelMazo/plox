@@ -234,6 +234,9 @@ class Parser(object):
 
     # returnStmt     → "return" expression? ";" ;
     def return_statement(self) -> ReturnStmt:
+        # El valor de retorno es opcional:
+        #   return <value>;     devuelve un valor
+        #   return;             devuelve nil
         value = None
 
         # Si no me cruzo un punto y coma, parseo la expresión que me
@@ -437,7 +440,7 @@ class Parser(object):
 
         # Si no tuve recursividad de unarios, entonces tengo una llamada a un prefijo
         return self.postfix()
-    
+
     # postfix        → call ( "++" )* ;
     def postfix(self) -> Expr:
         # acá el operador es un sufijo
