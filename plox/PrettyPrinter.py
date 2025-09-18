@@ -34,6 +34,8 @@ class Branch(Enum):
 
 
 class PrettyPrinter:
+    OFS_SIZE = 4
+
     # Aplica funciones distintas a los distintos tipos de nodos. Aplica:
     #   - branch_f: Al padding que tiene las ramas de los arboles de expresiones
     #   - expr_f:   A los nodos de expresiones
@@ -144,13 +146,14 @@ class PrettyPrinter:
 
     @_accept.register
     def _(self, expr: CallExpr):
-        self._store_expr("()", "CallExpr")
+        self._store_expr("@", "CallExpr")
         self._branch(Branch.MID, reversed(expr._arguments))
         self._branch(Branch.LAST, [expr._callee])
 
     @_accept.register
     def _(self, expr: GroupingExpr):
-        return self._accept(expr._expression)
+        self._store_expr("()", "Grouping")
+        self._branch(Branch.LAST, [expr._expression])
 
     @_accept.register
     def _(self, expr: LiteralExpr):
@@ -196,12 +199,12 @@ class PrettyPrinter:
     # Guarda el nodo actual, mueve el arbol hacia la derecha en una unidad
     # de offset y evalua la función pasada como argumento
     def _shift(self, visits: Iterable[Stmt | Expr]):
-        self._ofs += 1
+        self._ofs += self.OFS_SIZE
 
         for visitable in visits:
             self._accept(visitable)
 
-        self._ofs -= 1
+        self._ofs -= self.OFS_SIZE
 
     # Evalua la función pasada por parametro habiendose movido en cierta dirección
     def _branch(self, branch: Branch, visits: Iterable[Stmt | Expr]):
@@ -229,7 +232,7 @@ class PrettyPrinter:
             else:
                 parts.append("└── ")
 
-        return " " * (4 * self._ofs) + "".join(parts)
+        return " " * self._ofs + "".join(parts)
 
     # Aplica las funciones provistas en el constructuor a un entry
     def _apply(
