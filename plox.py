@@ -17,7 +17,7 @@ try:
     promptsession = PromptSession(history=FileHistory(".plox_history"))
 
     def prompt_input():
-        return promptsession.prompt("\n> ")
+        return promptsession.prompt("> ")
 
 except ImportError:
 
@@ -25,7 +25,7 @@ except ImportError:
         return text
 
     def prompt_input():
-        return input("\n> ")
+        return input("> ")
 
 
 class Plox:

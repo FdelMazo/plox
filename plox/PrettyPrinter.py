@@ -66,7 +66,7 @@ class PrettyPrinter:
 
         ast = self._prettify()
         self._reset()
-        print(f"\n{ast}")
+        print(f"\n{ast}\n")
 
     @singledispatchmethod
     def _accept(self, obj: Expr | Stmt) -> None:
