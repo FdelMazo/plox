@@ -62,10 +62,11 @@ class PrettyPrinter:
     # Printear por stdout el ast de forma más legible
     def print(self, stmts: list[Stmt]):
         for stmt in stmts:
-            self._reset()
             self._accept(stmt)
-            ast = self._prettify()
-            print(f"\n{ast}")
+
+        ast = self._prettify()
+        self._reset()
+        print(f"\n{ast}")
 
     @singledispatchmethod
     def _accept(self, obj: Expr | Stmt) -> None:
