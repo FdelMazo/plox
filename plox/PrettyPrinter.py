@@ -129,7 +129,7 @@ class PrettyPrinter:
         self._store_stmt("while:", "WhileStmt(cond)")
         self._shift([stmt._condition])
 
-        self._store_stmt("body:", "While(body)")
+        self._store_stmt("body:", "WhileStmt(body)")
         self._shift([stmt._body])
 
     # ---------- Handlers de Expresiones ---------- #
@@ -153,7 +153,7 @@ class PrettyPrinter:
 
     @_accept.register
     def _(self, expr: GroupingExpr):
-        self._store_expr("()", "Grouping")
+        self._store_expr("()", "GroupingExpr")
         self._branch(Branch.LAST, [expr._expression])
 
     @_accept.register
