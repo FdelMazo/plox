@@ -23,9 +23,9 @@ class Precedence(Enum):
 
 
 # fmt: off
+# Es muy flexible! Agregar operadores es una fila nueva, y cambiár la gramática es solamente editar una celda
 PRATT: dict[TokenType, tuple[str | None, str | None, Precedence, Precedence]] = {
     # TokenType              (prefix_fn,   infix_fn,   prefix_precedence,     infix_precedence)
-    # Es muy flexible! Agregar operadores es una fila nueva, y cambiár la gramática es solamente editar una celda
     TokenType.LEFT_PAREN:    ("grouping",  None,       Precedence.PREC_NONE,  Precedence.PREC_NONE),
     TokenType.RIGHT_PAREN:   (None,        None,       Precedence.PREC_NONE,  Precedence.PREC_NONE),
     TokenType.MINUS:         ("unary",     "binary",   Precedence.PREC_UNARY, Precedence.PREC_TERM),
