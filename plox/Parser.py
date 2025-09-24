@@ -10,6 +10,7 @@ from .Expr import (
     LogicExpr,
     CallExpr,
     PostfixExpr,
+    TernaryExpr,
 )
 from .Stmt import (
     Stmt,
