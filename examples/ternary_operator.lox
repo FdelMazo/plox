@@ -1,0 +1,66 @@
+// Para correr en la terminal: ./plox.py --line-by-line examples/ternary_operator.lox
+
+
+// Uso basico del operador
+print true ? 1 : 2;          // 1
+print false ? "a" : "b";     // b
+
+
+// Unicamente el valor nil y false se consideran falsy
+print nil ? condicion_es_truthy : "condicion_es_falsy";  // condicion_es_falsy
+print 0 ? "condicion_es_truthy" : "condicion_es_falsy";  // condicion_es_truthy
+
+
+// El resultado del operador puede ser asignado
+var a = true ? 1 : 2;
+print a;  // 1
+
+
+// Se permite que ambas ramas sean asignaciones
+var x = 0;
+true ? x = 10 : x = 20;
+print x;  // 10
+
+var y = 0;
+false ? y = 10 : y = 20;
+print y;  // 20
+
+
+// Se asocia de derecha a izquierda
+// a ? b : c ? d : e  ==>  a ? b : (c ? d : e)
+
+print true ? 1 : false ? 2 : 3;   // 1
+print false ? 1 : true ? 2 : 3;   // 2
+print false ? 1 : false ? 2 : 3;  // 3
+
+
+// conditional → logic_or ( "?" assignment ":" assignment )? ;
+// => El ternario tiene menor precedencia que logic_or y mayor que assignment
+
+// Con OR. La agrupacion es por ejemplo: (bool1 or bool2) ? ... : ... 
+print false or true ? 1 : 2;   // 1
+
+// Con asignación. La agrupacion es: var z = (cond ? ... : ...);
+var z = false ? 1 : 2;
+print z; // 2
+
+
+//Errores
+
+// Falta ';'
+print true ? 1 : 2
+
+// Falta ':'
+print true ? 1;
+
+// ':' sin '?'
+print true 1 : 2;
+
+// Falta rama true
+print true ? : 2;
+
+// Falta rama false
+print true ? 1 : ;
+
+// Falta expresion de condicion
+print ? 1 : 2;
