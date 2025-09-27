@@ -336,9 +336,9 @@ class Interpreter(object):
         if self.is_truthy(condition):
             # si condition es truthy, evaluamos la rama verdadera
             return self.evaluate(expression._true_branch)
-        else:
-            # si condition es falsy, evaluamos la rama falsa
-            return self.evaluate(expression._false_branch)
+        
+        # si condition es falsy, evaluamos la rama falsa
+        return self.evaluate(expression._false_branch)
 
     # ---------- Helpers ---------- #
 
