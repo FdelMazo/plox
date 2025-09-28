@@ -22,6 +22,7 @@ from .Expr import (
     AssignmentExpr,
     LogicExpr,
     CallExpr,
+    TernaryExpr,
 )
 
 
@@ -184,3 +185,9 @@ class Resolver(object):
         self.resolve(expression._callee)
         for arg in expression._arguments:
             self.resolve(arg)
+
+    @resolve.register
+    def _(self, expression: TernaryExpr):
+        self.resolve(expression._condition)
+        self.resolve(expression._true_branch)
+        self.resolve(expression._false_branch)

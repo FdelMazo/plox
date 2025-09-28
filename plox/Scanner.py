@@ -102,7 +102,6 @@ class Scanner(object):
                         raise Exception(f"Unterminated comment: `{self.lexeme()}`")
                 else:
                     self.add_token(TokenType.SLASH)
-
             # tokens de uno o dos caracteres
             case "+":
                 self.add_token(
@@ -124,6 +123,12 @@ class Scanner(object):
                 self.add_token(
                     TokenType.GREATER_EQUAL if self._match("=") else TokenType.GREATER
                 )
+
+            case "?":
+                self.add_token(TokenType.QUESTION)
+
+            case ":":
+                self.add_token(TokenType.COLON)
 
             case '\'':
                 # consumimos la cadena hasta el proximo ' o hasta el fin de linea
