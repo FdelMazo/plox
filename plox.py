@@ -39,6 +39,7 @@ class Plox:
             stmt_f=lambda s: colored(s, "red"),
             type_f=lambda s: colored(s, "light_blue"),
         )
+        self.in_repl = True
 
     def run(self, source: str):
         scanner = Scanner(source)
@@ -149,7 +150,6 @@ class Plox:
                 else:
                     source = file.read()
                     self.run(source)
-
             return
 
         while True:
