@@ -139,6 +139,7 @@ class Plox:
             self.mode = "resolve"
 
         if args.file:
+            self.in_repl = False
             with open(args.file, "r") as file:
                 # Modo line by line, sin tener en cuenta los saltos de linea
                 # Acá estamos haciendo uso de que Python ya sabe dividir archivos en lineas
@@ -150,6 +151,7 @@ class Plox:
                 else:
                     source = file.read()
                     self.run(source)
+            self.in_repl = True
             return
 
         while True:
