@@ -36,6 +36,17 @@ class Parser(object):
         while not self._is_at_end():
             statements.append(self.statement())
         return statements
+    
+    def parse_expression(self) -> Expr:
+        # Parseamos unicamente una expresion
+        expresion = self.expression()
+
+        # Si al terminar la expresion no estamos en EOF entonces hay un error
+        if not self._is_at_end():
+            raise SyntaxError(
+                f"Did not expect anything after end of expression, got `{self._lookahead()}` instead"
+            )
+        return expresion
 
     # ---------- Reglas de Producción de Statements ---------- #
 
