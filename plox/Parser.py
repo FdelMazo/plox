@@ -491,8 +491,18 @@ class Parser(object):
 
         # mientras nos crucemos ++
         while not self._is_at_end() and self._match(TokenType.PLUS_PLUS):
-            operator = self._previous()
-            expr = PostfixExpr(expr, operator)
+            # obtenemos el token ++ que acabamos de consumir
+            plus_plus_token = self._previous()
+
+            # solo se puede aplicar ++ sobre variables. Si no tenemos una variable, es un error
+            if not isinstance(expr, VariableExpr):
+                raise SyntaxError(
+                    f"Invalid prefix target, got `{self._lookahead()}` instead"
+                )
+
+            # representamos el post-increment como un nodo PostfixExpr
+            # el interprete se encarga despues de devolver el valor viejo y después incrementar
+            expr = PostfixExpr(expr, plus_plus_token)
 
         return expr
 
