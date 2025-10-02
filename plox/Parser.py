@@ -472,11 +472,21 @@ class Parser(object):
         # primero chequeamos lo que tenemos a la izquierda, y después seguimos
         expr = self.call()
 
-        # mientras nos crucemos ++, seguimos parseando
-        # ejemplo: x++, func()++
+        # mientras nos crucemos ++
         while not self._is_at_end() and self._match(TokenType.PLUS_PLUS):
-            operator = self._previous()
-            expr = PostfixExpr(expr, operator)
+            
+            # solo se puede aplicar ++ sobre variables. Si no tenemos una variable, es un error
+            if not isinstance(expr, VariableExpr):
+                raise SyntaxError(
+                    f"Invalid postfix target, got `{self._lookahead()}` instead"
+                )
+            
+            # usamos el operador ++ como un syntatic sugar de una suma: x = x + 1
+            # lo parseamos como una asignación para modificar el valor de la variable
+            expr = AssignmentExpr(
+                expr._name,
+                BinaryExpr(expr, Token(TokenType.PLUS, lexeme="+", literal=None, line=self._previous().line), LiteralExpr(1))
+            )
 
         return expr
 
