@@ -483,7 +483,7 @@ class Parser(object):
         # Si no tuve recursividad de unarios, entonces tengo una llamada a un prefijo
         return self.postfix()
 
-    # postfix        → call ( "++" )* ;
+    # postfix        → call ( "++" )? ;
     def postfix(self) -> Expr:
         # acá el operador es un sufijo
         # primero chequeamos lo que tenemos a la izquierda, y después seguimos
