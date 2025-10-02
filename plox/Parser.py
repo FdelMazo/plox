@@ -489,8 +489,7 @@ class Parser(object):
         # primero chequeamos lo que tenemos a la izquierda, y después seguimos
         expr = self.call()
 
-        # mientras nos crucemos ++
-        while not self._is_at_end() and self._match(TokenType.PLUS_PLUS):
+        if self._match(TokenType.PLUS_PLUS):
             # obtenemos el token ++ que acabamos de consumir
             plus_plus_token = self._previous()
 
