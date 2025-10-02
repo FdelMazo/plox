@@ -1,0 +1,15 @@
+// Para correr en la terminal: ./plox.py --line-by-line examples/increment_operator.lox
+
+// Postfix ++ (devuelve el valor viejo, incrementa despues)
+
+var x = 5;
+var value = x++;                 // devuelve el valor viejo, x pasa a 6
+print(value);                    // imprime 5
+print(x);                        // imprime 6
+
+// Prefix ++ (incrementa primero, despues devuelve el nuevo valor)
+
+var x = 5;
+var value = ++x;                 // x pasa a 6, devuelve el nuevo valor
+print(value);                    // imprime 6
+print(x);                        // imprime 6
