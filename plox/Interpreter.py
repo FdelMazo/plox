@@ -343,27 +343,25 @@ class Interpreter(object):
     
     @evaluate.register
     def _(self, expression: PostfixExpr):
-        left = expression._left # VariableExpr
+        left = expression._left
 
-        # obtenemos el valor viejo
-        if left in self.local_scope_depths: # si la variable se encuentra en nuestro diccionario de scope local, la buscamos con esa profundidad
+        # definimos funciones lambda para obtener el valor viejo y asignar el nuevo
+        if left in self.local_scope_depths: # si la variable se encuentra en nuestro diccionario de scope local, la buscamos y asignamos con esa profundidad
             depth = self.local_scope_depths[left]
-            old_value = self.env.get(left._name.lexeme, depth)
-        else: # en caso contrario, la buscamos dinámicamente en el entorno global
-            old_value = self.globals.get(left._name.lexeme)
+            get_value = lambda: self.env.get(left._name.lexeme, depth)
+            assign_value = lambda new_value: self.env.assign(left._name.lexeme, new_value, depth)
+        else: # en caso contrario, la buscamos y asignamos dinámicamente en el entorno global
+            get_value = lambda: self.globals.get(left._name.lexeme)
+            assign_value = lambda new_value: self.globals.assign(left._name.lexeme, new_value)
+
+        old_value = get_value() # la funcion lamba para obtener el valor viejo depende de si la variable se encuentra en nuestro diccionario de scope local o no
 
         # el operador ++ solo funciona sobre números
         if not self.is_number(old_value):
-            raise RuntimeError("Operand of ++ must be a number, got: `{old_value}++`")
+            raise RuntimeError(f"Operand of ++ must be a number, got: `{old_value}++`")
 
         new_value = old_value + 1
-
-        # asignamos el nuevo valor
-        if left in self.local_scope_depths: # si la variable se encuentra en nuestro diccionario de scope local, la asignamos en esa profundidad
-            depth = self.local_scope_depths[left]
-            self.env.assign(left._name.lexeme, new_value, depth)
-        else: # en caso contrario, la asignamos dinámicamente en el entorno global
-            self.globals.assign(left._name.lexeme, new_value)
+        assign_value(new_value)# la funcion lamba para asignar el valor nuevo depende de si la variable se encuentra en nuestro diccionario de scope local o no
 
         # devolvemos el valor viejo
         return old_value
