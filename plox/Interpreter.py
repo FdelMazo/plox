@@ -354,14 +354,14 @@ class Interpreter(object):
             get_value = lambda: self.globals.get(left._name.lexeme)
             assign_value = lambda new_value: self.globals.assign(left._name.lexeme, new_value)
 
-        old_value = get_value() # la funcion lamba para obtener el valor viejo depende de si la variable se encuentra en nuestro diccionario de scope local o no
+        old_value = get_value() # la funcion lambda para obtener el valor viejo depende de si la variable se encuentra en nuestro diccionario de scope local o no
 
         # el operador ++ solo funciona sobre números
         if not self.is_number(old_value):
             raise RuntimeError(f"Operand of ++ must be a number, got: `{old_value}++`")
 
         new_value = old_value + 1
-        assign_value(new_value)# la funcion lamba para asignar el valor nuevo depende de si la variable se encuentra en nuestro diccionario de scope local o no
+        assign_value(new_value) # la funcion lambda para asignar el valor nuevo depende de si la variable se encuentra en nuestro diccionario de scope local o no
 
         # devolvemos el valor viejo
         return old_value
