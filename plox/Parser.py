@@ -453,7 +453,7 @@ class Parser(object):
 
         return expr
 
-    # unary          → ( "!" | "-" ) unary | postfix ;
+    # unary          → ( "!" | "-" | "++" ) unary | postfix ;
     def unary(self) -> Expr:
         # a diferencia de las reglas de expresiones binarias,
         # acá el operador es un prefijo.
@@ -462,21 +462,46 @@ class Parser(object):
             operator = self._previous()
             right = self.unary()
             return UnaryExpr(operator, right)
+        
+        if self._match(TokenType.PLUS_PLUS):
+            operator = self._previous()
+            right = self.unary()
+
+            # solo se puede aplicar ++ sobre variables. Si no tenemos una variable, es un error
+            if not isinstance(right, VariableExpr):
+                raise SyntaxError(
+                    f"Invalid prefix target, got `{self._lookahead()}` instead"
+                )
+            
+            # usamos el operador ++ como un syntatic sugar de una suma: x = x + 1
+            # lo parseamos como una asignación para modificar el valor de la variable
+            return AssignmentExpr(
+                right._name,
+                BinaryExpr(right, Token(TokenType.PLUS, lexeme="+", literal=None, line=self._previous().line), LiteralExpr(1))
+            )
 
         # Si no tuve recursividad de unarios, entonces tengo una llamada a un prefijo
         return self.postfix()
 
-    # postfix        → call ( "++" )* ;
+    # postfix        → call ( "++" )? ;
     def postfix(self) -> Expr:
         # acá el operador es un sufijo
         # primero chequeamos lo que tenemos a la izquierda, y después seguimos
         expr = self.call()
 
-        # mientras nos crucemos ++, seguimos parseando
-        # ejemplo: x++, func()++
-        while not self._is_at_end() and self._match(TokenType.PLUS_PLUS):
-            operator = self._previous()
-            expr = PostfixExpr(expr, operator)
+        if self._match(TokenType.PLUS_PLUS):
+            # obtenemos el token ++ que acabamos de consumir
+            plus_plus_token = self._previous()
+
+            # solo se puede aplicar ++ sobre variables. Si no tenemos una variable, es un error
+            if not isinstance(expr, VariableExpr):
+                raise SyntaxError(
+                    f"Invalid prefix target, got `{self._lookahead()}` instead"
+                )
+
+            # representamos el post-increment como un nodo PostfixExpr
+            # el interprete se encarga despues de devolver el valor viejo y después incrementar
+            expr = PostfixExpr(expr, plus_plus_token)
 
         return expr
 
