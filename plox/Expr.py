@@ -6,7 +6,7 @@ class Expr(object):
 
 
 # binary         → expression operator expression ;
-# operator       → "==" | "!=" | "<" | "<=" | ">" | ">=" | "+"  | "-"  | "*" | "/" | "%" ;
+# operator       → "==" | "!=" | "<" | "<=" | ">" | ">=" | "+"  | "-"  | "*" | "/" | "%" | "**";
 class BinaryExpr(Expr):
     def __init__(self, left: Expr, operator: Token, right: Expr):
         self._left = left
