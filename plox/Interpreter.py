@@ -252,6 +252,12 @@ class Interpreter(object):
                         f"Operands of / must be numbers, got: `{left} / {right}`"
                     )
                 return left / right
+            case TokenType.POWER:
+                if not self.is_number(left, right):
+                    raise RuntimeError(
+                        f"Operands of ** must be numbers, got: `{left} ** {right}`"
+                    )
+                return left ** right
             case TokenType.PERCENT:
                 if not self.is_number(left, right):
                     raise RuntimeError(
