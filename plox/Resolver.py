@@ -81,6 +81,7 @@ class Resolver(object):
                 break
 
     def get_warnings_report(self):
+        # Devuelve un unico string con todos los warnings generados
         return "\n".join(self.warnings)
     
     @singledispatchmethod
