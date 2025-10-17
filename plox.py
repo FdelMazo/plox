@@ -72,9 +72,6 @@ class Plox:
             self.printer.print(statements)
             return
 
-        if self.in_repl and not self.mode:
-            statements = list(map(lambda s: PrintStmt(s._expression) if isinstance(s, ExpressionStmt) else s, statements))
-
         resolver = Resolver(self.interpreter)
         for statement in statements:
             try:
@@ -95,7 +92,9 @@ class Plox:
             return
 
         try:
-            self.interpreter.interpret(statements)
+            last_value_produced = self.interpreter.interpret(statements)
+            if self.in_repl and last_value_produced is not None:
+                print(last_value_produced)
         except Exception as e:
             if self.debug:
                 traceback.print_exc()
