@@ -27,6 +27,7 @@ from .Expr import (
 
 class VarInformation:
     def __init__(self, defined: bool, used: bool):
+        # Guardamos si la variable fue definida y si fue usada
         self.defined = defined
         self.used = used 
 
@@ -35,8 +36,8 @@ class Resolver(object):
     def __init__(self, interpreter: Interpreter):
         # Nos guardamos un stack de scopes, para saber cuan anidados estamos
         # En cada scope tenemos una tabla que nos dice si bajo un nombre tenemos
-        # una variable solo declarada (False) o ya definida (True)
-        self.scopes: list[dict[str, bool]] = []
+        # una variable declarada y usada (ver VarInformation)
+        self.scopes: list[dict[str, VarInformation]] = []
         # Una referencia al intérprete, para poder resolver las variables
         self.interpreter = interpreter
 
@@ -52,13 +53,13 @@ class Resolver(object):
         # Declarar una variable es guardarla bajo False en el tope del stack
         if not self.scopes:
             return
-        self.scopes[-1][name] = False
+        self.scopes[-1][name] = VarInformation(defined=False, used=False)
 
     def define(self, name: str):
-        # Declarar una variable es guardarla bajo True en el tope del stack
+        # Definir una variable es guardarla bajo True en el tope del stack
         if not self.scopes:
             return
-        self.scopes[-1][name] = True
+        self.scopes[-1][name] = VarInformation(defined=True, used=False)
 
     @singledispatchmethod
     def resolve(self, arg: Stmt | Expr):
