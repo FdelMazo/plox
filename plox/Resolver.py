@@ -25,6 +25,11 @@ from .Expr import (
     TernaryExpr,
 )
 
+class VarInformation:
+    def __init__(self, defined: bool, used: bool):
+        self.defined = defined
+        self.used = used 
+
 
 class Resolver(object):
     def __init__(self, interpreter: Interpreter):
