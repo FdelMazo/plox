@@ -61,6 +61,13 @@ class Resolver(object):
             return
         self.scopes[-1][name] = VarInformation(defined=True, used=False)
 
+    def mark_used(self, name:str):
+        # Marca una variable como usada (le agrega la informacion a VarInformation)
+        for scope in reversed(self.scopes):
+            if name in scope:
+                scope[name].used = True
+                break
+
     @singledispatchmethod
     def resolve(self, arg: Stmt | Expr):
         raise NameError(f"Unknown statement or expression type: `{type(arg)}`")
@@ -133,7 +140,7 @@ class Resolver(object):
     @resolve.register
     def _(self, expression: VariableExpr):
         # Si la variable esta declarada e intenta ser referenciada antes de ser definida,
-        # es decir, si su valor en la tabla es False, en vez de ser True,
+        # es decir, si defined es False, en vez de ser True,
         # lanzamos un error
         # Básicamente, el error frente a `var x = x;`
         
@@ -149,6 +156,9 @@ class Resolver(object):
         for i, scope in enumerate(reversed(self.scopes)):
             if expression._name.lexeme in scope:
                 self.interpreter.resolve_depth(expression, i)
+
+        # Marcamos la variable como usada
+        self.mark_used(expression._name.lexeme)
 
     @resolve.register
     def _(self, expression: AssignmentExpr):
