@@ -136,7 +136,9 @@ class Resolver(object):
         # es decir, si su valor en la tabla es False, en vez de ser True,
         # lanzamos un error
         # Básicamente, el error frente a `var x = x;`
-        if self.scopes and self.scopes[-1].get(expression._name.lexeme, None) is False:
+        
+        actual_var_info = self.scopes[-1].get(expression._name.lexeme, None) if self.scopes else None
+        if actual_var_info is not None and actual_var_info.defined is False:
             raise NameError(
                 f"Variable `{expression._name.lexeme}` was declared but not defined"
             )
