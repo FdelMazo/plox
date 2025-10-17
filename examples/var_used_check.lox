@@ -1,0 +1,42 @@
+// Para correr en la terminal: ./plox.py --line-by-line examples/var_used_check.lox
+// Plox revisa estaticamente si las variables locales son usadas o no.
+// Convenciones asumidas por el resolver:
+//   - No se toman en cuenta las variables globales
+//   - No cuenta como uso la asignacion de un valor a la variable.
+//   - Nombres de variables que empiezan con "_" no se toman en cuenta en el checkeo. 
+
+// === var local sin usar ===
+// Res: warning por variable no usada
+{ var a = 1; }
+
+// === var local asignada pero nunca leida (write-only) ===
+// Res: warning por variable no usada
+{ var b = 0; b = 42; }
+
+// === var local usada ===
+// Res: sin warning
+{ var c = "ok"; print c; }
+
+// === var local silenciada con prefijo "_" ===
+// Res: sin warning (se ignora por convención)
+{ var _tmp = 10; }
+
+// === var del closure usada ===
+// Res: sin warning por 'e' (leída desde la función interna)
+{ var e = 123; fun f() { print e; } f(); }
+
+// === parámetro no utilizado ===
+// Res: warning por parámetro 'x' no usado
+{ fun g(x) { return 1; } g(99); }
+
+// === parámetro utilizado ===
+// Res: sin warning
+{ fun h(y) { return y; } print h("param ok"); }
+
+// === parámetros silenciados con prefijo "_" ===
+// Res: sin warning
+{ fun sum(_a, _b) { return 0; } sum(1, 2); }
+
+// === globales (no deberían advertir) ===
+// Res: sin warning (las globales no se chequean)
+var G = 777;
