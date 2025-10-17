@@ -62,13 +62,13 @@ class Resolver(object):
                 self.warnings.append(warning)
 
     def declare(self, name: str):
-        # Declarar una variable es guardarla bajo False en el tope del stack
+        # Declarar una variable es guardarla con defined=False en el tope del stack
         if not self.scopes:
             return
         self.scopes[-1][name] = VarInformation(defined=False, used=False)
 
     def define(self, name: str):
-        # Definir una variable es guardarla bajo True en el tope del stack
+        # Definir una variable es guardarla con defined=True en el tope del stack
         if not self.scopes:
             return
         self.scopes[-1][name] = VarInformation(defined=True, used=False)
