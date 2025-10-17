@@ -7,7 +7,6 @@ from plox.Scanner import Scanner
 from plox.Parser import Parser
 from plox.Resolver import Resolver
 from plox.Interpreter import Interpreter
-from plox.Stmt import PrintStmt, ExpressionStmt
 
 # usar prompt_toolkit y termcolor si están disponibles
 try:
