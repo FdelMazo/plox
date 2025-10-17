@@ -56,7 +56,7 @@ class Resolver(object):
             if name.startswith("_"):
                 # Por convencion, si la variable empieza con "_" omitimos el warning
                 continue  
-            
+
             if var_info.used is False:
                 warning = f'[warning] Variable "{name}" is never used.'
                 self.warnings.append(warning)
@@ -80,6 +80,9 @@ class Resolver(object):
                 scope[name].used = True
                 break
 
+    def get_warnings_report(self):
+        return "\n".join(self.warnings)
+    
     @singledispatchmethod
     def resolve(self, arg: Stmt | Expr):
         raise NameError(f"Unknown statement or expression type: `{type(arg)}`")
