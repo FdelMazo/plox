@@ -38,6 +38,10 @@ class Resolver(object):
         # En cada scope tenemos una tabla que nos dice si bajo un nombre tenemos
         # una variable declarada y usada (ver VarInformation)
         self.scopes: list[dict[str, VarInformation]] = []
+
+        # Nos guardamos una lista con los warnings generados
+        self.warnings: list[str] = []
+
         # Una referencia al intérprete, para poder resolver las variables
         self.interpreter = interpreter
 
@@ -47,7 +51,15 @@ class Resolver(object):
 
     def end_scope(self):
         # Terminar un scope es desapilar la tabla
-        self.scopes.pop()
+        scope = self.scopes.pop()
+        for name, var_info in scope.items():
+            if name.startswith("_"):
+                # Por convencion, si la variable empieza con "_" omitimos el warning
+                continue  
+            
+            if var_info.used is False:
+                warning = f'[warning] Variable "{name}" is never used.'
+                self.warnings.append(warning)
 
     def declare(self, name: str):
         # Declarar una variable es guardarla bajo False en el tope del stack
