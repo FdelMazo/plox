@@ -73,7 +73,7 @@ class Scanner(object):
                 self.add_token(TokenType.SEMICOLON)
             case "*":
                 self.add_token(
-                    TokenType.POWER if self._match("*") else TokenType.STAR
+                    TokenType.STAR_STAR if self._match("*") else TokenType.STAR
                 )
             case "%":
                 self.add_token(TokenType.PERCENT)

@@ -252,7 +252,7 @@ class Interpreter(object):
                         f"Operands of / must be numbers, got: `{left} / {right}`"
                     )
                 return left / right
-            case TokenType.POWER:
+            case TokenType.STAR_STAR:
                 if not self.is_number(left, right):
                     raise RuntimeError(
                         f"Operands of ** must be numbers, got: `{left} ** {right}`"

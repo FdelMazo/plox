@@ -458,7 +458,7 @@ class Parser(object):
         expr = self.unary()
         # El operador de potencia es asociativo a derecha, por lo que
         # volvemos a llamar a power() al parsear la rama derecha.
-        if self._match(TokenType.POWER):
+        if self._match(TokenType.STAR_STAR):
             operator = self._previous()
             right = self.power()
             expr = BinaryExpr(expr, operator, right)
