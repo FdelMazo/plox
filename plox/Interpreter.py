@@ -254,6 +254,12 @@ class Interpreter(object):
                 elif right == 0:
                     raise RuntimeError(f"Division by {right} is not allowed")
                 return left / right
+            case TokenType.STAR_STAR:
+                if not self.is_number(left, right):
+                    raise RuntimeError(
+                        f"Operands of ** must be numbers, got: `{left} ** {right}`"
+                    )
+                return left ** right
             case TokenType.PERCENT:
                 if not self.is_number(left, right):
                     raise RuntimeError(

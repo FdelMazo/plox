@@ -9,7 +9,7 @@
 3 >= 3;
 3 == 3;
 "aa" == "aa";
-
+2 ** 3;
 `; // error de scaneo
 1 +; // error de parseo
 "aaa" + 5; // error de ejecución

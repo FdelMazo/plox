@@ -440,17 +440,28 @@ class Parser(object):
 
         return expr
 
-    # factor         → unary ( ( "/" | "*" | "%" ) unary )* ;
+    # factor         → power ( ( "/" | "*" | "%" ) power )* ;
     def factor(self) -> Expr:
-        expr = self.unary()
+        expr = self.power()
 
         # mientras nos crucemos *, / o %, seguimos parseando
         # la secuencia de multiplicaciones, divisiones o modulos
         while not self._is_at_end() and self._match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT):
             operator = self._previous()
-            right = self.unary()
+            right = self.power()
             expr = BinaryExpr(expr, operator, right)
 
+        return expr
+    
+    # power          → unary ( "**" power )? ;
+    def power(self) -> Expr:
+        expr = self.unary()
+        # El operador de potencia es asociativo a derecha, por lo que
+        # volvemos a llamar a power() al parsear la rama derecha.
+        if self._match(TokenType.STAR_STAR):
+            operator = self._previous()
+            right = self.power()
+            expr = BinaryExpr(expr, operator, right)
         return expr
 
     # unary          → ( "!" | "-" | "++" ) unary | postfix ;

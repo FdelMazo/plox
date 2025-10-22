@@ -16,11 +16,14 @@ nil;
 1 < 4;
 3 == 3;
 "a" != "b";
+2 ** 3;
 // agrupamientos
 (true);
 (1 + 5);
 (1 + 5) % 4;
 1 + 5 % 4;
+(2 + 3) ** 2;
+2 + 3 ** 2;
 // expresiones postfix
 x++;
 func()++;
