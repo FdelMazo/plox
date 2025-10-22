@@ -73,12 +73,9 @@ class Resolver(object):
             return
         self.scopes[-1][name] = VarInformation(defined=True, used=False)
 
-    def mark_used(self, name:str):
+    def mark_used(self, var_info: VarInformation):
         # Marca una variable como usada (le agrega la informacion a VarInformation)
-        for scope in reversed(self.scopes):
-            if name in scope:
-                scope[name].used = True
-                break
+        var_info.used = True
 
     def get_warnings_report(self):
         # Devuelve un unico string con todos los warnings generados
@@ -172,9 +169,8 @@ class Resolver(object):
         for i, scope in enumerate(reversed(self.scopes)):
             if expression._name.lexeme in scope:
                 self.interpreter.resolve_depth(expression, i)
-
-        # Marcamos la variable como usada
-        self.mark_used(expression._name.lexeme)
+                # Marcamos la variable como usada
+                self.mark_used(scope[expression._name.lexeme])
 
     @resolve.register
     def _(self, expression: AssignmentExpr):
