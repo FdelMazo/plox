@@ -36,7 +36,7 @@ class Parser(object):
         while not self._is_at_end():
             statements.append(self.statement())
         return statements
-    
+
     # ---------- Reglas de Producción de Statements ---------- #
 
     # statement      → exprStmt | printStmt | varDecl | funDecl | blockStmt | ifStmt | whileStmt | forStmt ;
