@@ -74,6 +74,10 @@ class Plox:
         for statement in statements:
             try:
                 resolver.resolve(statement)
+                # Proponemos manejar los warnings simplemente imprimiendolos
+                if warnings := resolver.get_warnings_report():
+                    print(warnings)
+                    
             except Exception as e:
                 if self.debug:
                     traceback.print_exc()
