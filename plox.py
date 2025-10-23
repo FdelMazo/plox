@@ -39,6 +39,7 @@ class Plox:
             stmt_f=lambda s: colored(s, "red"),
             type_f=lambda s: colored(s, "light_blue"),
         )
+        self.in_repl = True
 
     def run(self, source: str):
         scanner = Scanner(source)
@@ -94,7 +95,9 @@ class Plox:
             return
 
         try:
-            self.interpreter.interpret(statements)
+            last_value_produced = self.interpreter.interpret(statements)
+            if self.in_repl and last_value_produced is not None:
+                print(last_value_produced)
         except Exception as e:
             if self.debug:
                 traceback.print_exc()
@@ -142,6 +145,7 @@ class Plox:
             self.mode = "resolve"
 
         if args.file:
+            self.in_repl = False
             with open(args.file, "r") as file:
                 # Modo line by line, sin tener en cuenta los saltos de linea
                 # Acá estamos haciendo uso de que Python ya sabe dividir archivos en lineas
@@ -153,7 +157,7 @@ class Plox:
                 else:
                     source = file.read()
                     self.run(source)
-
+            self.in_repl = True
             return
 
         while True:

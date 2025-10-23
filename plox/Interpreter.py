@@ -45,7 +45,10 @@ class Interpreter(object):
     # Interpretar es ejecutar la lista de statements que tenemos
     def interpret(self, statements: list[Stmt]):
         for statement in statements:
-            self.execute(statement)
+            #Se guarda el ultimo valor producido por un statement
+            last_value_produced = self.execute(statement)
+        #Se retorna el ultimo valor producido
+        return last_value_produced
 
     # Guarda la profundidad en la que buscar una variable o asignación
     # Es llamado por el resolvedor de scopes para poblar el diccionario
@@ -62,7 +65,7 @@ class Interpreter(object):
     @execute.register
     def _(self, statement: ExpressionStmt):
         # Ejecutar un expression statement es solamente evaluar la expresión
-        self.evaluate(statement._expression)
+        return self.evaluate(statement._expression)
 
     @execute.register
     def _(self, statement: PrintStmt):
