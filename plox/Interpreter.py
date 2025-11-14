@@ -1,5 +1,7 @@
 from functools import singledispatchmethod
 
+from .BuiltIns import get_builtin, __builtins__ as BUILTIN_FUNCTIONS
+
 from .Stmt import (
     Stmt,
     ExpressionStmt,
@@ -33,6 +35,12 @@ class Interpreter(object):
     def __init__(self):
         self.globals = Env()
         self.env = self.globals
+
+        self.local_scope_depths: dict[VariableExpr | AssignmentExpr, int] = {}
+
+        # Registrar funciones built-in en el entorno global de Lox
+        for name, fn in BUILTIN_FUNCTIONS.items():
+            self.globals.define(name, fn)
 
         # De mano del resolvedor (Resolver.py), ahora el intérprete sabe
         # a qué profundidad hay que buscar cada expresión
@@ -117,6 +125,15 @@ class Interpreter(object):
     @execute.register
     def _(self, statement: BlockStmt):
         return self.execute_block(statement._statements, Env(enclosing=self.env))
+    
+    @execute.register
+    def _(self, statement: Stmt):
+        return self.execute_builtin(statement)
+    
+    def execute_builtin(self, lex: str, arguments: list):
+        # Ejecuta una función built-in
+        builtin_function = get_builtin(lex)
+        return builtin_function(self, arguments)
 
     def execute_block(self, statements: list[Stmt], block_env: Env):
         # Para ejecutar un bloque de statements, tenemos que crear un nuevo entorno
