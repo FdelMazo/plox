@@ -1,3 +1,4 @@
+from .BuiltIns import is_builtin
 from .Token import Token, TokenType
 from .Expr import (
     Expr,
@@ -260,6 +261,11 @@ class Parser(object):
             raise SyntaxError(
                 f"Expected function declaration, got `{self._lookahead()}` instead"
             )
+        
+        if is_builtin(self._previous().lexeme):
+            raise SyntaxError(
+                f"Cannot declare function with the name of a built-in function: `{self._previous().lexeme}`"
+            )
 
         function_name = self._previous()
         parameters: list[Token] = []
@@ -308,6 +314,11 @@ class Parser(object):
                 f"Expected variable declaration, got `{self._lookahead()}` instead"
             )
 
+        if is_builtin(self._previous().lexeme):
+            raise SyntaxError(
+                f"Cannot declare variable with the name of a built-in function: `{self._previous().lexeme}`"
+            )
+
         variable_name = self._previous()
 
         # Si no se especifica un valor para la variable, se le asigna Nil
@@ -334,6 +345,10 @@ class Parser(object):
     def assignment(self) -> Expr:
         expr = self.conditional() # una conditional tiene mayor precedencia que una asignacion
 
+        if is_builtin(self._previous().lexeme):
+            raise SyntaxError(
+                f"Cannot make assignments with the name of a built-in function: `{self._previous().lexeme}`"
+            )
         # Solo se puede asignar sobre variables. Si no, es un error
         if self._match(TokenType.EQUAL):
             if not isinstance(expr, VariableExpr):

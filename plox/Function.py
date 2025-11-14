@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from .BuiltIns import is_builtin
+
 if TYPE_CHECKING:
     from .Interpreter import Interpreter
 
@@ -35,6 +37,8 @@ class Function(object):
 
         # Ejecutamos el cuerpo de la función y devolvemos el return value que salte
         try:
+            if is_builtin(self.declaration._name.lexeme):
+                interpreter.execute_builtin(self.declaration._name.lexeme, arguments)
             interpreter.execute_block(self.declaration._body, function_env)
         except ReturnValue as return_value:
             return return_value.value
