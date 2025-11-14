@@ -13,6 +13,9 @@ class BuiltinFunction:
 
 
 def _rand(max_value):
+    if max_value <= 0:
+        raise ValueError("max_value must be greater than 0")
+
     import random
     return random.randint(0, int(max_value) - 1)
 
@@ -21,6 +24,9 @@ def _time():
     return time.time()
 
 def _sqrt(value):
+    if value < 0:
+        raise ValueError("Cannot compute square root of negative number")
+
     import math
     return math.sqrt(value)
 
