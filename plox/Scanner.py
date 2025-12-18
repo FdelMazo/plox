@@ -113,8 +113,8 @@ class Scanner(object):
                 self._advance()  # consumimos el cierre de la cadena
 
                 # la cadena la guardamos sin las comillas
-                value = self._source[self._start + 1 : self._current - 1]
-                self.add_token(TokenType.STRING, literal=value)
+                str_value = self._source[self._start + 1 : self._current - 1]
+                self.add_token(TokenType.STRING, literal=str_value)
 
             case _ if c in "0123456789":
                 # consumimos el número hasta que no sea un dígito o un punto para decimales

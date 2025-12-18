@@ -1,3 +1,6 @@
 __pycache__
 .plox_history
 .venv
+.mypy_cache
+*.egg-info
+build
