@@ -1,4 +1,5 @@
 from functools import singledispatchmethod
+from typing import Union, cast
 
 from .Stmt import (
     Stmt,
@@ -354,7 +355,8 @@ class Interpreter(object):
     
     @evaluate.register
     def _(self, expression: PostfixExpr):
-        left = expression._left
+        # TODO: this cast is not ok
+        left = cast(VariableExpr | AssignmentExpr, expression._left)
 
         # definimos funciones lambda para obtener el valor viejo y asignar el nuevo
         if left in self.local_scope_depths: # si la variable se encuentra en nuestro diccionario de scope local, la buscamos y asignamos con esa profundidad
@@ -371,7 +373,7 @@ class Interpreter(object):
         if not self.is_number(old_value):
             raise RuntimeError(f"Operand of ++ must be a number, got: `{old_value}++`")
 
-        new_value = old_value + 1
+        new_value = cast(float, old_value) + 1
         assign_value(new_value) # la funcion lambda para asignar el valor nuevo depende de si la variable se encuentra en nuestro diccionario de scope local o no
 
         # devolvemos el valor viejo

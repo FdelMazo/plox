@@ -50,7 +50,7 @@ class PrettyPrinter:
         type_f: Callable[[str], str] | None = None,
     ):
         self._ofs = 0
-        self._path = []
+        self._path: list[Branch] = []
         self._branch_f = branch_f
         self._expr_f = expr_f
         self._stmt_f = stmt_f
