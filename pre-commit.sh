@@ -1,13 +1,11 @@
 #!/bin/bash
 
-python3 -m pytest -v
-
-mypy . --explicit-package-bases --check-untyped-defs --exclude 'bytecode/'
+uv run mypy --check-untyped-defs --explicit-package-bases --exclude 'bytecode/' plox
 if [ $? -ne 0 ]; then
   exit 1
 fi
 
-cd bytecode && mypy . --explicit-package-bases --check-untyped-defs
+cd bytecode && uv run mypy --check-untyped-defs --explicit-package-bases .
 if [ $? -ne 0 ]; then
   exit 1
 fi

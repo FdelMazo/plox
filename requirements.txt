@@ -1,4 +1,0 @@
-prompt_toolkit==3.0.51
-mypy==1.15.0
-termcolor==3.1.0
-pytest==8.4.1

@@ -10,7 +10,7 @@ class Scanner(object):
         self._source = source  # la linea entera de caracteres crudos, sin significado
         self._start = 0  # caracter desde el que empezamos a leer un nuevo lexema
         self._current = 0  # caracter donde estamos parados
-        self._line = 1 # linea donde estamos parados
+        self._line = 1  # linea donde estamos parados
 
     # Obtiene la lista de tokens escaneados
     def scan(self) -> list[Token]:
@@ -36,7 +36,9 @@ class Scanner(object):
     # Agrega un token a la lista
     def add_token(self, token_type: TokenType, literal=None):
         # nos guardamos el token con el lexema actual
-        self.tokens.append(Token(token_type, lexeme=self.lexeme(), literal=literal, line=self._line))
+        self.tokens.append(
+            Token(token_type, lexeme=self.lexeme(), literal=literal, line=self._line)
+        )
 
     # Escanea un token individual
     def scan_token(self):
@@ -92,10 +94,14 @@ class Scanner(object):
                         if self._match("\n"):
                             self._line += 1
                             continue
-                        if self._match("*") and self._match("/"):  # cierre de comentario
+                        if self._match("*") and self._match(
+                            "/"
+                        ):  # cierre de comentario
                             level -= 1
                             continue
-                        if self._match("/") and self._match("*"):  # apertura de comentario
+                        if self._match("/") and self._match(
+                            "*"
+                        ):  # apertura de comentario
                             level += 1
                             continue
                         self._advance()
@@ -132,9 +138,13 @@ class Scanner(object):
             case ":":
                 self.add_token(TokenType.COLON)
 
-            case '\'':
+            case "'":
                 # consumimos la cadena hasta el proximo ' o hasta el fin de linea
-                while not self._is_at_end() and not self._lookahead() == '\'' and not self._lookahead() == "\n":
+                while (
+                    not self._is_at_end()
+                    and not self._lookahead() == "'"
+                    and not self._lookahead() == "\n"
+                ):
                     self._advance()
 
                 if self._is_at_end() or self._lookahead() == "\n":

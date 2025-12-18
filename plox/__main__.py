@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import traceback
 import argparse
 from plox.PrettyPrinter import PrettyPrinter
@@ -8,24 +6,15 @@ from plox.Parser import Parser
 from plox.Resolver import Resolver
 from plox.Interpreter import Interpreter
 
-# usar prompt_toolkit y termcolor si están disponibles
-try:
-    from prompt_toolkit import PromptSession
-    from prompt_toolkit.history import FileHistory
-    from termcolor import colored
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import FileHistory
+from termcolor import colored
+from pathlib import Path
+from platformdirs import user_data_dir
 
-    promptsession = PromptSession(history=FileHistory(".plox_history"))
 
-    def prompt_input():
-        return promptsession.prompt("> ")
-
-except ImportError:
-
-    def colored(text, _):
-        return text
-
-    def prompt_input():
-        return input("> ")
+history_file = Path(user_data_dir("plox", ensure_exists=True)) / ".plox_history"
+promptsession: PromptSession[str] = PromptSession(history=FileHistory(history_file))
 
 
 class Plox:
@@ -162,13 +151,17 @@ class Plox:
 
         while True:
             try:
-                source = prompt_input()
+                source = promptsession.prompt("> ")
             except (EOFError, KeyboardInterrupt):
                 break
 
             self.run(source)
 
 
-if __name__ == "__main__":
+def main():
     plox = Plox()
     plox.main()
+
+
+if __name__ == "__main__":
+    main()
