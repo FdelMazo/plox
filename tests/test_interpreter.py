@@ -87,3 +87,22 @@ def test_errors():
         Interpreter().evaluate(expr)
 
     assert "Operands of - must be numbers" in str(excinfo.value)
+
+
+def test_logic():
+    tests = [
+        ("true and true", True),
+        ("true and false", False),
+        ("false and true", False),
+        ("false and false", False),
+        ("true or true", True),
+        ("true or false", True),
+        ("false or true", True),
+        ("false or false", False),
+    ]
+
+    for src, expected in tests:
+        tokens = Scanner(src).scan()
+        expr = Parser(tokens).expression()
+        value = Interpreter().evaluate(expr)
+        assert value == expected
