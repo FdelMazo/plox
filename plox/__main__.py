@@ -80,9 +80,9 @@ class Plox:
             return
 
         try:
-            last_value_produced = self.interpreter.interpret(statements)
-            if self.in_repl and last_value_produced is not None:
-                print(last_value_produced)
+            lastvalue_produced = self.interpreter.interpret(statements)
+            if self.in_repl and lastvalue_produced is not None:
+                print(lastvalue_produced)
         except Exception as e:
             if self.debug:
                 traceback.print_exc()

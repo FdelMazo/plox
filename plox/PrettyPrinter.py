@@ -77,113 +77,113 @@ class PrettyPrinter:
     @_accept.register
     def _(self, stmt: BlockStmt):
         self._store_stmt("block:", "BlockStmt")
-        self._shift(stmt._statements)
+        self._shift(stmt.statements)
 
     @_accept.register
     def _(self, stmt: ExpressionStmt):
-        self._accept(stmt._expression)
+        self._accept(stmt.expression)
 
     @_accept.register
     def _(self, stmt: FunDecl):
-        name = stmt._name.lexeme
-        parameters = ",".join(p.lexeme for p in stmt._parameters)
+        name = stmt.name.lexeme
+        parameters = ",".join(p.lexeme for p in stmt.parameters)
         tag = f"{name}({parameters}):"
 
         self._store_stmt(tag, "FunDecl")
-        self._shift(stmt._body)
+        self._shift(stmt.body)
 
     @_accept.register
     def _(self, stmt: IfStmt):
         self._store_stmt("if:", "IfStmt(cond)")
-        self._shift([stmt._condition])
+        self._shift([stmt.condition])
 
         self._store_stmt("then:", "IfStmt(then)")
-        self._shift([stmt._thenBranch])
+        self._shift([stmt.thenBranch])
 
-        if else_branch := stmt._elseBranch:
+        if else_branch := stmt.elseBranch:
             self._store_stmt("else:", "IfStmt(else)")
             self._shift([else_branch])
 
     @_accept.register
     def _(self, stmt: PrintStmt):
         self._store_stmt("print:", "PrintStmt")
-        self._shift([stmt._expression])
+        self._shift([stmt.expression])
 
     @_accept.register
     def _(self, stmt: ReturnStmt):
         self._store_stmt("return:", "ReturnStmt")
 
-        if expr := stmt._value:
+        if expr := stmt.value:
             self._shift([expr])
 
     @_accept.register
     def _(self, stmt: VarDecl):
-        tag = stmt._name.lexeme
+        tag = stmt.name.lexeme
         self._store_stmt(f"{tag}:", "VarDecl")
 
-        if init := stmt._initializer:
+        if init := stmt.initializer:
             self._shift([init])
 
     @_accept.register
     def _(self, stmt: WhileStmt):
         self._store_stmt("while:", "WhileStmt(cond)")
-        self._shift([stmt._condition])
+        self._shift([stmt.condition])
 
         self._store_stmt("body:", "WhileStmt(body)")
-        self._shift([stmt._body])
+        self._shift([stmt.body])
 
     # ---------- Handlers de Expresiones ---------- #
 
     @_accept.register
     def _(self, expr: AssignmentExpr):
-        self._store_expr(expr._name.lexeme, "AssignmentExpr")
-        self._branch(Branch.LAST, [expr._value])
+        self._store_expr(expr.name.lexeme, "AssignmentExpr")
+        self._branch(Branch.LAST, [expr.value])
 
     @_accept.register
     def _(self, expr: BinaryExpr):
-        self._store_expr(expr._operator.lexeme, "BinaryExpr")
-        self._branch(Branch.MID, [expr._right])
-        self._branch(Branch.LAST, [expr._left])
+        self._store_expr(expr.operator.lexeme, "BinaryExpr")
+        self._branch(Branch.MID, [expr.right])
+        self._branch(Branch.LAST, [expr.left])
 
     @_accept.register
     def _(self, expr: CallExpr):
         self._store_expr("@", "CallExpr")
-        self._branch(Branch.MID, reversed(expr._arguments))
-        self._branch(Branch.LAST, [expr._callee])
+        self._branch(Branch.MID, reversed(expr.arguments))
+        self._branch(Branch.LAST, [expr.callee])
 
     @_accept.register
     def _(self, expr: GroupingExpr):
         self._store_expr("()", "GroupingExpr")
-        self._branch(Branch.LAST, [expr._expression])
+        self._branch(Branch.LAST, [expr.expression])
 
     @_accept.register
     def _(self, expr: LiteralExpr):
-        if isinstance(expr._value, str):
-            tag = f'"{expr._value}"'
+        if isinstance(expr.value, str):
+            tag = f'"{expr.value}"'
         else:
-            tag = str(expr._value)
+            tag = str(expr.value)
 
         self._store_expr(tag, "LiteralExpr")
 
     @_accept.register
     def _(self, expr: LogicExpr):
-        self._store_expr(expr._operator.lexeme, "LogicExpr")
-        self._branch(Branch.MID, [expr._right])
-        self._branch(Branch.LAST, [expr._left])
+        self._store_expr(expr.operator.lexeme, "LogicExpr")
+        self._branch(Branch.MID, [expr.right])
+        self._branch(Branch.LAST, [expr.left])
 
     @_accept.register
     def _(self, expr: PostfixExpr):
-        self._store_expr(expr._operator.lexeme, "PostfixExpr")
-        self._branch(Branch.LAST, [expr._left])
+        self._store_expr(expr.operator.lexeme, "PostfixExpr")
+        self._branch(Branch.LAST, [expr.left])
 
     @_accept.register
     def _(self, expr: UnaryExpr):
-        self._store_expr(expr._operator.lexeme, "UnaryExpr")
-        self._branch(Branch.LAST, [expr._right])
+        self._store_expr(expr.operator.lexeme, "UnaryExpr")
+        self._branch(Branch.LAST, [expr.right])
 
     @_accept.register
     def _(self, expr: VariableExpr):
-        self._store_expr(expr._name.lexeme, "VariableExpr")
+        self._store_expr(expr.name.lexeme, "VariableExpr")
 
     # ---------- Helpers ---------- #
 

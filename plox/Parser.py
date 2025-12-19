@@ -27,8 +27,8 @@ from .Stmt import (
 
 class Parser(object):
     def __init__(self, tokens: list[Token]):
-        self._tokens = tokens  # la lista de tokens ya escaneados
-        self._current = 0  # el token en el que estamos parados
+        self.tokens = tokens  # la lista de tokens ya escaneados
+        self.current = 0  # el token en el que estamos parados
 
     # Obtiene la lista de statements parseados
     def parse(self) -> list[Stmt]:
@@ -261,7 +261,7 @@ class Parser(object):
                 f"Expected function declaration, got `{self._lookahead()}` instead"
             )
 
-        function_name = self._previous()
+        functionname = self._previous()
         parameters: list[Token] = []
 
         # Después del nombre de la función, vienen los argumentos entre paréntesis
@@ -299,7 +299,7 @@ class Parser(object):
             )
 
         body = self.block()
-        return FunDecl(function_name, parameters, body)
+        return FunDecl(functionname, parameters, body)
 
     # varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
     def variable_declaration(self) -> VarDecl:
@@ -308,13 +308,13 @@ class Parser(object):
                 f"Expected variable declaration, got `{self._lookahead()}` instead"
             )
 
-        variable_name = self._previous()
+        variablename = self._previous()
 
         # Si no se especifica un valor para la variable, se le asigna Nil
         if self._match(TokenType.EQUAL):  # var x = valor;
-            variable_value = self.expression()
+            variablevalue = self.expression()
         else:  # var x;
-            variable_value = None
+            variablevalue = None
 
         # los statements terminan sí o sí con un punto y coma
         if not self._match(TokenType.SEMICOLON):
@@ -322,7 +322,7 @@ class Parser(object):
                 f"Expected ';' after variable declaration, got `{self._lookahead()}` instead"
             )
 
-        return VarDecl(variable_name, variable_value)
+        return VarDecl(variablename, variablevalue)
 
     # ---------- Reglas de Producción de Expresiones ---------- #
 
@@ -332,7 +332,9 @@ class Parser(object):
 
     # assignment     → IDENTIFIER "=" assignment | conditional ;
     def assignment(self) -> Expr:
-        expr = self.conditional() # una conditional tiene mayor precedencia que una asignacion
+        expr = (
+            self.conditional()
+        )  # una conditional tiene mayor precedencia que una asignacion
 
         # Solo se puede asignar sobre variables. Si no, es un error
         if self._match(TokenType.EQUAL):
@@ -342,7 +344,7 @@ class Parser(object):
                 )
 
             value = self.assignment()
-            return AssignmentExpr(expr._name, value)
+            return AssignmentExpr(expr.name, value)
 
         return expr
 
@@ -363,7 +365,7 @@ class Parser(object):
                 raise SyntaxError(
                     f"Expected ':' after ternary true-branch, got `{self._lookahead()}` instead"
                 )
-            
+
             # permitimos que la branch false pueda ser otra asignacion
             false_branch = self.assignment()
             expr = TernaryExpr(expr, true_branch, false_branch)
@@ -446,13 +448,15 @@ class Parser(object):
 
         # mientras nos crucemos *, / o %, seguimos parseando
         # la secuencia de multiplicaciones, divisiones o modulos
-        while not self._is_at_end() and self._match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT):
+        while not self._is_at_end() and self._match(
+            TokenType.STAR, TokenType.SLASH, TokenType.PERCENT
+        ):
             operator = self._previous()
             right = self.power()
             expr = BinaryExpr(expr, operator, right)
 
         return expr
-    
+
     # power          → unary ( "**" power )? ;
     def power(self) -> Expr:
         expr = self.unary()
@@ -473,7 +477,7 @@ class Parser(object):
             operator = self._previous()
             right = self.unary()
             return UnaryExpr(operator, right)
-        
+
         if self._match(TokenType.PLUS_PLUS):
             operator = self._previous()
             right = self.unary()
@@ -483,12 +487,21 @@ class Parser(object):
                 raise SyntaxError(
                     f"Invalid prefix target, got `{self._lookahead()}` instead"
                 )
-            
+
             # usamos el operador ++ como un syntatic sugar de una suma: x = x + 1
             # lo parseamos como una asignación para modificar el valor de la variable
             return AssignmentExpr(
-                right._name,
-                BinaryExpr(right, Token(TokenType.PLUS, lexeme="+", literal=None, line=self._previous().line), LiteralExpr(1))
+                right.name,
+                BinaryExpr(
+                    right,
+                    Token(
+                        TokenType.PLUS,
+                        lexeme="+",
+                        literal=None,
+                        line=self._previous().line,
+                    ),
+                    LiteralExpr(1),
+                ),
             )
 
         # Si no tuve recursividad de unarios, entonces tengo una llamada a un prefijo
@@ -589,17 +602,17 @@ class Parser(object):
 
     # Devuelve el token anterior, ya consumido
     def _previous(self) -> Token:
-        return self._tokens[self._current - 1]
+        return self.tokens[self.current - 1]
 
     # Devuelve el token actual, sin consumirlo
     def _lookahead(self) -> Token:
-        return self._tokens[self._current]
+        return self.tokens[self.current]
 
     # Consume un token y lo devuelve
     def _advance(self) -> Token:
         token = self._lookahead()
         if not self._is_at_end():
-            self._current += 1
+            self.current += 1
 
         return token
 

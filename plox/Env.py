@@ -3,12 +3,12 @@ from typing import Optional
 
 class Env(object):
     def __init__(self, *, enclosing: Optional["Env"] = None):
-        self._values: dict[str, object] = {}
+        self.values: dict[str, object] = {}
         # El entorno global es el único que no tiene enclosing
         self.enclosing: Optional["Env"] = enclosing
 
     def __repr__(self) -> str:
-        return f"Environment: {self._values}{f' (Enclosing{self.enclosing})' if self.enclosing else ''}"
+        return f"Environment: {self.values}{f' (Enclosing{self.enclosing})' if self.enclosing else ''}"
 
     def ancestor(self, distance: int) -> "Env":
         # Agarrar el scope a una distancia particular del actual
@@ -27,7 +27,7 @@ class Env(object):
         # No estamos chequeando si la variable ya esta definida.
         # Lox nos permite hacer var x = 1; var x = 2;
         # mientras que otros lenguajes lo consideran un error
-        self._values[name] = value
+        self.values[name] = value
 
     def get(self, name: str, distance: int | None = None) -> object:
         scope = self
@@ -36,8 +36,8 @@ class Env(object):
         if distance is not None:
             scope = self.ancestor(distance)
 
-        if name in scope._values:
-            return scope._values[name]
+        if name in scope.values:
+            return scope.values[name]
 
         # Lox considera un error el intentar referenciar una
         # variable inexistente
@@ -52,8 +52,8 @@ class Env(object):
         if distance is not None:
             scope = self.ancestor(distance)
 
-        if name in scope._values:
-            scope._values[name] = value
+        if name in scope.values:
+            scope.values[name] = value
             return value
 
         # Si no encontramos la variable, lanzamos un error!

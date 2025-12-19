@@ -46,10 +46,10 @@ class Interpreter(object):
     # Interpretar es ejecutar la lista de statements que tenemos
     def interpret(self, statements: list[Stmt]):
         for statement in statements:
-            #Se guarda el ultimo valor producido por un statement
-            last_value_produced = self.execute(statement)
-        #Se retorna el ultimo valor producido
-        return last_value_produced
+            # Se guarda el ultimo valor producido por un statement
+            lastvalue_produced = self.execute(statement)
+        # Se retorna el ultimo valor producido
+        return lastvalue_produced
 
     # Guarda la profundidad en la que buscar una variable o asignación
     # Es llamado por el resolvedor de scopes para poblar el diccionario
@@ -66,23 +66,21 @@ class Interpreter(object):
     @execute.register
     def _(self, statement: ExpressionStmt):
         # Ejecutar un expression statement es solamente evaluar la expresión
-        return self.evaluate(statement._expression)
+        return self.evaluate(statement.expression)
 
     @execute.register
     def _(self, statement: PrintStmt):
         # Ejecutar un print statement es evaluar la expresión e imprimir el resultado
-        value = self.evaluate(statement._expression)
+        value = self.evaluate(statement.expression)
         print(value)
 
     @execute.register
     def _(self, statement: VarDecl):
         # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
-        if statement._initializer is not None:
-            self.env.define(
-                statement._name.lexeme, self.evaluate(statement._initializer)
-            )
+        if statement.initializer is not None:
+            self.env.define(statement.name.lexeme, self.evaluate(statement.initializer))
         else:
-            self.env.define(statement._name.lexeme, statement._initializer)
+            self.env.define(statement.name.lexeme, statement.initializer)
 
     @execute.register
     def _(self, statement: FunDecl):
@@ -90,37 +88,37 @@ class Interpreter(object):
         # 1. Construir la función
         fun = Function(statement, self.env)
         # 2. Atarla a su nombre
-        self.env.define(statement._name.lexeme, fun)
+        self.env.define(statement.name.lexeme, fun)
 
     @execute.register
     def _(self, statement: ReturnStmt):
-        return_value = None
-        if statement._value is not None:
+        returnvalue = None
+        if statement.value is not None:
             # Si hay un valor de retorno, lo evaluamos y lo lanzamos cual error
-            return_value = self.evaluate(statement._value)
+            returnvalue = self.evaluate(statement.value)
 
-        raise ReturnValue(return_value)
+        raise ReturnValue(returnvalue)
 
     @execute.register
     def _(self, statement: IfStmt):
         # El if se implementa con... un if
         # Si la condición resuelve a verdadero, ejecuto el bloque del then
         # si no, ejecuto el bloque del else
-        if self.is_truthy(self.evaluate(statement._condition)):
-            self.execute(statement._thenBranch)
-        elif statement._elseBranch is not None:
+        if self.is_truthy(self.evaluate(statement.condition)):
+            self.execute(statement.thenBranch)
+        elif statement.elseBranch is not None:
             # Si la condición es falsa y hay un bloque de else, lo ejecuto
-            self.execute(statement._elseBranch)
+            self.execute(statement.elseBranch)
 
     @execute.register
     def _(self, statement: WhileStmt):
         # El while se implementa con... un while
-        while self.is_truthy(self.evaluate(statement._condition)):
-            self.execute(statement._body)
+        while self.is_truthy(self.evaluate(statement.condition)):
+            self.execute(statement.body)
 
     @execute.register
     def _(self, statement: BlockStmt):
-        return self.execute_block(statement._statements, Env(enclosing=self.env))
+        return self.execute_block(statement.statements, Env(enclosing=self.env))
 
     def execute_block(self, statements: list[Stmt], block_env: Env):
         # Para ejecutar un bloque de statements, tenemos que crear un nuevo entorno
@@ -150,41 +148,41 @@ class Interpreter(object):
         # la buscamos con esa profundidad.
         if expression in self.local_scope_depths:
             depth = self.local_scope_depths[expression]
-            return self.env.get(expression._name.lexeme, depth)
+            return self.env.get(expression.name.lexeme, depth)
 
         # Si no, la buscamos dinámicamente en el entorno global
-        return self.globals.get(expression._name.lexeme)
+        return self.globals.get(expression.name.lexeme)
 
     @evaluate.register
     def _(self, expression: AssignmentExpr):
-        value = self.evaluate(expression._value)
+        value = self.evaluate(expression.value)
 
         # Si la variable se encuentra en nuestro diccionario de scope local,
         # la asignamos en esa profundidad.
         if expression in self.local_scope_depths:
             depth = self.local_scope_depths[expression]
-            self.env.assign(expression._name.lexeme, value, depth)
+            self.env.assign(expression.name.lexeme, value, depth)
             return value
 
         # Si no, la asignamos en el entorno global
-        self.globals.assign(expression._name.lexeme, value)
+        self.globals.assign(expression.name.lexeme, value)
         return value
 
     @evaluate.register
     def _(self, expression: LiteralExpr):
         # Evaluar expresiones literales es solamente devolver el valor  ya escaneado
-        return expression._value
+        return expression.value
 
     @evaluate.register
     def _(self, expression: GroupingExpr):
         # Para evaluar expresiones agrupadas, solo hay que evaluar la expresión contenida
-        return self.evaluate(expression._expression)
+        return self.evaluate(expression.expression)
 
     @evaluate.register
     def _(self, expression: UnaryExpr):
-        right = self.evaluate(expression._right)
+        right = self.evaluate(expression.right)
 
-        match expression._operator.token_type:
+        match expression.operator.token_type:
             case TokenType.MINUS:
                 # El operador - solo funciona sobre números
                 if not self.is_number(right):
@@ -196,7 +194,7 @@ class Interpreter(object):
                 # Negar un valor lo castea implicitamente a un booleano
                 return not self.is_truthy(right)
             case _:
-                raise RuntimeError(f"Unknown unary operator: `{expression._operator}`")
+                raise RuntimeError(f"Unknown unary operator: `{expression.operator}`")
 
     @evaluate.register
     def _(self, expression: BinaryExpr):
@@ -207,8 +205,8 @@ class Interpreter(object):
         # En vez de evaluar el primer operador y chequear su tipo,
         # y levantar un error antes de hacerlo con el segundo,
         # evaluamos y chequeamos todo y luego levantamos el error.
-        left = self.evaluate(expression._left)
-        right = self.evaluate(expression._right)
+        left = self.evaluate(expression.left)
+        right = self.evaluate(expression.right)
 
         # Es acá donde más ojo hay que poner en qué utilizamos del lenguaje de la implementación,
         # y sobre qué agregamos lógica propia.
@@ -217,7 +215,7 @@ class Interpreter(object):
         # Si no, el riesgo es que una implementación de Lox en otro lenguaje de resultados distintos
         # frente a código de Lox.
 
-        match expression._operator.token_type:
+        match expression.operator.token_type:
             # Por ejemplo, Lox no hace coerciones de tipos implicitas en la igualdad,
             # y Python tampoco. Es decir, "1" == 1 es False en ambos lenguajes.
             # Si este intérprete estuviese implementado en Ruby o JavaScript,
@@ -263,7 +261,7 @@ class Interpreter(object):
                     raise RuntimeError(
                         f"Operands of ** must be numbers, got: `{left} ** {right}`"
                     )
-                return left ** right
+                return left**right
             case TokenType.PERCENT:
                 if not self.is_number(left, right):
                     raise RuntimeError(
@@ -299,36 +297,36 @@ class Interpreter(object):
             case TokenType.BANG_EQUAL:
                 return left != right
             case _:
-                raise RuntimeError(f"Unknown binary operator: `{expression._operator}`")
+                raise RuntimeError(f"Unknown binary operator: `{expression.operator}`")
 
     @evaluate.register
     def _(self, expression: LogicExpr):
         # Tanto en el or como en el and, empezamos por evaluar el primer operando
-        left = self.evaluate(expression._left)
+        left = self.evaluate(expression.left)
 
         # En un or, si el primer operando es truthy, lo devolvemos
         # sin evaluar el segundo
-        if expression._operator.token_type == TokenType.OR:
+        if expression.operator.token_type == TokenType.OR:
             if self.is_truthy(left):
                 return left
 
         # En cambio, en los and, si el primer operando no es truthy,
         # ya debemos corto-circuitear y devolverlo
-        if expression._operator.token_type == TokenType.AND:
+        if expression.operator.token_type == TokenType.AND:
             if not self.is_truthy(left):
                 return left
 
         # En ambos casos, si no cortocircuitamos, evaluamos el segundo operando
-        return self.evaluate(expression._right)
+        return self.evaluate(expression.right)
 
     @evaluate.register
     def _(self, expression: CallExpr):
         # Evaluamos al llamado a la función, que puede ser cualquier cosa
-        callee = self.evaluate(expression._callee)
+        callee = self.evaluate(expression.callee)
 
         # Evaluamos cada argumento de la llamada
         arguments = []
-        for arg in expression._arguments:
+        for arg in expression.arguments:
             arguments.append(self.evaluate(arg))
 
         # Si el llamado no es una función, levantamos un error
@@ -342,42 +340,52 @@ class Interpreter(object):
             )
 
         return callee(self, arguments)
-    
+
     @evaluate.register
     def _(self, expression: TernaryExpr):
-        condition = self.evaluate(expression._condition)
+        condition = self.evaluate(expression.condition)
         if self.is_truthy(condition):
             # si condition es truthy, evaluamos la rama verdadera
-            return self.evaluate(expression._true_branch)
-        
+            return self.evaluate(expression.true_branch)
+
         # si condition es falsy, evaluamos la rama falsa
-        return self.evaluate(expression._false_branch)
-    
+        return self.evaluate(expression.false_branch)
+
     @evaluate.register
     def _(self, expression: PostfixExpr):
         # TODO: this cast is not ok
-        left = cast(VariableExpr | AssignmentExpr, expression._left)
+        left = cast(VariableExpr | AssignmentExpr, expression.left)
 
         # definimos funciones lambda para obtener el valor viejo y asignar el nuevo
-        if left in self.local_scope_depths: # si la variable se encuentra en nuestro diccionario de scope local, la buscamos y asignamos con esa profundidad
+        if (
+            left in self.local_scope_depths
+        ):  # si la variable se encuentra en nuestro diccionario de scope local, la buscamos y asignamos con esa profundidad
             depth = self.local_scope_depths[left]
-            get_value = lambda: self.env.get(left._name.lexeme, depth)
-            assign_value = lambda new_value: self.env.assign(left._name.lexeme, new_value, depth)
-        else: # en caso contrario, la buscamos y asignamos dinámicamente en el entorno global
-            get_value = lambda: self.globals.get(left._name.lexeme)
-            assign_value = lambda new_value: self.globals.assign(left._name.lexeme, new_value)
+            getvalue = lambda: self.env.get(left.name.lexeme, depth)
+            assignvalue = lambda newvalue: self.env.assign(
+                left.name.lexeme, newvalue, depth
+            )
+        else:  # en caso contrario, la buscamos y asignamos dinámicamente en el entorno global
+            getvalue = lambda: self.globals.get(left.name.lexeme)
+            assignvalue = lambda newvalue: self.globals.assign(
+                left.name.lexeme, newvalue
+            )
 
-        old_value = get_value() # la funcion lambda para obtener el valor viejo depende de si la variable se encuentra en nuestro diccionario de scope local o no
+        oldvalue = (
+            getvalue()
+        )  # la funcion lambda para obtener el valor viejo depende de si la variable se encuentra en nuestro diccionario de scope local o no
 
         # el operador ++ solo funciona sobre números
-        if not self.is_number(old_value):
-            raise RuntimeError(f"Operand of ++ must be a number, got: `{old_value}++`")
+        if not self.is_number(oldvalue):
+            raise RuntimeError(f"Operand of ++ must be a number, got: `{oldvalue}++`")
 
-        new_value = cast(float, old_value) + 1
-        assign_value(new_value) # la funcion lambda para asignar el valor nuevo depende de si la variable se encuentra en nuestro diccionario de scope local o no
+        newvalue = cast(float, oldvalue) + 1
+        assignvalue(
+            newvalue
+        )  # la funcion lambda para asignar el valor nuevo depende de si la variable se encuentra en nuestro diccionario de scope local o no
 
         # devolvemos el valor viejo
-        return old_value
+        return oldvalue
 
     # ---------- Helpers ---------- #
 

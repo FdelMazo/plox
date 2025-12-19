@@ -21,7 +21,7 @@ class Function(object):
     ):
         self.closure = closure
         self.declaration = declaration
-        self.arity = len(declaration._parameters)
+        self.arity = len(declaration.parameters)
 
     # La invocación! La parte mas linda. El código toma vida
     def __call__(self, interpreter: "Interpreter", arguments: list):
@@ -30,18 +30,18 @@ class Function(object):
 
         # Definimos los parámetros en el nuevo entorno
         # con el valor de los argumentos
-        for param, arg in zip(self.declaration._parameters, arguments):
+        for param, arg in zip(self.declaration.parameters, arguments):
             function_env.define(param.lexeme, arg)
 
         # Ejecutamos el cuerpo de la función y devolvemos el return value que salte
         try:
-            interpreter.execute_block(self.declaration._body, function_env)
-        except ReturnValue as return_value:
-            return return_value.value
+            interpreter.execute_block(self.declaration.body, function_env)
+        except ReturnValue as returnvalue:
+            return returnvalue.value
 
         # Si no hubo return, devolvemos nil
         return None
 
     def __repr__(self) -> str:
-        params = ", ".join(param.lexeme for param in self.declaration._parameters)
-        return f"<fn {self.declaration._name.lexeme}({params})>"
+        params = ", ".join(param.lexeme for param in self.declaration.parameters)
+        return f"<fn {self.declaration.name.lexeme}({params})>"
