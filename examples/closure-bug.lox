@@ -6,15 +6,13 @@
 // Sin embargo, al declarar de nuevo la variable a, se re-definio el entorno global
 // y al intentar referenciarlo de nuevo, se usó la versión actualizada.
 
-// var a = "global";
-// {
-// fun showA() {
-//   print a;
-// }
-//
-// showA();
-// var a = "block";
-// showA();
-// }
+var a = "global";
+{
+   fun showA() {
+     print a;
+   }
 
-var a = "global" ; { fun showA() { print a; } showA(); var a = "block"; showA();  }
+   showA();
+   var a = "block";
+   showA();
+}
