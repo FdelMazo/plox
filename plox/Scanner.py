@@ -7,21 +7,21 @@ class Scanner(object):
         self.tokens: list[Token] = []
 
         # El lexema que queremos capturar es el que esta entre el start y el current de source
-        self._source = source  # la linea entera de caracteres crudos, sin significado
-        self._start = 0  # caracter desde el que empezamos a leer un nuevo lexema
-        self._current = 0  # caracter donde estamos parados
-        self._line = 1 # linea donde estamos parados
+        self.source = source  # la linea entera de caracteres crudos, sin significado
+        self.start = 0  # caracter desde el que empezamos a leer un nuevo lexema
+        self.current = 0  # caracter donde estamos parados
+        self.line = 1  # linea donde estamos parados
 
     # Obtiene la lista de tokens escaneados
     def scan(self) -> list[Token]:
         # recorremos cada linea hasta el final
         while not self._is_at_end():
             # arranca un lexema nuevo
-            self._start = self._current
+            self.start = self.current
             self.scan_token()
 
         # terminamos la lista de tokens con un EOF, para más prolijidad
-        self._start = self._current
+        self.start = self.current
         self.add_token(TokenType.EOF)
 
         return self.tokens
@@ -31,12 +31,14 @@ class Scanner(object):
     # Devuelve el lexema actual
     def lexeme(self) -> str:
         # el lexema entero es desde el inicio hasta donde estamos parados
-        return self._source[self._start : self._current]
+        return self.source[self.start : self.current]
 
     # Agrega un token a la lista
     def add_token(self, token_type: TokenType, literal=None):
         # nos guardamos el token con el lexema actual
-        self.tokens.append(Token(token_type, lexeme=self.lexeme(), literal=literal, line=self._line))
+        self.tokens.append(
+            Token(token_type, lexeme=self.lexeme(), literal=literal, line=self.line)
+        )
 
     # Escanea un token individual
     def scan_token(self):
@@ -52,7 +54,7 @@ class Scanner(object):
             case " " | "\r" | "\t":
                 pass
             case "\n":
-                self._line += 1
+                self.line += 1
 
             # tokens de un solo carácter
             case "(":
@@ -88,12 +90,16 @@ class Scanner(object):
                     level = 1
                     while level > 0 and not self._is_at_end():
                         if self._match("\n"):
-                            self._line += 1
+                            self.line += 1
                             continue
-                        if self._match("*") and self._match("/"):  # cierre de comentario
+                        if self._match("*") and self._match(
+                            "/"
+                        ):  # cierre de comentario
                             level -= 1
                             continue
-                        if self._match("/") and self._match("*"):  # apertura de comentario
+                        if self._match("/") and self._match(
+                            "*"
+                        ):  # apertura de comentario
                             level += 1
                             continue
                         self._advance()
@@ -134,8 +140,8 @@ class Scanner(object):
                 self._advance()  # consumimos el cierre de la cadena
 
                 # la cadena la guardamos sin las comillas
-                str_value = self._source[self._start + 1 : self._current - 1]
-                self.add_token(TokenType.STRING, literal=str_value)
+                strvalue = self.source[self.start + 1 : self.current - 1]
+                self.add_token(TokenType.STRING, literal=strvalue)
 
             case _ if c in "0123456789":
                 # consumimos el número hasta que no sea un dígito o un punto para decimales
@@ -166,7 +172,7 @@ class Scanner(object):
 
     # Devuelve si llegamos al final de la linea
     def _is_at_end(self) -> bool:
-        return self._current >= len(self._source)
+        return self.current >= len(self.source)
 
     # Devuelve el caracter actual, sin consumirlo
     def _lookahead(self) -> str:
@@ -174,12 +180,12 @@ class Scanner(object):
         if self._is_at_end():
             return "\0"
 
-        return self._source[self._current]
+        return self.source[self.current]
 
     # Consume un caracter y lo devuelve
     def _advance(self) -> str:
         lookahead = self._lookahead()
-        self._current += 1
+        self.current += 1
         return lookahead
 
     # Devuelve si el siguiente caracter es el esperado, y lo consume

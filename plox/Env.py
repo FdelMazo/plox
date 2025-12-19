@@ -3,22 +3,22 @@ from typing import Optional
 
 class Env(object):
     def __init__(self, *, enclosing: Optional["Env"] = None):
-        self._values: dict[str, object] = {}
+        self.values: dict[str, object] = {}
         # El entorno global es el único que no tiene enclosing
         self.enclosing: Optional["Env"] = enclosing
 
     def __repr__(self) -> str:
-        return f"Environment: {self._values}{f' (Enclosing{self.enclosing})' if self.enclosing else ''}"
+        return f"Environment: {self.values}{f' (Enclosing{self.enclosing})' if self.enclosing else ''}"
 
     def define(self, name: str, value: object):
         # No estamos chequeando si la variable ya esta definida.
         # Lox nos permite hacer var x = 1; var x = 2;
         # mientras que otros lenguajes lo consideran un error
-        self._values[name] = value
+        self.values[name] = value
 
     def get(self, name: str) -> object:
-        if name in self._values:
-            return self._values[name]
+        if name in self.values:
+            return self.values[name]
 
         # Si no encontré la variable, le pregunto al entorno padre
         if self.enclosing is not None:
@@ -31,8 +31,8 @@ class Env(object):
         raise RuntimeError(f"Undefined variable '{name}'")
 
     def assign(self, name: str, value: object) -> object:
-        if name in self._values:
-            self._values[name] = value
+        if name in self.values:
+            self.values[name] = value
             return value
 
         # Si no encontré la variable, le pregunto al entorno padre

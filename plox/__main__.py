@@ -108,7 +108,7 @@ class Plox:
                 else:
                     source = file.read()
                     self.run(source)
-                    
+
             return
 
         while True:
