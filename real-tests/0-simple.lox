@@ -1,0 +1,10 @@
+fun assert(input, expected) {
+    if (input != expected) {
+        print "ERROR";
+    } else {
+        print "OK";
+    }
+}
+
+print "--- Simple Calc ---";
+assert(2 + 2, 4);

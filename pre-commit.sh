@@ -6,3 +6,10 @@ if [ $? -ne 0 ]; then
 fi
 
 uv run pytest --verbose
+
+if [ -d "real-tests" ]; then
+    python3 real-tests/script.py
+fi
+if [ $? -ne 0 ]; then
+  exit 1
+fi
