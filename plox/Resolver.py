@@ -64,7 +64,7 @@ class Resolver(object):
     def _(self, statement: BlockStmt):
         # Los bloques arrancan su propio scope
         self.begin_scope()
-        for stmt in statement._statements:
+        for stmt in statement.statements:
             self.resolve(stmt)
         self.end_scope()
 
@@ -75,22 +75,22 @@ class Resolver(object):
         # Esto esta desacoplado de esta manera para que podamos atajar
         # el error donde uno hace `var x = x;`, e intenta
         # referenciar una variable que todavía no fue definida
-        self.declare(statement._name.lexeme)
-        if statement._initializer is not None:
-            self.resolve(statement._initializer)
-        self.define(statement._name.lexeme)
+        self.declare(statement.name.lexeme)
+        if statement.initializer is not None:
+            self.resolve(statement.initializer)
+        self.define(statement.name.lexeme)
 
     @resolve.register
     def _(self, statement: FunDecl):
         # Las funciones arrancan un scope nuevo después del nombre de la función
         # fun nombre() { <scope nuevo> }
-        self.declare(statement._name.lexeme)
-        self.define(statement._name.lexeme)
+        self.declare(statement.name.lexeme)
+        self.define(statement.name.lexeme)
         self.begin_scope()
-        for param in statement._parameters:
+        for param in statement.parameters:
             self.declare(param.lexeme)
             self.define(param.lexeme)
-        for stmt in statement._body:
+        for stmt in statement.body:
             self.resolve(stmt)
         self.end_scope()
 
@@ -98,28 +98,28 @@ class Resolver(object):
 
     @resolve.register
     def _(self, statement: ExpressionStmt):
-        self.resolve(statement._expression)
+        self.resolve(statement.expression)
 
     @resolve.register
     def _(self, statement: PrintStmt):
-        self.resolve(statement._expression)
+        self.resolve(statement.expression)
 
     @resolve.register
     def _(self, statement: ReturnStmt):
-        if statement._value is not None:
-            self.resolve(statement._value)
+        if statement.value is not None:
+            self.resolve(statement.value)
 
     @resolve.register
     def _(self, statement: IfStmt):
-        self.resolve(statement._condition)
-        self.resolve(statement._thenBranch)
-        if statement._elseBranch is not None:
-            self.resolve(statement._elseBranch)
+        self.resolve(statement.condition)
+        self.resolve(statement.thenBranch)
+        if statement.elseBranch is not None:
+            self.resolve(statement.elseBranch)
 
     @resolve.register
     def _(self, statement: WhileStmt):
-        self.resolve(statement._condition)
-        self.resolve(statement._body)
+        self.resolve(statement.condition)
+        self.resolve(statement.body)
 
     # ---------- Resolver Expresiones ---------- #
 
@@ -129,26 +129,26 @@ class Resolver(object):
         # es decir, si su valor en la tabla es False, en vez de ser True,
         # lanzamos un error
         # Básicamente, el error frente a `var x = x;`
-        if self.scopes and self.scopes[-1].get(expression._name.lexeme, None) is False:
+        if self.scopes and self.scopes[-1].get(expression.name.lexeme, None) is False:
             raise NameError(
-                f"Variable `{expression._name.lexeme}` was declared but not defined"
+                f"Variable `{expression.name.lexeme}` was declared but not defined"
             )
 
         # Luego, agregamos al intérprete la profundidad del scope
         # en la que buscar la variable referenciada, partiendo
         # desde el top del stack
         for i, scope in enumerate(reversed(self.scopes)):
-            if expression._name.lexeme in scope:
+            if expression.name.lexeme in scope:
                 self.interpreter.resolve_depth(expression, i)
 
     @resolve.register
     def _(self, expression: AssignmentExpr):
-        value = self.resolve(expression._value)
+        value = self.resolve(expression.value)
 
         # Agregamos al intérprete la profundidad del scope en la que
         # se tiene que asignar el valor de la variable
         for i, scope in enumerate(reversed(self.scopes)):
-            if expression._name.lexeme in scope:
+            if expression.name.lexeme in scope:
                 self.interpreter.resolve_depth(expression, i)
 
         return value
@@ -163,24 +163,24 @@ class Resolver(object):
 
     @resolve.register
     def _(self, expression: GroupingExpr):
-        self.resolve(expression._expression)
+        self.resolve(expression.expression)
 
     @resolve.register
     def _(self, expression: UnaryExpr):
-        self.resolve(expression._right)
+        self.resolve(expression.right)
 
     @resolve.register
     def _(self, expression: BinaryExpr):
-        self.resolve(expression._left)
-        self.resolve(expression._right)
+        self.resolve(expression.left)
+        self.resolve(expression.right)
 
     @resolve.register
     def _(self, expression: LogicExpr):
-        self.resolve(expression._left)
-        self.resolve(expression._right)
+        self.resolve(expression.left)
+        self.resolve(expression.right)
 
     @resolve.register
     def _(self, expression: CallExpr):
-        self.resolve(expression._callee)
-        for arg in expression._arguments:
+        self.resolve(expression.callee)
+        for arg in expression.arguments:
             self.resolve(arg)

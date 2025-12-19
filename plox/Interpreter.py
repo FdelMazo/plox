@@ -60,58 +60,58 @@ class Interpreter(object):
     @execute.register
     def _(self, statement: ExpressionStmt):
         # Ejecutar un expression statement es solamente evaluar la expresión
-        self.evaluate(statement._expression)
+        self.evaluate(statement.expression)
 
     @execute.register
     def _(self, statement: PrintStmt):
         # Ejecutar un print statement es evaluar la expresión e imprimir el resultado
-        value = self.evaluate(statement._expression)
+        value = self.evaluate(statement.expression)
         print(value)
 
     @execute.register
     def _(self, statement: VarDecl):
         # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
-        if statement._initializer is not None:
+        if statement.initializer is not None:
             self.env.define(
-                statement._name.lexeme, self.evaluate(statement._initializer)
+                statement.name.lexeme, self.evaluate(statement.initializer)
             )
         else:
-            self.env.define(statement._name.lexeme, statement._initializer)
+            self.env.define(statement.name.lexeme, statement.initializer)
 
     @execute.register
     def _(self, statement: FunDecl):
         # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
-        self.env.define(statement._name.lexeme, Function(statement, self.env))
+        self.env.define(statement.name.lexeme, Function(statement, self.env))
 
     @execute.register
     def _(self, statement: ReturnStmt):
-        return_value = None
-        if statement._value is not None:
+        returnvalue = None
+        if statement.value is not None:
             # Si hay un valor de retorno, lo evaluamos y lo lanzamos cual error
-            return_value = self.evaluate(statement._value)
+            returnvalue = self.evaluate(statement.value)
 
-        raise ReturnValue(return_value)
+        raise ReturnValue(returnvalue)
 
     @execute.register
     def _(self, statement: IfStmt):
         # El if se implementa con... un if
         # Si la condición resuelve a verdadero, ejecuto el bloque del then
         # si no, ejecuto el bloque del else
-        if self.is_truthy(self.evaluate(statement._condition)):
-            self.execute(statement._thenBranch)
-        elif statement._elseBranch is not None:
+        if self.is_truthy(self.evaluate(statement.condition)):
+            self.execute(statement.thenBranch)
+        elif statement.elseBranch is not None:
             # Si la condición es falsa y hay un bloque de else, lo ejecuto
-            self.execute(statement._elseBranch)
+            self.execute(statement.elseBranch)
 
     @execute.register
     def _(self, statement: WhileStmt):
         # El while se implementa con... un while
-        while self.is_truthy(self.evaluate(statement._condition)):
-            self.execute(statement._body)
+        while self.is_truthy(self.evaluate(statement.condition)):
+            self.execute(statement.body)
 
     @execute.register
     def _(self, statement: BlockStmt):
-        return self.execute_block(statement._statements, Env(enclosing=self.env))
+        return self.execute_block(statement.statements, Env(enclosing=self.env))
 
     def execute_block(self, statements: list[Stmt], block_env: Env):
         # Para ejecutar un bloque de statements, tenemos que crear un nuevo entorno
@@ -141,41 +141,41 @@ class Interpreter(object):
         # la buscamos con esa profundidad.
         if expression in self.local_scope_depths:
             depth = self.local_scope_depths[expression]
-            return self.env.get(expression._name.lexeme, depth)
+            return self.env.get(expression.name.lexeme, depth)
 
         # Si no, la buscamos dinámicamente en el entorno global
-        return self.globals.get(expression._name.lexeme)
+        return self.globals.get(expression.name.lexeme)
 
     @evaluate.register
     def _(self, expression: AssignmentExpr):
-        value = self.evaluate(expression._value)
+        value = self.evaluate(expression.value)
 
         # Si la variable se encuentra en nuestro diccionario de scope local,
         # la asignamos en esa profundidad.
         if expression in self.local_scope_depths:
             depth = self.local_scope_depths[expression]
-            self.env.assign(expression._name.lexeme, value, depth)
+            self.env.assign(expression.name.lexeme, value, depth)
             return value
 
         # Si no, la asignamos en el entorno global
-        self.globals.assign(expression._name.lexeme, value)
+        self.globals.assign(expression.name.lexeme, value)
         return value
 
     @evaluate.register
     def _(self, expression: LiteralExpr):
         # Evaluar expresiones literales es solamente devolver el valor  ya escaneado
-        return expression._value
+        return expression.value
 
     @evaluate.register
     def _(self, expression: GroupingExpr):
         # Para evaluar expresiones agrupadas, solo hay que evaluar la expresión contenida
-        return self.evaluate(expression._expression)
+        return self.evaluate(expression.expression)
 
     @evaluate.register
     def _(self, expression: UnaryExpr):
-        right = self.evaluate(expression._right)
+        right = self.evaluate(expression.right)
 
-        match expression._operator.token_type:
+        match expression.operator.token_type:
             case TokenType.MINUS:
                 # El operador - solo funciona sobre números
                 if not self.is_number(right):
@@ -187,7 +187,7 @@ class Interpreter(object):
                 # Negar un valor lo castea implicitamente a un booleano
                 return not self.is_truthy(right)
             case _:
-                raise RuntimeError(f"Unknown unary operator: `{expression._operator}`")
+                raise RuntimeError(f"Unknown unary operator: `{expression.operator}`")
 
     @evaluate.register
     def _(self, expression: BinaryExpr):
@@ -198,8 +198,8 @@ class Interpreter(object):
         # En vez de evaluar el primer operador y chequear su tipo,
         # y levantar un error antes de hacerlo con el segundo,
         # evaluamos y chequeamos todo y luego levantamos el error.
-        left = self.evaluate(expression._left)
-        right = self.evaluate(expression._right)
+        left = self.evaluate(expression.left)
+        right = self.evaluate(expression.right)
 
         # Es acá donde más ojo hay que poner en qué utilizamos del lenguaje de la implementación,
         # y sobre qué agregamos lógica propia.
@@ -208,7 +208,7 @@ class Interpreter(object):
         # Si no, el riesgo es que una implementación de Lox en otro lenguaje de resultados distintos
         # frente a código de Lox.
 
-        match expression._operator.token_type:
+        match expression.operator.token_type:
             # Por ejemplo, Lox no hace coerciones de tipos implicitas en la igualdad,
             # y Python tampoco. Es decir, "1" == 1 es False en ambos lenguajes.
             # Si este intérprete estuviese implementado en Ruby o JavaScript,
@@ -276,36 +276,36 @@ class Interpreter(object):
             case TokenType.BANG_EQUAL:
                 return left != right
             case _:
-                raise RuntimeError(f"Unknown binary operator: `{expression._operator}`")
+                raise RuntimeError(f"Unknown binary operator: `{expression.operator}`")
 
     @evaluate.register
     def _(self, expression: LogicExpr):
         # Tanto en el or como en el and, empezamos por evaluar el primer operando
-        left = self.evaluate(expression._left)
+        left = self.evaluate(expression.left)
 
         # En un or, si el primer operando es truthy, lo devolvemos
         # sin evaluar el segundo
-        if expression._operator.token_type == TokenType.OR:
+        if expression.operator.token_type == TokenType.OR:
             if self.is_truthy(left):
                 return left
 
         # En cambio, en los and, si el primer operando no es truthy,
         # ya debemos corto-circuitear y devolverlo
-        if expression._operator.token_type == TokenType.AND:
+        if expression.operator.token_type == TokenType.AND:
             if not self.is_truthy(left):
                 return left
 
         # En ambos casos, si no cortocircuitamos, evaluamos el segundo operando
-        return self.evaluate(expression._right)
+        return self.evaluate(expression.right)
 
     @evaluate.register
     def _(self, expression: CallExpr):
         # Evaluamos al llamado a la función, que puede ser cualquier cosa
-        callee = self.evaluate(expression._callee)
+        callee = self.evaluate(expression.callee)
 
         # Evaluamos cada argumento de la llamada
         arguments = []
-        for arg in expression._arguments:
+        for arg in expression.arguments:
             arguments.append(self.evaluate(arg))
 
         # Si el llamado no es una función, levantamos un error
