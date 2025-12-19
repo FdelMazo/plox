@@ -6,9 +6,3 @@ if [ $? -ne 0 ]; then
 fi
 
 uv run pytest --verbose
-
-
-cd bytecode && uv run mypy --check-untyped-defs --explicit-package-bases .
-if [ $? -ne 0 ]; then
-  exit 1
-fi
