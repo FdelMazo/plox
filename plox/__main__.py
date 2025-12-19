@@ -13,10 +13,6 @@ from pathlib import Path
 from platformdirs import user_data_dir
 
 
-history_file = Path(user_data_dir("plox", ensure_exists=True)) / ".plox_history"
-promptsession: PromptSession[str] = PromptSession(history=FileHistory(history_file))
-
-
 class Plox:
     def __init__(self):
         self.debug = False
@@ -67,7 +63,7 @@ class Plox:
                 # Proponemos manejar los warnings simplemente imprimiendolos
                 if warnings := resolver.get_warnings_report():
                     print(warnings)
-                    
+
             except Exception as e:
                 if self.debug:
                     traceback.print_exc()
@@ -150,6 +146,13 @@ class Plox:
             return
 
         while True:
+            history_file = (
+                Path(user_data_dir("plox", ensure_exists=True)) / ".plox_history"
+            )
+            promptsession: PromptSession[str] = PromptSession(
+                history=FileHistory(history_file)
+            )
+
             try:
                 source = promptsession.prompt("> ")
             except (EOFError, KeyboardInterrupt):
