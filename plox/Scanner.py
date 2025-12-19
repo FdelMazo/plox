@@ -67,8 +67,6 @@ class Scanner(object):
                 self.add_token(TokenType.RIGHT_BRACE)
             case ",":
                 self.add_token(TokenType.COMMA)
-            case ".":
-                self.add_token(TokenType.DOT)
             case "-":
                 self.add_token(TokenType.MINUS)
             case ";":

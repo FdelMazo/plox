@@ -157,7 +157,7 @@ def test_remove_comments():
 
 
 def test_single_char_tokens():
-    tokens = Scanner("(){},.-+;*/").scan()
+    tokens = Scanner("(){},-+;*/").scan()
     tokens_type = [token.token_type for token in tokens]
 
     expected_tokens_type = [
@@ -166,7 +166,6 @@ def test_single_char_tokens():
         TokenType.LEFT_BRACE,
         TokenType.RIGHT_BRACE,
         TokenType.COMMA,
-        TokenType.DOT,
         TokenType.MINUS,
         TokenType.PLUS,
         TokenType.SEMICOLON,
