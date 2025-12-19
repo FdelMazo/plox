@@ -329,7 +329,13 @@ class Parser(object):
     def assignment(self) -> Expr:
         expr = self.logic_or()
 
-        # Solo se puede asignar sobre variables. Si no, es un error
+        # En una asignación tenemos dos partes: el nombre a la izquierda, y el valor a la derecha.
+        # La expresión de la izquierda (el lvalue) no es una expresión que resuelve a un valor,
+        # es una expresión que resuelve a un "algo" asignable. Esa expresión no la evaluamos, solo la usamos
+        # `a = 5` tiene que funcionar, pero `(a + b) = 5` no!
+        #
+        # Por el momento, solo podemos asignar sobre identificadores de variables, pero también podríamos agregar
+        # asignaciones a propiedades de objetos como `obj.attr() = 'a'`, o a elementos de arrays como `arr[0] = 'a'`
         if self._match(TokenType.EQUAL):
             if not isinstance(expr, VariableExpr):
                 raise SyntaxError(
