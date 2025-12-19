@@ -23,18 +23,18 @@ class Interpreter(object):
     @evaluate.register
     def _(self, expression: LiteralExpr):
         # Evaluar expresiones literales es solamente devolver el valor  ya escaneado
-        return expression._value
+        return expression.value
 
     @evaluate.register
     def _(self, expression: GroupingExpr):
         # Para evaluar expresiones agrupadas, solo hay que evaluar la expresión contenida
-        return self.evaluate(expression._expression)
+        return self.evaluate(expression.expression)
 
     @evaluate.register
     def _(self, expression: UnaryExpr):
-        right = self.evaluate(expression._right)
+        right = self.evaluate(expression.right)
 
-        match expression._operator.token_type:
+        match expression.operator.token_type:
             case TokenType.MINUS:
                 # El operador - solo funciona sobre números
                 if not self.is_number(right):
@@ -46,7 +46,7 @@ class Interpreter(object):
                 # Negar un valor lo castea implicitamente a un booleano
                 return not self.is_truthy(right)
             case _:
-                raise RuntimeError(f"Unknown unary operator: `{expression._operator}`")
+                raise RuntimeError(f"Unknown unary operator: `{expression.operator}`")
 
     @evaluate.register
     def _(self, expression: BinaryExpr):
@@ -57,8 +57,8 @@ class Interpreter(object):
         # En vez de evaluar el primer operador y chequear su tipo,
         # y levantar un error antes de hacerlo con el segundo,
         # evaluamos y chequeamos todo y luego levantamos el error.
-        left = self.evaluate(expression._left)
-        right = self.evaluate(expression._right)
+        left = self.evaluate(expression.left)
+        right = self.evaluate(expression.right)
 
         # Es acá donde más ojo hay que poner en qué utilizamos del lenguaje de la implementación,
         # y sobre qué agregamos lógica propia.
@@ -67,7 +67,7 @@ class Interpreter(object):
         # Si no, el riesgo es que una implementación de Lox en otro lenguaje de resultados distintos
         # frente a código de Lox.
 
-        match expression._operator.token_type:
+        match expression.operator.token_type:
             # Por ejemplo, Lox no hace coerciones de tipos implicitas en la igualdad,
             # y Python tampoco. Es decir, "1" == 1 es False en ambos lenguajes.
             # Si este intérprete estuviese implementado en Ruby o JavaScript,
@@ -135,7 +135,7 @@ class Interpreter(object):
             case TokenType.BANG_EQUAL:
                 return left != right
             case _:
-                raise RuntimeError(f"Unknown binary operator: `{expression._operator}`")
+                raise RuntimeError(f"Unknown binary operator: `{expression.operator}`")
 
     # ---------- Helpers ---------- #
 

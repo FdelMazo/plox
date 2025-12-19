@@ -4,8 +4,8 @@ from .Expr import Expr, BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr
 
 class Parser(object):
     def __init__(self, tokens: list[Token]):
-        self._tokens = tokens  # la lista de tokens ya escaneados
-        self._current = 0  # el token en el que estamos parados
+        self.tokens = tokens  # la lista de tokens ya escaneados
+        self.current = 0  # el token en el que estamos parados
 
     # Obtiene expresion parseada
     def parse(self) -> Expr:
@@ -128,17 +128,17 @@ class Parser(object):
 
     # Devuelve el token anterior, ya consumido
     def _previous(self) -> Token:
-        return self._tokens[self._current - 1]
+        return self.tokens[self.current - 1]
 
     # Devuelve el token actual, sin consumirlo
     def _lookahead(self) -> Token:
-        return self._tokens[self._current]
+        return self.tokens[self.current]
 
     # Consume un token y lo devuelve
     def _advance(self) -> Token:
         token = self._lookahead()
         if not self._is_at_end():
-            self._current += 1
+            self.current += 1
 
         return token
 

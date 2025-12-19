@@ -9,39 +9,39 @@ class Expr(object):
 # operator       → "==" | "!=" | "<" | "<=" | ">" | ">=" | "+"  | "-"  | "*" | "/" ;
 class BinaryExpr(Expr):
     def __init__(self, left: Expr, operator: Token, right: Expr):
-        self._left = left
-        self._operator = operator
-        self._right = right
+        self.left = left
+        self.operator = operator
+        self.right = right
 
     def __repr__(self) -> str:
-        return f"Binary: [{self._left}  {self._operator.lexeme} {self._right}]"
+        return f"Binary: [{self.left}  {self.operator.lexeme} {self.right}]"
 
 
 # grouping       → "(" expression ")" ;
 class GroupingExpr(Expr):
     def __init__(self, expression: Expr):
-        self._expression = expression
+        self.expression = expression
 
     def __repr__(self) -> str:
-        return f"Grouping: ({self._expression})"
+        return f"Grouping: ({self.expression})"
 
 
 # literal        → NUMBER | STRING | "true" | "false" | "nil" ;
 class LiteralExpr(Expr):
     def __init__(self, value: TokenLiteralType):
-        self._value = value
+        self.value = value
 
     def __repr__(self) -> str:
-        if isinstance(self._value, str):
-            return f'Literal: "{self._value}"'
-        return f"Literal: {self._value}"
+        if isinstance(self.value, str):
+            return f'Literal: "{self.value}"'
+        return f"Literal: {self.value}"
 
 
 # unary          → ( "-" | "!" ) expression ;
 class UnaryExpr(Expr):
     def __init__(self, operator: Token, right: Expr):
-        self._operator = operator
-        self._right = right
+        self.operator = operator
+        self.right = right
 
     def __repr__(self) -> str:
-        return f"Unary: [{self._operator.lexeme} {self._right}]"
+        return f"Unary: [{self.operator.lexeme} {self.right}]"
