@@ -139,6 +139,21 @@ def test_precedence():
     assert right.value == 4.0
 
 
+def test_precedence_unary():
+    tokens = Scanner("-1+2").scan()
+    expr = Parser(tokens).expression()
+
+    # Esto tiene que dar (-1) + 2, no -(1+2)
+    assert isinstance(expr, BinaryExpr)
+    assert expr.operator.token_type == TokenType.PLUS
+    assert isinstance(expr.left, UnaryExpr)
+    assert expr.left.operator.token_type == TokenType.MINUS
+    assert isinstance(expr.left.right, LiteralExpr)
+    assert expr.left.right.value == 1.0
+    assert isinstance(expr.right, LiteralExpr)
+    assert expr.right.value == 2.0
+
+
 def test_big():
     tokens = Scanner("1 - (2 * 3) < 4 == false").scan()
     expr = Parser(tokens).expression()
