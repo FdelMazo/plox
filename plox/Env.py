@@ -8,7 +8,12 @@ class Env(object):
         self.enclosing: Optional["Env"] = enclosing
 
     def __repr__(self) -> str:
-        return f"Environment: {self.values}{f' (Enclosing{self.enclosing})' if self.enclosing else ''}"
+        all_values = str(self.values)
+        enclosing = self.enclosing
+        while enclosing is not None:
+            all_values += " << " + str(enclosing.values)
+            enclosing = enclosing.enclosing
+        return all_values
 
     def define(self, name: str, value: object):
         # No estamos chequeando si la variable ya esta definida.
