@@ -445,3 +445,28 @@ def test_ternary():
     with pytest.raises(Exception) as excinfo:
         Parser(tokens).parse()
     assert "Expected ':' after ternary" in str(excinfo.value)
+
+
+def test_power():
+    tokens = Scanner("2 ** 3").scan()
+    expr = Parser(tokens).expression()
+
+    assert isinstance(expr, BinaryExpr)
+    assert expr.operator.token_type == TokenType.STAR_STAR
+    assert isinstance(expr.left, LiteralExpr)
+    assert expr.left.value == 2.0
+    assert isinstance(expr.right, LiteralExpr)
+    assert expr.right.value == 3.0
+
+    tokens = Scanner("2 ** 3 ** 4").scan()
+    expr = Parser(tokens).expression()
+
+    assert isinstance(expr, BinaryExpr)
+    assert expr.operator.token_type == TokenType.STAR_STAR
+    assert isinstance(expr.left, LiteralExpr)
+    assert expr.left.value == 2.0
+    assert isinstance(expr.right, BinaryExpr)
+    assert isinstance(expr.right.left, LiteralExpr)
+    assert expr.right.left.value == 3.0
+    assert isinstance(expr.right.right, LiteralExpr)
+    assert expr.right.right.value == 4.0
