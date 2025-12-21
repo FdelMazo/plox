@@ -53,6 +53,9 @@ class Plox:
 
         # en modo parsing, imprimimos las expresiones encontradas
         if self.mode == "parsing":
+            for stmt in statements:
+                print(colored(repr(stmt), "light_blue"))
+            print()
             self.printer.print(statements)
             return
 

@@ -86,9 +86,6 @@ class Token(object):
             else f"{self.token_type.name}<{self.literal}>"
         )
 
-    def __str__(self) -> str:
-        return f"{self.token_type.name} {repr(self.lexeme)}"
-
 
 TokenKeywords = {
     "and": TokenType.AND,

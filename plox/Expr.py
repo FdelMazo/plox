@@ -41,7 +41,7 @@ class LiteralExpr(Expr):
         elif self.value is None:
             return "<NIL>"
 
-        return self.value
+        return str(self.value)
 
 
 # unary          → ( "-" | "!" ) expression ;
@@ -51,7 +51,7 @@ class UnaryExpr(Expr):
         self.right = right
 
     def __repr__(self) -> str:
-        return f"({self.operator} {self.right})"
+        return f"({self.operator}{self.right})"
 
 
 # call          → primary "(" arguments? ")" ;
@@ -103,7 +103,7 @@ class PostfixExpr(Expr):
         self.operator = operator
 
     def __repr__(self) -> str:
-        return f"Postfix: [{self.left} {self.operator.lexeme}]"
+        return f"({self.left}{self.operator})"
 
 
 # ternary        → expresion "?" expression ":" expression ;
@@ -114,4 +114,4 @@ class TernaryExpr(Expr):
         self.false_branch = false_branch
 
     def __repr__(self) -> str:
-        return f"Ternary: [{self.condition} ? {self.true_branch} : {self.false_branch}]"
+        return f"({self.condition} ? {self.true_branch} : {self.false_branch})"
