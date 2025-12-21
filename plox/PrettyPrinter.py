@@ -66,11 +66,14 @@ class PrettyPrinter:
 
         ast = self._prettify()
         self._reset()
-        print(f"\n{ast}\n")
+        print(ast)
 
     @singledispatchmethod
     def _accept(self, obj: Expr | Stmt) -> None:
-        raise RuntimeError(f"Unknown object type: `{type(obj)}`")
+        if isinstance(obj, Expr):
+            self._store_expr(str(obj), type(obj).__name__)
+        elif isinstance(obj, Stmt):
+            self._store_stmt(str(obj), type(obj).__name__)
 
     # ---------- Handlers de Statements ---------- #
 
