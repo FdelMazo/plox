@@ -48,6 +48,35 @@ def test_string_literal():
     assert tokens[0].literal == "hello world"
 
 
+def test_multilne_strings():
+    tokens = Scanner("'hello world'").scan()
+    tokens_type = [token.token_type for token in tokens]
+
+    expected_tokens_type = [
+        TokenType.STRING,
+        TokenType.EOF,
+    ]
+
+    assert tokens_type == expected_tokens_type
+    assert tokens[0].literal == "hello world"
+
+    tokens = Scanner(
+        """
+"comentario
+con salto de linea"
+        """
+    ).scan()
+    tokens_type = [token.token_type for token in tokens]
+
+    expected_tokens_type = [
+        TokenType.STRING,
+        TokenType.EOF,
+    ]
+
+    assert tokens_type == expected_tokens_type
+    assert tokens[0].literal == "comentario\ncon salto de linea"
+
+
 def test_number_literal():
     tokens = Scanner("123.45").scan()
     tokens_type = [token.token_type for token in tokens]
@@ -64,6 +93,24 @@ def test_number_literal():
 def test_error_unterminated_string():
     with pytest.raises(Exception) as excinfo:
         Scanner('"hello world').scan()
+    assert "Unterminated string" in str(excinfo.value)
+
+    with pytest.raises(Exception) as excinfo:
+        Scanner(
+            """
+            'comillas simples
+            no son multilinea'
+            """
+        ).scan()
+    assert "Unterminated string" in str(excinfo.value)
+
+    with pytest.raises(Exception) as excinfo:
+        Scanner(
+            """
+            "hello
+            world
+            """
+        ).scan()
     assert "Unterminated string" in str(excinfo.value)
 
 
