@@ -34,7 +34,7 @@ class Plox:
 
         # en modo scanning, solo imprimimos los tokens
         if self.mode == "scanning":
-            for i, token in enumerate(tokens):
+            for token in tokens:
                 print(colored(f"line {token.line} | {token}", "light_blue"))
             return
 

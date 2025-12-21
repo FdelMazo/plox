@@ -12,7 +12,7 @@ class ExpressionStmt(Stmt):
         self.expression = expression
 
     def __repr__(self) -> str:
-        return f"Expression Statement: {self.expression};"
+        return f"{self.expression}"
 
 
 # printStmt      → "print" expression ";" ;
@@ -21,7 +21,7 @@ class PrintStmt(Stmt):
         self.expression = expression
 
     def __repr__(self) -> str:
-        return f"Print Statement: {self.expression};"
+        return f"PRINT {self.expression}"
 
 
 # blockStmt       → "{" statement* "}" ;
@@ -30,7 +30,7 @@ class BlockStmt(Stmt):
         self.statements = statements
 
     def __repr__(self) -> str:
-        return f"Block Statement: {self.statements};"
+        return f"{{ {'; '.join(str(stmt) for stmt in self.statements)} }}"
 
 
 # varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
@@ -40,7 +40,7 @@ class VarDecl(Stmt):
         self.initializer = initializer
 
     def __repr__(self) -> str:
-        return f"Variable Declaration: {self.name.lexeme} = {self.initializer};"
+        return f"VAR {self.name.lexeme} = {self.initializer}"
 
 
 # funDecl        → "fun" IDENTIFIER "(" parameters? ")" blockStmt ;
@@ -52,7 +52,7 @@ class FunDecl(Stmt):
 
     def __repr__(self) -> str:
         params = ", ".join(param.lexeme for param in self.parameters)
-        return f"Function Declaration: {self.name.lexeme}({params}) {self.body};"
+        return f"FUN fn<{self.name.lexeme}({params})> {{ {('; '.join(str(stmt) for stmt in self.body))} }}"
 
 
 # returnStmt     → "return" expression? ";" ;
@@ -61,7 +61,7 @@ class ReturnStmt(Stmt):
         self.value = value
 
     def __repr__(self) -> str:
-        return f"Return Statement: return {self.value};"
+        return f"RETURN {self.value or 'NIL'}"
 
 
 # ifStmt        → "if" "(" expression ")" statement ( "else" statement )? ;
@@ -72,7 +72,11 @@ class IfStmt(Stmt):
         self.elseBranch = elseBranch
 
     def __repr__(self) -> str:
-        return f"If Statement: if {self.condition} then {self.thenBranch} else {self.elseBranch};"
+        if self.elseBranch is None:
+            return (
+                f"IF {self.condition} THEN {self.thenBranch}"
+            )
+        return f"IF {self.condition} THEN {self.thenBranch} ELSE {self.elseBranch}"
 
 
 # whileStmt     → "while" "(" expression ")" statement ;
@@ -82,4 +86,4 @@ class WhileStmt(Stmt):
         self.body = body
 
     def __repr__(self) -> str:
-        return f"While Statement: while {self.condition} do {self.body};"
+        return f"WHILE {self.condition} {self.body}"
