@@ -1,4 +1,4 @@
-// run in --resolve mode
+// run in --resolve and --line-by-line modes!!
 var g = 1; print g; // las variables globales no se suman al intérprete
 { print g; } // como no fue definida localmente, sigue sin agregarse al intérprete. va a ser resuelta dinámicamente
 { var x = 2; } // no hubo referencia a x, solo se definió. no se suma al intérprete!
