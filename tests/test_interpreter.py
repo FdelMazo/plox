@@ -124,3 +124,21 @@ def test_logic():
         expr = Parser(tokens).expression()
         value = Interpreter().evaluate(expr)
         assert value == expected
+
+
+def test_ternary():
+    tests = [
+        ("true ? 1 : 2", 1),
+        ("false ? 1 : 2", 2),
+        ("true ? true ? 1 : 2 : 3", 1),
+        ("true ? false ? 1 : 2 : 3", 2),
+        ("false ? true ? 1 : 2 : 3", 3),
+        ("false ? 1 : true ? 2 : 3", 2),
+        ("false ? 1 : false ? 2 : 3", 3),
+    ]
+
+    for src, expected in tests:
+        tokens = Scanner(src).scan()
+        expr = Parser(tokens).expression()
+        value = Interpreter().evaluate(expr)
+        assert value == expected

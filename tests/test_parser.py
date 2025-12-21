@@ -6,6 +6,7 @@ from plox.Expr import (
     UnaryExpr,
     AssignmentExpr,
     PostfixExpr,
+    TernaryExpr,
 )
 from plox.Scanner import Scanner
 from plox.Parser import Parser
@@ -419,3 +420,28 @@ def test_prefix_inc():
     with pytest.raises(Exception) as excinfo:
         Parser(tokens).parse()
     assert "Invalid prefix target" in str(excinfo.value)
+
+
+def test_ternary():
+    tokens = Scanner("true ? 1 : 2").scan()
+    expr = Parser(tokens).expression()
+
+    assert isinstance(expr, TernaryExpr)
+    assert isinstance(expr.condition, LiteralExpr)
+    assert expr.condition.value == True
+    assert isinstance(expr.true_branch, LiteralExpr)
+    assert expr.true_branch.value == 1.0
+    assert isinstance(expr.false_branch, LiteralExpr)
+    assert expr.false_branch.value == 2.0
+
+    tokens = Scanner("true ? true ? 1 : 2 : true ? 1 : 2").scan()
+    expr = Parser(tokens).expression()
+
+    assert isinstance(expr, TernaryExpr)
+    assert isinstance(expr.true_branch, TernaryExpr)
+    assert isinstance(expr.false_branch, TernaryExpr)
+
+    tokens = Scanner("true ? 1").scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected ':' after ternary" in str(excinfo.value)
