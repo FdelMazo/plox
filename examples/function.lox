@@ -40,12 +40,21 @@ x();
 print "";
 
 print "Un poco de currying";
-fun fn() { print "soy un callback!"; }
-fun get_fn() { return fn; }
+fun fn() {
+    print "soy un callback!";
+}
+fun get_fn() {
+    return fn;
+}
 get_fn()();
 
 print "";
 
 print "Un poco de anidados";
-fun nest() { fun nested() { print "soy una funcion interna!"; } nested(); }
+fun nest() {
+    fun nested() {
+        print "soy una funcion interna!";
+    }
+    nested();
+}
 nest();
