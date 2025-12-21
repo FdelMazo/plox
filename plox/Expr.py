@@ -14,7 +14,7 @@ class BinaryExpr(Expr):
         self.right = right
 
     def __repr__(self) -> str:
-        return f"Binary: [{self.left}  {self.operator.lexeme} {self.right}]"
+        return f"({self.left} {self.operator} {self.right})"
 
 
 # grouping       → "(" expression ")" ;
@@ -23,7 +23,7 @@ class GroupingExpr(Expr):
         self.expression = expression
 
     def __repr__(self) -> str:
-        return f"Grouping: ({self.expression})"
+        return f"({self.expression})"
 
 
 # literal        → NUMBER | STRING | "true" | "false" | "nil" ;
@@ -33,8 +33,15 @@ class LiteralExpr(Expr):
 
     def __repr__(self) -> str:
         if isinstance(self.value, str):
-            return f'Literal: "{self.value}"'
-        return f"Literal: {self.value}"
+            return f'<"{self.value}">'
+        elif isinstance(self.value, float):
+            return f"<{self.value}>"
+        elif isinstance(self.value, bool):
+            return f"<TRUE>" if self.value else "<FALSE>"
+        elif self.value is None:
+            return "<NIL>"
+
+        return self.value
 
 
 # unary          → ( "-" | "!" ) expression ;
@@ -44,4 +51,4 @@ class UnaryExpr(Expr):
         self.right = right
 
     def __repr__(self) -> str:
-        return f"Unary: [{self.operator.lexeme} {self.right}]"
+        return f"({self.operator} {self.right})"

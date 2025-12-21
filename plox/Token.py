@@ -69,7 +69,14 @@ class Token(object):
         self.literal = literal  # Si es un literal, aprovechamos y nos almacenamos directamente el valor al que resuelve
 
     def __repr__(self) -> str:
-        return f"{self.token_type.name} '{self.lexeme}'"
+        if self.token_type == TokenType.IDENTIFIER:
+            return f"{self.token_type.name}<{self.lexeme}>"
+
+        return (
+            f"{self.token_type.name}"
+            if self.literal is None
+            else f"{self.token_type.name}<{self.literal}>"
+        )
 
 
 TokenKeywords = {
