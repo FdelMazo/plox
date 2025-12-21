@@ -267,6 +267,8 @@ class Interpreter(object):
                     raise RuntimeError(
                         f"Operands of % must be numbers, got: `{left} % {right}`"
                     )
+                elif right == 0:
+                    raise RuntimeError(f"Modulo by {right} is not allowed")
                 return left % right
             case TokenType.GREATER:
                 if not self.is_number(left, right):

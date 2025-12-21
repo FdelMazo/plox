@@ -52,6 +52,10 @@ def test_various_expressions():
         ("1 + 2 * 3 - 4 + 2", 5),
         ("3 * (3 - 1)", 6),
         ("((1 + 2) * (3 + 4)) / 3", 7),
+        ("1 * 0", 0),
+        ("5 % 2", 1),
+        ("5 % 5", 0),
+        ("0 % 2", 0),
     ]
 
     for expr, expected in tests:
@@ -87,6 +91,20 @@ def test_errors():
         Interpreter().evaluate(expr)
 
     assert "Operands of - must be numbers" in str(excinfo.value)
+
+    tokens = Scanner("5 / 0").scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+
+    assert "Division by 0" in str(excinfo.value)
+
+    tokens = Scanner("5 % 0").scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+
+    assert "Modulo by 0" in str(excinfo.value)
 
 
 def test_logic():
