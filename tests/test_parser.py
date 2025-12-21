@@ -1,5 +1,12 @@
 import pytest
-from plox.Expr import BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr, AssignmentExpr
+from plox.Expr import (
+    BinaryExpr,
+    GroupingExpr,
+    LiteralExpr,
+    UnaryExpr,
+    AssignmentExpr,
+    PostfixExpr,
+)
 from plox.Scanner import Scanner
 from plox.Parser import Parser
 from plox.Token import TokenType
@@ -368,3 +375,47 @@ def test_for():
     assert isinstance(inner_body, BlockStmt)
     assert len(inner_body.statements) == 1
     assert isinstance(inner_body.statements[0], PrintStmt)
+
+
+def test_postfix_inc():
+    tokens = Scanner("x++").scan()
+    expr = Parser(tokens).expression()
+
+    assert isinstance(expr, PostfixExpr)
+    assert expr.operator.token_type == TokenType.PLUS_PLUS
+    assert isinstance(expr.left, VariableExpr)
+    assert expr.left.name.lexeme == "x"
+
+    tokens = Scanner("-x++").scan()
+    expr = Parser(tokens).expression()
+    assert isinstance(expr, UnaryExpr)
+    assert isinstance(expr.right, PostfixExpr)
+
+    tokens = Scanner("x++ + 1").scan()
+    expr = Parser(tokens).expression()
+    assert isinstance(expr, BinaryExpr)
+    assert isinstance(expr.left, PostfixExpr)
+    assert isinstance(expr.right, LiteralExpr)
+
+    tokens = Scanner("1++").scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Invalid postfix target" in str(excinfo.value)
+
+
+def test_prefix_inc():
+    tokens = Scanner("++x").scan()
+    expr = Parser(tokens).expression()
+
+    assert isinstance(expr, AssignmentExpr)
+    assert expr.name.lexeme == "x"
+    assert isinstance(expr.value, BinaryExpr)
+    assert isinstance(expr.value.left, VariableExpr)
+    assert expr.value.left.name.lexeme == "x"
+    assert isinstance(expr.value.right, LiteralExpr)
+    assert expr.value.right.value == 1.0
+
+    tokens = Scanner("++1").scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Invalid prefix target" in str(excinfo.value)

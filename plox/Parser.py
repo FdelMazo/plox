@@ -526,7 +526,7 @@ class Parser(object):
             # solo se puede aplicar ++ sobre variables. Si no tenemos una variable, es un error
             if not isinstance(expr, VariableExpr):
                 raise SyntaxError(
-                    f"Invalid prefix target, got `{self._lookahead()}` instead"
+                    f"Invalid postfix target, got `{self._lookahead()}` instead"
                 )
 
             # representamos el post-increment como un nodo PostfixExpr
