@@ -1,0 +1,33 @@
+print "--- IFs ---";
+
+if (true) {
+    print "OK";
+} else {
+    print "ERROR";
+}
+
+print "--- WHILEs ---";
+var i = 0;
+while (i < 3) {
+    i = i + 1;
+}
+
+if (i != 3) {
+    print "ERROR";
+} else {
+    print "OK";
+}
+
+print "--- FOR ---";
+var x = 0;
+for ( ; x <= 5; x = x + 1) {
+    if (x == 4) {
+        print "OK";
+    }
+}
+// Este comportamiento es producto de haber codeado el for como un sintactic sugar
+// en otro lenguajes, a esta altura, x debería ser 5
+// todas las implementaciones de lox mantienen esta semantica
+if (x != 6) {
+    print "ERROR";
+}

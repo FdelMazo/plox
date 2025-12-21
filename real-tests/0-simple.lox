@@ -6,5 +6,28 @@ fun assert(input, expected) {
     }
 }
 
-print "--- Simple Calc ---";
+// Comentario a ignorar
+
+print "--- SIMPLE CALC ---";
 assert(2 + 2, 4);
+assert(5 + 0.5, 5.5);
+assert(2 + 3 * 4, 14);
+assert((2 + 3) * 4, 20);
+assert(-10, -10);
+assert(5 - 3 - 1, 1);
+assert(1 + 2 * 3 - 4, 3);
+assert(-1+2, 1);
+assert(8 / 2, 4);
+assert((5), 5);
+
+print "--- STRINGS ---";
+assert("hola", "hola");
+assert("hola" + "chau", "holachau");
+
+print "--- BOOLEAN LOGIC ---";
+assert(true or false, true);
+assert(true and false, false);
+assert(!true, false);
+assert(true or nil, true);
+assert(true and nil, nil);
+assert(1 - (2 * 3) < 4 == true, true);

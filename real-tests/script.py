@@ -13,5 +13,6 @@ for lox_file in filter(lambda f: f.endswith(".lox"), os.listdir("real-tests")):
     )
     out = result.stdout.decode().strip()
     print(out)
-    if "ERROR" in out:
+    print()
+    if "ERROR".lower() in out.lower():
         sys.exit(1)
