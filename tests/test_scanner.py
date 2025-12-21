@@ -156,6 +156,49 @@ def test_remove_comments():
     assert tokens_type == expected_tokens_type
 
 
+def test_remove_multiline_comments():
+    expected_tokens_type = [
+        TokenType.EOF,
+    ]
+
+    tokens = Scanner(
+        """
+        /*
+        comentario multilinea
+        */
+        """
+    ).scan()
+    tokens_type = [token.token_type for token in tokens]
+    assert tokens_type == expected_tokens_type
+
+    tokens = Scanner(
+        """
+        /*
+        comentario multilinea
+        /*
+        comentario multilinea anidado
+        */
+        // otro comentario mas
+        */
+        """
+    ).scan()
+    tokens_type = [token.token_type for token in tokens]
+    assert tokens_type == expected_tokens_type
+
+    with pytest.raises(Exception) as excinfo:
+        Scanner(
+            """
+            /*
+            comentario multilinea
+            /*
+            comentario multilinea anidado
+            */
+            // otro comentario mas
+            """
+        ).scan()
+    assert "Unterminated comment" in str(excinfo.value)
+
+
 def test_single_char_tokens():
     tokens = Scanner("(){},-+;*/").scan()
     tokens_type = [token.token_type for token in tokens]
