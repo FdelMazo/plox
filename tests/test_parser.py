@@ -242,6 +242,28 @@ def test_var_decl():
     assert stmt.initializer.value == 5.0
 
 
+def test_assignment():
+    tokens = Scanner("x = 5;").scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, ExpressionStmt)
+    assert isinstance(stmt.expression, AssignmentExpr)
+    assert stmt.expression.name.lexeme == "x"
+    assert isinstance(stmt.expression.value, LiteralExpr)
+    assert stmt.expression.value.value == 5.0
+
+    tokens = Scanner("(x) = 5;").scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Invalid assignment" in str(excinfo.value)
+
+    tokens = Scanner("a + b = 5;").scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Invalid assignment" in str(excinfo.value)
+
+
 def test_function_decl_and_return():
     src = "fun add(a, b) { return a; }"
     tokens = Scanner(src).scan()
@@ -269,6 +291,19 @@ def test_return_stmt():
     stmts = Parser(tokens).parse()
     assert isinstance(stmts[0], ReturnStmt)
     assert stmts[0].value is None
+
+
+def test_block_stmts():
+    tokens = Scanner("{ print a; }").scan()
+    stmts = Parser(tokens).parse()
+    assert isinstance(stmts[0], BlockStmt)
+    assert len(stmts[0].statements) == 1
+    assert isinstance(stmts[0].statements[0], PrintStmt)
+
+    tokens = Scanner("{ print a; ").scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected '}'" in str(excinfo.value)
 
 
 def test_control_flow():
