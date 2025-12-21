@@ -101,9 +101,9 @@ class PrettyPrinter:
         self._shift([stmt.condition])
 
         self._store_stmt("then:", "IfStmt(then)")
-        self._shift([stmt.thenBranch])
+        self._shift([stmt.then_branch])
 
-        if else_branch := stmt.elseBranch:
+        if else_branch := stmt.else_branch:
             self._store_stmt("else:", "IfStmt(else)")
             self._shift([else_branch])
 

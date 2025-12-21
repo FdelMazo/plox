@@ -105,10 +105,10 @@ class Interpreter(object):
         # Si la condición resuelve a verdadero, ejecuto el bloque del then
         # si no, ejecuto el bloque del else
         if self.is_truthy(self.evaluate(statement.condition)):
-            self.execute(statement.thenBranch)
-        elif statement.elseBranch is not None:
+            self.execute(statement.then_branch)
+        elif statement.else_branch is not None:
             # Si la condición es falsa y hay un bloque de else, lo ejecuto
-            self.execute(statement.elseBranch)
+            self.execute(statement.else_branch)
 
     @execute.register
     def _(self, statement: WhileStmt):

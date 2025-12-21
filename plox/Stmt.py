@@ -66,17 +66,15 @@ class ReturnStmt(Stmt):
 
 # ifStmt        → "if" "(" expression ")" statement ( "else" statement )? ;
 class IfStmt(Stmt):
-    def __init__(self, condition: Expr, thenBranch: Stmt, elseBranch: Stmt | None):
+    def __init__(self, condition: Expr, then_branch: Stmt, else_branch: Stmt | None):
         self.condition = condition
-        self.thenBranch = thenBranch
-        self.elseBranch = elseBranch
+        self.then_branch = then_branch
+        self.else_branch = else_branch
 
     def __repr__(self) -> str:
-        if self.elseBranch is None:
-            return (
-                f"IF {self.condition} THEN {self.thenBranch}"
-            )
-        return f"IF {self.condition} THEN {self.thenBranch} ELSE {self.elseBranch}"
+        if self.else_branch is None:
+            return f"IF {self.condition} THEN {self.then_branch}"
+        return f"IF {self.condition} THEN {self.then_branch} ELSE {self.else_branch}"
 
 
 # whileStmt     → "while" "(" expression ")" statement ;

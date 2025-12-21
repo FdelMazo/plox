@@ -320,8 +320,8 @@ def test_control_flow():
     ifs = stmts[0]
     assert isinstance(ifs.condition, LiteralExpr)
     assert ifs.condition.value is True
-    assert isinstance(ifs.thenBranch, ExpressionStmt)
-    assert isinstance(ifs.elseBranch, ExpressionStmt)
+    assert isinstance(ifs.then_branch, ExpressionStmt)
+    assert isinstance(ifs.else_branch, ExpressionStmt)
 
     tokens = Scanner("while (false) 3;").scan()
     stmts = Parser(tokens).parse()

@@ -140,9 +140,9 @@ class Resolver(object):
     @resolve.register
     def _(self, statement: IfStmt):
         self.resolve(statement.condition)
-        self.resolve(statement.thenBranch)
-        if statement.elseBranch is not None:
-            self.resolve(statement.elseBranch)
+        self.resolve(statement.then_branch)
+        if statement.else_branch is not None:
+            self.resolve(statement.else_branch)
 
     @resolve.register
     def _(self, statement: WhileStmt):
