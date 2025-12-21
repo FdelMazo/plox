@@ -281,6 +281,24 @@ def test_error_unexpected_character():
     assert "Unexpected character" in str(excinfo.value)
 
 
+def test_error_invalid_numbers():
+    with pytest.raises(Exception) as excinfo:
+        Scanner("1..2").scan()
+    assert "Invalid number" in str(excinfo.value)
+
+    with pytest.raises(Exception) as excinfo:
+        Scanner("1.5.2").scan()
+    assert "Invalid number" in str(excinfo.value)
+
+    with pytest.raises(Exception) as excinfo:
+        Scanner("1.").scan()
+    assert "Invalid number" in str(excinfo.value)
+
+    with pytest.raises(Exception) as excinfo:
+        Scanner(".2").scan()
+    assert "Unexpected character" in str(excinfo.value)
+
+
 def test_scanner_plus_plus_token():
     tokens = Scanner("++").scan()
     tokens_type = [token.token_type for token in tokens]
