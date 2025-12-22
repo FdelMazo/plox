@@ -1,3 +1,4 @@
+// run in --line-by-line mode!!
 if (true) print "if dió true!";
 if (false) print "no me imprimas nunca";
 
