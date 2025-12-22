@@ -1,3 +1,4 @@
+// run in --line-by-line mode!!
 "aaa";
 123;
 "a" + "b";
