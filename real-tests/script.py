@@ -4,7 +4,7 @@ import os
 
 LOX_BINARY = "plox"
 
-for lox_file in filter(lambda f: f.endswith(".lox"), os.listdir("real-tests")):
+for lox_file in filter(lambda f: f.endswith(".lox"), sorted(os.listdir("real-tests"))):
     print(f"$ {LOX_BINARY} real-tests/{lox_file}")
     result = subprocess.run(
         [LOX_BINARY, f"real-tests/{lox_file}"],
