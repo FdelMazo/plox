@@ -37,5 +37,3 @@ En cada branch del repo hay distintas implementaciones de Lox:
 - `tree-walk` -> Intérprete completo de statements. Es lo que hay en `barebones` más lo visto en los capítulos 8 a 10 del libro.
 - `full-tree-walk` -> Intérprete completo de statements, con resolvedor de scopes estáticos antes de la ejecución. Es lo que hay en `tree-walk` más lo visto en el capítulo 11 del libro.
 - `main` -> Versión Final. Es el intérprete completo junto a ideas que surjan en clase.
-
-También, en `bytecode` se puede encontrar una mínima (míiiiiinima) implementación de Lox que en vez de estructurar la gramática en un árbol compila el código del usuario a Bytecode y lo ejecuta en una máquina virtual.
