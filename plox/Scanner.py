@@ -71,10 +71,10 @@ class Scanner(object):
                 self.add_token(TokenType.MINUS)
             case ";":
                 self.add_token(TokenType.SEMICOLON)
-            case "*":
-                self.add_token(
-                    TokenType.STAR_STAR if self._match("*") else TokenType.STAR
-                )
+            case "?":
+                self.add_token(TokenType.QUESTION)
+            case ":":
+                self.add_token(TokenType.COLON)
             case "%":
                 self.add_token(TokenType.PERCENT)
             case "/":
@@ -113,6 +113,10 @@ class Scanner(object):
                 self.add_token(
                     TokenType.PLUS_PLUS if self._match("+") else TokenType.PLUS
                 )
+            case "*":
+                self.add_token(
+                    TokenType.STAR_STAR if self._match("*") else TokenType.STAR
+                )
             case "!":
                 self.add_token(
                     TokenType.BANG_EQUAL if self._match("=") else TokenType.BANG
@@ -129,12 +133,6 @@ class Scanner(object):
                 self.add_token(
                     TokenType.GREATER_EQUAL if self._match("=") else TokenType.GREATER
                 )
-
-            case "?":
-                self.add_token(TokenType.QUESTION)
-
-            case ":":
-                self.add_token(TokenType.COLON)
 
             case "'":
                 # consumimos la cadena hasta el proximo ' o hasta el fin de linea
