@@ -149,8 +149,8 @@ class Interpreter(object):
 
     # Devuelve si los valores recibidos son un número según Lox
     def is_number(self, *values):
-        return all(isinstance(value, (int, float)) for value in values)
+        return all(type(value) is int or type(value) is float for value in values)
 
     # Devuelve si los valores recibidos son una cadena según Lox
     def is_string(self, *values):
-        return all(isinstance(value, str) for value in values)
+        return all(type(value) is str for value in values)
