@@ -1,0 +1,67 @@
+// https://esolangs.org/wiki/Minsky_machine
+// Una Minsky Machine es una computadora de dos registros, turing completa,
+// que requiere muy poco para ser simulada: con solo poder incrementar, decrementar
+// y comparar números, ya esta.
+
+// Esta en particular utiliza solo un registro y devuelve si un número es par (1) o impar (0).
+
+// Instrucciones Disponibles
+// - inc(r, instr)            -- Agregar 1 al registro, y saltar a otra instrucción
+// - decjz(r, instr1, instr2) -- Si r es zero, saltar a instr1. Si no, restar 1, y saltar a instr2
+// - halt                     -- Cortar la ejecución
+
+fun minsky_even(n) {
+    var r0 = n;
+    var pc = 0;
+    var halt = false;
+
+    while (true and !halt) {
+        // Instruction 0: DECJZ(r0, pc2, pc1)
+        if (pc == 0) {
+            if (r0 == 0) {
+            pc = 2;
+            } else {
+            r0 = r0 - 1;
+            pc = 1;
+            }
+        }
+
+        // Instruction 1: DECJZ(r0, pc3, pc0)
+        else if (pc == 1) {
+            if (r0 == 0) {
+            pc = 3;
+            } else {
+            r0 = r0 - 1;
+            pc = 0;
+            }
+        }
+
+        // Instruction 2: INC(r0, pc3)
+        else if (pc == 2) {
+            r0 = r0 + 1;
+            pc = 3;
+        }
+
+        // Instruction 3: HALT
+        else if (pc == 3) {
+            halt = true;
+        }
+    }
+
+    return r0;
+}
+
+fun assert(input, expected) {
+    if (input != expected) {
+        print "ERROR";
+    } else {
+        print "OK";
+    }
+}
+
+assert(minsky_even(0), 1);
+assert(minsky_even(1), 0);
+assert(minsky_even(2), 1);
+assert(minsky_even(3), 0);
+assert(minsky_even(4), 1);
+assert(minsky_even(5), 0);
