@@ -97,10 +97,11 @@ def test_error_unterminated_string():
 
 
 def test_identifiers():
-    tokens = Scanner("foo bar trueman").scan()
+    tokens = Scanner("foo bar trueman t0").scan()
     tokens_type = [token.token_type for token in tokens]
 
     expected_tokens_type = [
+        TokenType.IDENTIFIER,
         TokenType.IDENTIFIER,
         TokenType.IDENTIFIER,
         TokenType.IDENTIFIER,
