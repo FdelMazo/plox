@@ -46,8 +46,10 @@ class Scanner(object):
         c = self._advance()
 
         # para identificadores y palabras reservadas, chequeamos
-        # si el caracter es alfanumérico o un guion bajo
+        # si el primer caracter es una letra o un guion bajo,
+        # y después permitimos caracteres alfanumericos tambien
         is_alpha = lambda c: str.isalpha(c) or c == "_"
+        is_alphanum = lambda c: str.isalnum(c) or c == "_"
 
         match c:
             # descartamos los whitespaces
@@ -194,7 +196,7 @@ class Scanner(object):
             # identificadores y palabras reservadas
             case _ if is_alpha(c):
                 # consumimos el identificador hasta que no sea un alfanumérico
-                while not self._is_at_end() and is_alpha(self._lookahead()):
+                while not self._is_at_end() and is_alphanum(self._lookahead()):
                     self._advance()
 
                 lexeme = self.lexeme()
