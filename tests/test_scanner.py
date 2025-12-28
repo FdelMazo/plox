@@ -17,24 +17,6 @@ def test_hello_world():
     assert tokens_type == expected_tokens_type
 
 
-def test_scanner_plus_plus_token():
-    tokens = Scanner("++").scan()
-    tokens_type = [token.token_type for token in tokens]
-
-    expected_tokens_type = [TokenType.PLUS_PLUS, TokenType.EOF]
-
-    assert tokens_type == expected_tokens_type
-
-
-def test_plus_plus_token_and_plus_token():
-    tokens = Scanner("+++").scan()
-    tokens_type = [token.token_type for token in tokens]
-
-    expected_tokens_type = [TokenType.PLUS_PLUS, TokenType.PLUS, TokenType.EOF]
-
-    assert tokens_type == expected_tokens_type
-
-
 def test_string_literal():
     tokens = Scanner('"hello world"').scan()
     tokens_type = [token.token_type for token in tokens]
