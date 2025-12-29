@@ -1,0 +1,29 @@
+fun assert(input, expected) {
+    if (input != expected) {
+        print "ERROR";
+    } else {
+        print "OK";
+    }
+}
+
+
+fun fizzbuzz(n) {
+   var res = "";
+   for (var i = 1; i <= n; i = i + 1) {
+       if (i % 3 == 0 and i % 5 == 0) {
+           res = res + "FizzBuzz";
+       } else if (i % 3 == 0) {
+           res = res + "Fizz";
+       } else if (i % 5 == 0) {
+           res = res + "Buzz";
+       }
+   }
+   return res;
+}
+
+
+assert(fizzbuzz(2), "");
+assert(fizzbuzz(3), "Fizz");
+assert(fizzbuzz(5), "FizzBuzz");
+assert(fizzbuzz(6), "FizzBuzzFizz");
+assert(fizzbuzz(15), "FizzBuzzFizzFizzBuzzFizzFizzBuzz");
