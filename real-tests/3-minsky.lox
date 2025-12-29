@@ -59,6 +59,7 @@ fun assert(input, expected) {
     }
 }
 
+print "--- MINSKY MACHINE ---";
 assert(minsky_even(0), 1);
 assert(minsky_even(1), 0);
 assert(minsky_even(2), 1);
