@@ -74,9 +74,10 @@ class Plox:
 
         # en modo resolve, imprimimos los scopes locales del intérprete
         if self.mode == "resolve":
+            depths = {k.name: v for k, v in self.interpreter.local_scope_depths.items()}
             print(
                 colored(
-                    f"Interpreter Locals: {self.interpreter.local_scope_depths}",
+                    f"Interpreter Locals: {depths}",
                     "light_blue",
                 )
             )
