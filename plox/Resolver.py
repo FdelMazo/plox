@@ -49,7 +49,7 @@ class Resolver(object):
         self.scopes[-1][name] = False
 
     def define(self, name: str):
-        # Declarar una variable es guardarla bajo True en el tope del stack
+        # Definir una variable es guardarla bajo True en el tope del stack
         if not self.scopes:
             return
         self.scopes[-1][name] = True
