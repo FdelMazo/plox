@@ -140,6 +140,7 @@ class Resolver(object):
         for i, scope in enumerate(reversed(self.scopes)):
             if expression.name.lexeme in scope:
                 self.interpreter.resolve_depth(expression, i)
+                return
 
     @resolve.register
     def _(self, expression: AssignmentExpr):
@@ -150,6 +151,7 @@ class Resolver(object):
         for i, scope in enumerate(reversed(self.scopes)):
             if expression.name.lexeme in scope:
                 self.interpreter.resolve_depth(expression, i)
+                return value
 
         return value
 
