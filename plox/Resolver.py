@@ -26,6 +26,7 @@ from .Expr import (
     PostfixExpr,
 )
 
+
 class VarInformation:
     def __init__(self, defined: bool, used: bool):
         # Guardamos si la variable fue definida y si fue usada
@@ -158,7 +159,9 @@ class Resolver(object):
         # lanzamos un error
         # Básicamente, el error frente a `var x = x;`
 
-        actual_var_info = self.scopes[-1].get(expression.name.lexeme, None) if self.scopes else None
+        actual_var_info = (
+            self.scopes[-1].get(expression.name.lexeme, None) if self.scopes else None
+        )
         if actual_var_info is not None and actual_var_info.defined is False:
             raise NameError(
                 f"Variable `{expression.name.lexeme}` was declared but not defined"
@@ -172,6 +175,7 @@ class Resolver(object):
                 self.interpreter.resolve_depth(expression, i)
                 # Marcamos la variable como usada
                 self.mark_used(scope[expression.name.lexeme])
+                return
 
     @resolve.register
     def _(self, expression: AssignmentExpr):
@@ -182,6 +186,7 @@ class Resolver(object):
         for i, scope in enumerate(reversed(self.scopes)):
             if expression.name.lexeme in scope:
                 self.interpreter.resolve_depth(expression, i)
+                return value
 
         return value
 
