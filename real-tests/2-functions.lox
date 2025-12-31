@@ -57,6 +57,19 @@ assert(y_counter(), 3);
 assert(x_counter(), 4);
 assert(y_counter(), 4);
 
+print "--- VARIABLE SHADOWING ---";
+var a = 1;
+assert(a, 1);
+{
+   var a = 2;
+   assert(a, 2);
+   {
+    var a = 3;
+    assert(a, 3);
+   }
+}
+
+
 print "--- CLOSURE BUG ---";
 var a = "global";
 {
