@@ -45,6 +45,7 @@ class Interpreter(object):
 
     # Interpretar es ejecutar la lista de statements que tenemos
     def interpret(self, statements: list[Stmt]):
+        lastvalue_produced = None
         for statement in statements:
             # Se guarda el ultimo valor producido por un statement
             lastvalue_produced = self.execute(statement)
