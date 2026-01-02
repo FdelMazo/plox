@@ -79,10 +79,6 @@ class Resolver(object):
         # Marca una variable como usada (le agrega la informacion a VarInformation)
         var_info.used = True
 
-    def get_warnings_report(self):
-        # Devuelve un unico string con todos los warnings generados
-        return "\n".join(self.warnings)
-
     @singledispatchmethod
     def resolve(self, arg: Stmt | Expr):
         raise NameError(f"Unknown statement or expression type: `{type(arg)}`")

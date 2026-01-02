@@ -16,6 +16,7 @@ from platformdirs import user_data_dir
 class Plox:
     def __init__(self):
         self.debug = False
+        self.show_warnings = False
         self.mode = None  # "scanning" | "parsing" | "resolve"
         self.interpreter = Interpreter()
         self.printer = PrettyPrinter(
@@ -64,8 +65,9 @@ class Plox:
             try:
                 resolver.resolve(statement)
                 # Proponemos manejar los warnings simplemente imprimiendolos
-                if warnings := resolver.get_warnings_report():
-                    print(warnings)
+                if self.show_warnings:
+                    for warning in resolver.warnings:
+                        print(colored(warning, "yellow"))
 
             except Exception as e:
                 if self.debug:
@@ -118,6 +120,9 @@ class Plox:
             "--line-by-line", action="store_true", help="Run in line-by-line mode"
         )
         parser.add_argument(
+            "--show-warnings", action="store_true", help="Report compile-time warnings"
+        )
+        parser.add_argument(
             "file", nargs="?", help="Interpret a file instead of running the REPL"
         )
 
@@ -125,6 +130,8 @@ class Plox:
 
         if args.debug:
             self.debug = True
+        if args.show_warnings:
+            self.show_warnings = True
 
         if args.scanning:
             self.mode = "scanning"
