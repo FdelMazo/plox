@@ -67,6 +67,10 @@ class Resolver(object):
         # Declarar una variable es guardarla con defined=False en el tope del stack
         if not self.scopes:
             return
+
+        if name in self.scopes[-1]:
+            raise NameError(f"Variable `{name}` already exists")
+
         self.scopes[-1][name] = VarInformation(defined=False, used=False)
 
     def define(self, name: str):
