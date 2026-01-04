@@ -1,4 +1,4 @@
-// Para correr en la terminal: ./plox.py --line-by-line examples/increment_operator.lox
+// Correr con --line-by-line
 
 // Postfix ++ (devuelve el valor viejo, incrementa despues)
 

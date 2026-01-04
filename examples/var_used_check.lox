@@ -1,9 +1,10 @@
-// Para correr en la terminal: ./plox.py --line-by-line examples/var_used_check.lox
+// Correr con --line-by-line
+
 // Plox revisa estaticamente si las variables locales son usadas o no.
 // Convenciones asumidas por el resolver:
 //   - No se toman en cuenta las variables globales
 //   - No cuenta como uso la asignacion de un valor a la variable.
-//   - Nombres de variables que empiezan con "_" no se toman en cuenta en el checkeo. 
+//   - Nombres de variables que empiezan con "_" no se toman en cuenta en el checkeo.
 
 // === var local sin usar ===
 // Res: warning por variable no usada

@@ -1,5 +1,4 @@
-// Para correr en la terminal: ./plox.py --line-by-line examples/ternary_operator.lox
-
+// Correr con --line-by-line
 
 // Uso basico del operador
 print true ? 1 : 2;          // 1
@@ -37,7 +36,7 @@ print false ? 1 : false ? 2 : 3;  // 3
 // conditional → logic_or ( "?" assignment ":" assignment )? ;
 // => El ternario tiene menor precedencia que logic_or y mayor que assignment
 
-// Con OR. La agrupacion es por ejemplo: (bool1 or bool2) ? ... : ... 
+// Con OR. La agrupacion es por ejemplo: (bool1 or bool2) ? ... : ...
 print false or true ? 1 : 2;   // 1
 
 // Con asignación. La agrupacion es: var z = (cond ? ... : ...);
