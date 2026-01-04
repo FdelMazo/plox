@@ -1,0 +1,11 @@
+// Simplemente para benchmarkear bucles grandes
+
+var i = 0;
+while (i < 1000) {
+    var j = 0;
+    while (j < 100) {
+        j = j + 1;
+    }
+    i = i + 1;
+}
+print i;
