@@ -10,4 +10,9 @@
 // Usando github.com/sharkdp/hyperfine
 // hyperfine --shell=none 'plox ./examples/fib.lox' 'python3 -c "fib = lambda n: n if n <= 1 else fib(n-1) + fib(n-2); print(fib(20))"' './fib_c'
 
-fun fib(n) { if (n <= 1) return n; return fib(n-2) + fib(n-1); } print fib(20);
+fun fib(n) {
+    if (n <= 1) return n;
+    return fib(n-2) + fib(n-1);
+}
+
+print fib(20);
