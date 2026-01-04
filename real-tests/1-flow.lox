@@ -6,28 +6,34 @@ if (true) {
     print "ERROR";
 }
 
-print "--- WHILEs ---";
-var i = 0;
-while (i < 3) {
-    i = i + 1;
-}
-
-if (i != 3) {
+if (false) {
     print "ERROR";
 } else {
     print "OK";
 }
 
-print "--- FOR ---";
-var x = 0;
-for ( ; x <= 5; x = x + 1) {
-    if (x == 4) {
-        print "OK";
-    }
+print "--- WHILEs ---";
+var i = 0;
+var match = 0;
+while (i <= 3) {
+    match = i;
+    i = i + 1;
 }
-// Este comportamiento es producto de haber codeado el for como un sintactic sugar
-// en otro lenguajes, a esta altura, x debería ser 5
-// todas las implementaciones de lox mantienen esta semantica
-if (x != 6) {
+
+if (match == 3) {
+    print "OK";
+} else {
+    print "ERROR";
+}
+
+print "--- FOR ---";
+var match = 0;
+for (var i = 0 ; i <= 5; i = i + 1) {
+    match = i;
+}
+
+if (match == 5) {
+    print "OK";
+} else {
     print "ERROR";
 }
