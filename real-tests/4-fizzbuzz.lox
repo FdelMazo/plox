@@ -22,6 +22,7 @@ fun fizzbuzz(n) {
 }
 
 
+print "--- FIZZ BUZZ ---";
 assert(fizzbuzz(2), "");
 assert(fizzbuzz(3), "Fizz");
 assert(fizzbuzz(5), "FizzBuzz");
