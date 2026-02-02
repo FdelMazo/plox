@@ -17,16 +17,16 @@ class Function(object):
     def __init__(
         self,
         declaration: FunDecl,
-        closure: Env,
+        closure_env: Env,
     ):
-        self.closure = closure
+        self.closure_env = closure_env
         self.declaration = declaration
         self.arity = len(declaration.parameters)
 
     # La invocación! La parte mas linda. El código toma vida
     def __call__(self, interpreter: "Interpreter", arguments: list):
         # Creamos un nuevo entorno, solo para esta invocación
-        function_env = Env(enclosing=self.closure)
+        function_env = Env(enclosing=self.closure_env)
 
         # Definimos los parámetros en el nuevo entorno
         # con el valor de los argumentos
