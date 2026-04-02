@@ -18,6 +18,7 @@ from .Expr import (
     GroupingExpr,
     LiteralExpr,
     UnaryExpr,
+    CastExpr,
     VariableExpr,
     AssignmentExpr,
     LogicExpr,
@@ -196,6 +197,20 @@ class Interpreter(object):
                 return not self.is_truthy(right)
             case _:
                 raise RuntimeError(f"Unknown unary operator: `{expression.operator}`")
+
+    @evaluate.register
+    def _(self, expression: CastExpr):
+        value = self.evaluate(expression.expression)
+        
+        match expression.type_token.token_type:
+            case TokenType.NUMBER_CAST:
+                return self._cast_to_number(value)
+            case TokenType.BOOL:
+                return self._cast_to_bool(value)
+            case TokenType.STRING_CAST:
+                return self._cast_to_string(value)
+            case _:
+                raise RuntimeError(f"Unknown cast type: `{expression.type_token.lexeme}`")
 
     @evaluate.register
     def _(self, expression: BinaryExpr):
@@ -407,3 +422,56 @@ class Interpreter(object):
     # Devuelve si los valores recibidos son una cadena según Lox
     def is_string(self, *values):
         return all(type(value) is str for value in values)
+
+    # ---------- Type Casting ---------- #
+
+    def _cast_to_number(self, value):
+        """
+        bool -> 1 (true) /  0 (false)
+        number -> number
+        string -> uso float() de Python
+        nil -> error
+        """
+        if isinstance(value, bool):
+            return 1.0 if value else 0.0
+        elif isinstance(value, (int, float)):
+            return float(value)
+        elif isinstance(value, str):
+            s = value.strip() # Aceptamos espacios 
+            if not s:
+                raise RuntimeError("Cannot cast empty string to number")
+            try:
+                return float(s)  # Técnica: delegá al backend
+            except ValueError:
+                raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
+        elif value is None:
+            raise RuntimeError("Cannot cast nil to number")
+        else:
+            # No se debe mostrar el tipo del valor en el mensaje de error, para no romper la semántica de Lox.
+            raise RuntimeError(f"Cannot cast {value} to number")
+
+    def _cast_to_bool(self, value):
+        # Mantengo el mismo criterio de truthiness que en is_truthy
+        return self.is_truthy(value)
+
+    def _cast_to_string(self, value):
+        """
+        true -> "true"
+        false -> "false"
+        nil -> "nil"
+        number -> str de Python
+        string -> string
+        funciones/otros -> str de Python 
+        """
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        elif value is None:
+            return "nil"
+        elif isinstance(value, (int, float)):
+            if isinstance(value, float) and value.is_integer():
+                return str(int(value))
+            return str(value)
+        elif isinstance(value, str):
+            return value
+        else:
+            return str(value)

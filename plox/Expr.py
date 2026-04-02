@@ -54,6 +54,16 @@ class UnaryExpr(Expr):
         return f"({self.operator}{self.right})"
 
 
+# cast           → ("bool" | "number" | "string") expression ;
+class CastExpr(Expr):
+    def __init__(self, type_token: Token, expression: Expr):
+        self.type_token = type_token
+        self.expression = expression
+
+    def __repr__(self) -> str:
+        return f"<CAST {self.type_token.lexeme}({self.expression})>"
+
+
 # call          → primary "(" arguments? ")" ;
 # arguments     → expression ("," expression)* ;
 class CallExpr(Expr):
