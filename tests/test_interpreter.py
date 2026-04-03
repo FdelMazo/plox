@@ -147,3 +147,56 @@ def test_ternary():
         expr = Parser(tokens).expression()
         value = Interpreter().evaluate(expr)
         assert value == expected
+
+
+def test_casting():
+    tests = [
+        # number casting
+        ('number true', 1.0),
+        ('number false', 0.0),
+        ('number "42"', 42.0),
+        ('number "3.14"', 3.14),
+        # bool casting (en Lox: solo false y nil son falsy, todo lo demás es truthy)
+        ('bool true', True),
+        ('bool 0', True),
+        ('bool 42', True),
+        ('bool ""', True),
+        ('bool "hello"', True),
+        ('bool false', False),
+        ('bool nil', False),
+        # string casting
+        ('string true', "true"),
+        ('string false', "false"),
+        ('string nil', "nil"),
+        ('string 42', "42"),
+        ('string 5.0', "5"),
+        # nested casting
+        ('string(number "42")', "42"),
+        ('bool(number "0")', True),
+        ('bool(bool false)', False),
+        ('number(string 3.19)', 3.19),
+        ('number(string 4.1) + 1', 5.1),
+        ('number number number "123"', 123.0),
+    ]
+
+    for src, expected in tests:
+        tokens = Scanner(src).scan()
+        expr = Parser(tokens).expression()
+        value = Interpreter().evaluate(expr)
+        assert value == expected
+
+
+def test_casting_errors():
+    # Casting string no numérico a number
+    tokens = Scanner('number "abc"').scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+    assert "Cannot cast string" in str(excinfo.value)
+
+    # Casting nil a number
+    tokens = Scanner("number nil").scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+    assert "Cannot cast nil to number" in str(excinfo.value)

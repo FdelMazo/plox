@@ -18,6 +18,7 @@ from .Expr import (
     GroupingExpr,
     LiteralExpr,
     UnaryExpr,
+    CastExpr,
     VariableExpr,
     AssignmentExpr,
     LogicExpr,
@@ -205,6 +206,10 @@ class Resolver(object):
     @resolve.register
     def _(self, expression: UnaryExpr):
         self.resolve(expression.right)
+
+    @resolve.register
+    def _(self, expression: CastExpr):
+        self.resolve(expression.expression)
 
     @resolve.register
     def _(self, expression: BinaryExpr):
