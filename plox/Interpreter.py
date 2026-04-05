@@ -205,7 +205,7 @@ class Interpreter(object):
         match expression.type_token.token_type:
             case TokenType.NUMBER_CAST:
                 return self._cast_to_number(value)
-            case TokenType.BOOL:
+            case TokenType.BOOL_CAST:
                 return self._cast_to_bool(value)
             case TokenType.STRING_CAST:
                 return self._cast_to_string(value)
@@ -429,7 +429,7 @@ class Interpreter(object):
         """
         bool -> 1 (true) /  0 (false)
         number -> number
-        string -> uso float() de Python
+        string -> syntax válido: [signo][dígitos].[dígitos]
         nil -> error
         """
         if isinstance(value, bool):
@@ -437,17 +437,35 @@ class Interpreter(object):
         elif isinstance(value, (int, float)):
             return float(value)
         elif isinstance(value, str):
-            s = value.strip() # Aceptamos espacios 
+            s = value.strip()
             if not s:
                 raise RuntimeError("Cannot cast empty string to number")
-            try:
-                return float(s)  # Técnica: delegá al backend
-            except ValueError:
+            
+            # Validar que solo tenga dígitos, un punto como máximo, y signos solo al inicio
+            dot_count = 0
+            for i, c in enumerate(s):
+                if c in '+-':
+                    if i != 0:  # Signo solo al inicio
+                        raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
+                elif c == '.':
+                    dot_count += 1
+                    if dot_count > 1:
+                        raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
+                elif not c.isdigit():
+                    raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
+            
+            # Rechazar si empieza o termina con punto
+            if s.startswith('.') or s.endswith('.'):
                 raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
+            
+            # Rechazar si es solo un signo
+            if s in ('+', '-'):
+                raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
+            
+            return float(s)
         elif value is None:
             raise RuntimeError("Cannot cast nil to number")
         else:
-            # No se debe mostrar el tipo del valor en el mensaje de error, para no romper la semántica de Lox.
             raise RuntimeError(f"Cannot cast {value} to number")
 
     def _cast_to_bool(self, value):
@@ -461,7 +479,7 @@ class Interpreter(object):
         nil -> "nil"
         number -> str de Python
         string -> string
-        funciones/otros -> str de Python 
+        función -> <function name>
         """
         if isinstance(value, bool):
             return "true" if value else "false"
@@ -469,9 +487,11 @@ class Interpreter(object):
             return "nil"
         elif isinstance(value, (int, float)):
             if isinstance(value, float) and value.is_integer():
-                return str(int(value))
+                return str(int(value)) # para que 1.0 sea 1 en la conversión a string
             return str(value)
         elif isinstance(value, str):
             return value
+        elif isinstance(value, Function):
+            return f"<function {value.declaration.name.lexeme}>"
         else:
-            return str(value)
+            raise RuntimeError(f"Cannot cast {value} to string")

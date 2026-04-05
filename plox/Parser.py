@@ -486,7 +486,7 @@ class Parser(object):
             return UnaryExpr(operator, right)
 
         # Type casting 
-        if self._match(TokenType.BOOL, TokenType.NUMBER_CAST, TokenType.STRING_CAST):
+        if self._match(TokenType.BOOL_CAST, TokenType.NUMBER_CAST, TokenType.STRING_CAST):
             type_token = self._previous()
             right = self.unary() # permitimos anidación de castings también, como bool number "123" -> bool(number("123"))
             return CastExpr(type_token, right)
