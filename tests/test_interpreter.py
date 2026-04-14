@@ -200,3 +200,40 @@ def test_casting_errors():
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
     assert "Cannot cast nil to number" in str(excinfo.value)
+
+
+def test_type_function():
+    """Test the built-in type() function"""
+    tests = [
+        ("type(42)", "number"),
+        ("type(3.8)", "number"),
+        ("type(0)", "number"),
+        ('type("hola")', "string"),
+        ('type("")', "string"),
+        ("type(true)", "bool"),
+        ("type(false)", "bool"),
+        ("type(nil)", "nil"),
+        # type() es una función
+        ("type(type)", "function"),
+    ]
+
+    for src, expected in tests:
+        tokens = Scanner(src).scan()
+        expr = Parser(tokens).expression()
+        value = Interpreter().evaluate(expr)
+        assert value == expected, f"type({src}) returned {value}, expected {expected}"
+
+
+def test_type_function_with_casting():
+    tests = [
+        ('type(number "42")', "number"),
+        ('type(string 42)', "string"),
+        ('type(bool 0)', "bool"),
+        ('type(bool nil)', "bool"),
+    ]
+
+    for src, expected in tests:
+        tokens = Scanner(src).scan()
+        expr = Parser(tokens).expression()
+        value = Interpreter().evaluate(expr)
+        assert value == expected, f"type({src}) returned {value}, expected {expected}"

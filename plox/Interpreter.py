@@ -29,11 +29,13 @@ from .Expr import (
 from .Function import Function, ReturnValue
 from .Token import TokenType
 from .Env import Env
+from .BuiltinFunctions import TypeFunction
 
 
 class Interpreter(object):
     def __init__(self):
         self.globals = Env()
+        self.globals.define("type", TypeFunction())
         self.env = self.globals
 
         # De mano del resolvedor (Resolver.py), ahora el intérprete sabe

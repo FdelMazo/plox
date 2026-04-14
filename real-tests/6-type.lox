@@ -1,0 +1,32 @@
+fun assert(input, expected) {
+    if (input != expected) {
+        print "ERROR";
+    } else {
+        print "OK";
+    }
+}
+
+print "--- TYPE FUNCTION ---";
+assert(type(42), "number");
+assert(type(3.8), "number");
+assert(type(0), "number");
+assert(type("hello"), "string");
+assert(type(""), "string");
+assert(type(true), "bool");
+assert(type(false), "bool");
+assert(type(nil), "nil");
+assert(type(type), "function");
+
+print "--- TYPE WITH CASTING ---";
+assert(type(number "42"), "number");
+assert(type(string 42), "string");
+assert(type(bool 0), "bool");
+assert(type(bool nil), "bool");
+assert(type(bool false), "bool");
+
+print "--- TYPE WITH FUNCTIONS ---";
+fun greet(name) {
+    return "Hola, " + name;
+}
+
+assert(type(greet), "function");
