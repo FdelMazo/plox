@@ -260,4 +260,18 @@ def test_index():
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
-    assert "Cannot use a non-round number as index" in str(excinfo.value)
+    assert "Index must be a round number" in str(excinfo.value)
+
+    tokens = Scanner('"test"["error"]').scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+
+    assert "Index must be a round number" in str(excinfo.value)
+
+    tokens = Scanner('"test"[12]').scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+
+    assert "Index out of range" in str(excinfo.value)

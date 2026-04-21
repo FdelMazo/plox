@@ -382,7 +382,13 @@ class Interpreter(object):
         # Revisamos que se esté usando un número de índice y que el mismo no tenga parte fraccionaria
         if not self.is_number(index) or int(index) != index:
             raise RuntimeError(
-                f"Cannot use a non-round number as index, got: `{index}`"
+                f"Index must be a round number, got: `{index}`"
+            )
+
+        index = int(index)
+        if index > len(target):
+            raise RuntimeError(
+                f"Index out of range (len: {len(target)}, index: {index})"
             )
 
         return target[int(index)]
