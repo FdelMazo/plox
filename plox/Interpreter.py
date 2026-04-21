@@ -379,13 +379,15 @@ class Interpreter(object):
 
         index = self.evaluate(expression.index)
 
-        # Revisamos que se esté usando un número de índice y que el mismo no tenga parte fraccionaria
+        # Revisamos que se esté usando un número de índice y que el mismo no tenga parte fraccionaria ni sea negativo
         if not self.is_number(index) or int(index) != index or index < 0:
             raise RuntimeError(
                 f"Index must be a positive whole number, got: `{index}`"
             )
 
         index = int(index)
+
+        # Revisamos que no esté fuera de rango
         if index >= len(target):
             raise RuntimeError(
                 f"Index out of range (len: {len(target)}, index: {index})"
