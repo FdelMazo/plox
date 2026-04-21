@@ -241,6 +241,7 @@ def test_type_function_with_casting():
 def test_index():
     tests = [
         ('"string"[0]', "s"),
+        ('"string"[5]', "g"),
         ('"plox"[2]', "o"),
         ('"plox"[2.00]', "o"),
         ('"plox"[1.5 - (1.5 % 1)]', "l"),
@@ -260,14 +261,21 @@ def test_index():
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
-    assert "Index must be a round number" in str(excinfo.value)
+    assert "Index must be a positive whole number" in str(excinfo.value)
 
     tokens = Scanner('"test"["error"]').scan()
     expr = Parser(tokens).expression()
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
-    assert "Index must be a round number" in str(excinfo.value)
+    assert "Index must be a positive whole number" in str(excinfo.value)
+
+    tokens = Scanner('"test"[-1]').scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+
+    assert "Index must be a positive whole number" in str(excinfo.value)
 
     tokens = Scanner('"test"[12]').scan()
     expr = Parser(tokens).expression()
