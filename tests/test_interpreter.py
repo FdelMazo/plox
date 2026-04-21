@@ -149,6 +149,21 @@ def test_ternary():
         assert value == expected
 
 
+def test_index():
+    tests = [
+        ('"string"[0]', "s"),
+        ('"plox"[2]', "o"),
+        ('"plox"[2][0]', "o"),
+        ('"test"[0] + "test"[1]', "te"),
+    ]
+
+    for src, expected in tests:
+        tokens = Scanner(src).scan()
+        expr = Parser(tokens).expression()
+        value = Interpreter().evaluate(expr)
+        assert value == expected
+
+
 def test_casting():
     tests = [
         # number casting
@@ -184,7 +199,6 @@ def test_casting():
         expr = Parser(tokens).expression()
         value = Interpreter().evaluate(expr)
         assert value == expected
-
 
 def test_casting_errors():
     # Casting string no numérico a number

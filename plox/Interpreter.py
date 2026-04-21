@@ -23,6 +23,7 @@ from .Expr import (
     AssignmentExpr,
     LogicExpr,
     CallExpr,
+    IndexExpr,
     TernaryExpr,
     PostfixExpr,
 )
@@ -364,6 +365,27 @@ class Interpreter(object):
             )
 
         return callee(self, arguments)
+
+    @evaluate.register
+    def _(self, expression: IndexExpr):
+        target = self.evaluate(expression.target)
+
+        # Si lo que se trata de indexar no es un string, levantamos un error
+        # A futuro, en caso de que mas tipos sean indexables, habría que extender el chequeo
+        if not self.is_string(target):
+            raise RuntimeError(
+                f"Only strings support indexing, got: `{target}`"
+            )
+
+        index = self.evaluate(expression.index)
+
+        # Revisamos que se esté usando un número de índice y que el mismo no tenga parte fraccionaria
+        if not self.is_number(index) or int(index) != index:
+            raise RuntimeError(
+                f"Cannot use a non-round number as index, got: `{index}`"
+            )
+
+        return target[int(index)]
 
     @evaluate.register
     def _(self, expression: TernaryExpr):
