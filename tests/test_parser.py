@@ -7,6 +7,8 @@ from plox.Expr import (
     AssignmentExpr,
     PostfixExpr,
     TernaryExpr,
+    IndexExpr,
+    CallExpr,
 )
 from plox.Scanner import Scanner
 from plox.Parser import Parser
@@ -470,3 +472,27 @@ def test_power():
     assert expr.right.left.value == 3.0
     assert isinstance(expr.right.right, LiteralExpr)
     assert expr.right.right.value == 4.0
+
+def test_index():
+    tokens = Scanner("\"hola\"[3]").scan()
+    expr = Parser(tokens).expression()
+    assert isinstance(expr, IndexExpr)
+
+    assert isinstance(expr.target, LiteralExpr)
+    assert expr.target.value == "hola"
+    assert isinstance(expr.index, LiteralExpr)
+    assert expr.index.value == 3.0
+
+    tokens = Scanner("obtener_string()[1 + 1]").scan()
+    expr = Parser(tokens).expression()
+    assert isinstance(expr, IndexExpr)
+    assert isinstance(expr.target, CallExpr)
+    assert isinstance(expr.index, BinaryExpr)
+
+    # Soporta encadenar llamados e indexing correctamente
+    tokens = Scanner("funciones()[3]()").scan()
+    expr = Parser(tokens).expression()
+    assert isinstance(expr, CallExpr)
+    assert isinstance(expr.callee, IndexExpr)
+    assert isinstance(expr.callee.target, CallExpr)
+
