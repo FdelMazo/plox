@@ -149,21 +149,6 @@ def test_ternary():
         assert value == expected
 
 
-def test_index():
-    tests = [
-        ('"string"[0]', "s"),
-        ('"plox"[2]', "o"),
-        ('"plox"[2][0]', "o"),
-        ('"test"[0] + "test"[1]', "te"),
-    ]
-
-    for src, expected in tests:
-        tokens = Scanner(src).scan()
-        expr = Parser(tokens).expression()
-        value = Interpreter().evaluate(expr)
-        assert value == expected
-
-
 def test_casting():
     tests = [
         # number casting
@@ -251,3 +236,28 @@ def test_type_function_with_casting():
         expr = Parser(tokens).expression()
         value = Interpreter().evaluate(expr)
         assert value == expected, f"type({src}) returned {value}, expected {expected}"
+
+
+def test_index():
+    tests = [
+        ('"string"[0]', "s"),
+        ('"plox"[2]', "o"),
+        ('"plox"[2.00]', "o"),
+        ('"plox"[1.5 - (1.5 % 1)]', "l"),
+        ('"plox"[2][0]', "o"),
+        ('"test"[0] + "test"[1]', "te"),
+    ]
+
+    for src, expected in tests:
+        tokens = Scanner(src).scan()
+        expr = Parser(tokens).expression()
+        value = Interpreter().evaluate(expr)
+        assert value == expected
+    
+    
+    tokens = Scanner('"test"[1.5]').scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+
+    assert "Cannot use a non-round number as index" in str(excinfo.value)
