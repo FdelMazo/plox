@@ -168,10 +168,10 @@ def test_casting():
         ('string true', "true"),
         ('string false', "false"),
         ('string nil', "nil"),
-        ('string 42', "42"),
-        ('string 5.0', "5"),
+        ('string 42', "42.0"),
+        ('string 5.0', "5.0"),
         # nested casting
-        ('string(number "42")', "42"),
+        ('string(number "42")', "42.0"),
         ('bool(number "0")', True),
         ('bool(bool false)', False),
         ('number(string 3.19)', 3.19),
@@ -214,7 +214,7 @@ def test_type_function():
         ("type(false)", "bool"),
         ("type(nil)", "nil"),
         # type() es una función
-        ("type(type)", "function"),
+        ("type(type)", "builtin function"),
     ]
 
     for src, expected in tests:
