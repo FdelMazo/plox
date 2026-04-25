@@ -187,7 +187,7 @@ class PrettyPrinter:
 
     @_accept.register
     def _(self, expr: CastExpr):
-        self._store_expr(f"({expr.type_token.lexeme})", "CastExpr")
+        self._store_expr(f"<{expr.type_to_cast.lexeme}>", "CastExpr")
         self._branch(Branch.LAST, [expr.expression])
 
     @_accept.register

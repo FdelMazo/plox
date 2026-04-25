@@ -56,12 +56,12 @@ class UnaryExpr(Expr):
 
 # cast           → ("bool" | "number" | "string") expression ;
 class CastExpr(Expr):
-    def __init__(self, type_token: Token, expression: Expr):
-        self.type_token = type_token
+    def __init__(self, type_to_cast: Token, expression: Expr):
+        self.type_to_cast = type_to_cast
         self.expression = expression
 
     def __repr__(self) -> str:
-        return f"<CAST {self.type_token.lexeme}({self.expression})>"
+        return f"<CAST {self.type_to_cast.lexeme}({self.expression})>"
 
 
 # call          → primary "(" arguments? ")" ;
