@@ -158,7 +158,7 @@ class PrettyPrinter:
 
     @_accept.register
     def _(self, expr: IndexExpr):
-        self._store_expr("@", "IndexExpr")
+        self._store_expr("[]", "IndexExpr")
         self._branch(Branch.MID, [expr.target])
         self._branch(Branch.LAST, [expr.index])
 

@@ -548,9 +548,12 @@ class Parser(object):
     def call(self) -> Expr:
         expr = self.primary()
 
-        # Si me cruzo un paréntesis abierto, tengo una llamada a función
-        # y tengo que parsear los argumentos
-        while True:
+        while (
+            not self._is_at_end() 
+            and self._lookahead().token_type in [TokenType.LEFT_PAREN, TokenType.LEFT_BRACKET]
+        ):
+            # Si me cruzo un paréntesis abierto, tengo una llamada a función
+            # y tengo que parsear los argumentos
             if self._match(TokenType.LEFT_PAREN):
                 arguments: list[Expr] = []
 
@@ -574,6 +577,7 @@ class Parser(object):
 
                 expr = CallExpr(expr, arguments)
 
+            # Si me cruzo un corchete abierto, tengo una operación de índice
             elif self._match(TokenType.LEFT_BRACKET):
                 # Consumo el índice
                 index = self.expression()
@@ -585,9 +589,6 @@ class Parser(object):
                     )
 
                 expr = IndexExpr(expr, index)
-
-            else:
-                break
 
         return expr
 
