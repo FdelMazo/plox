@@ -35,7 +35,7 @@ from .BuiltinFunctions import TypeFunction
 class Interpreter(object):
     def __init__(self):
         self.globals = Env()
-        self.globals.define("type", TypeFunction())
+        self._populate_native_functions()
         self.env = self.globals
 
         # De mano del resolvedor (Resolver.py), ahora el intérprete sabe
@@ -45,6 +45,10 @@ class Interpreter(object):
         # en el entorno local actual (depth 0), en el entorno padre (depth 1),
         # o en el entorno global (directamente no esta en el dict).
         self.local_scope_depths: dict[VariableExpr | AssignmentExpr, int] = {}
+
+       
+
+
 
     # Interpretar es ejecutar la lista de statements que tenemos
     def interpret(self, statements: list[Stmt]):
@@ -60,6 +64,10 @@ class Interpreter(object):
     # antes de la ejecución del programa
     def resolve_depth(self, expression: VariableExpr | AssignmentExpr, depth: int):
         self.local_scope_depths[expression] = depth
+
+    # Incorpora al intérprete funciones nativas
+    def _populate_native_functions(self):
+        self.globals.define("type", TypeFunction())
 
     # ---------- Ejecutadores de Statements ---------- #
 
@@ -204,7 +212,7 @@ class Interpreter(object):
     def _(self, expression: CastExpr):
         value = self.evaluate(expression.expression)
         
-        match expression.type_token.token_type:
+        match expression.type_to_cast.token_type:
             case TokenType.NUMBER_CAST:
                 return self._cast_to_number(value)
             case TokenType.BOOL_CAST:
@@ -212,7 +220,7 @@ class Interpreter(object):
             case TokenType.STRING_CAST:
                 return self._cast_to_string(value)
             case _:
-                raise RuntimeError(f"Unknown cast type: `{expression.type_token.lexeme}`")
+                raise RuntimeError(f"Unknown cast type: `{expression.type_to_cast.lexeme}`")
 
     @evaluate.register
     def _(self, expression: BinaryExpr):
@@ -431,25 +439,23 @@ class Interpreter(object):
         """
         bool -> 1 (true) /  0 (false)
         number -> number
-        string -> syntax válido: [signo][dígitos].[dígitos]
+        string -> sintaxis válida de literales numéricos del Scanner: [dígitos].[dígitos]
         nil -> error
         """
         if isinstance(value, bool):
             return 1.0 if value else 0.0
-        elif isinstance(value, (int, float)):
+        elif self.is_number(value):
             return float(value)
-        elif isinstance(value, str):
+        elif self.is_string(value):
             s = value.strip()
             if not s:
                 raise RuntimeError("Cannot cast empty string to number")
             
-            # Validar que solo tenga dígitos, un punto como máximo, y signos solo al inicio
+            # Solo dígitos y un punto decimal opcional
+            # Los signos se manejan por separado en el Scanner, no como parte del literal
             dot_count = 0
-            for i, c in enumerate(s):
-                if c in '+-':
-                    if i != 0:  # Signo solo al inicio
-                        raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
-                elif c == '.':
+            for c in s:
+                if c == '.':
                     dot_count += 1
                     if dot_count > 1:
                         raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
@@ -458,10 +464,6 @@ class Interpreter(object):
             
             # Rechazar si empieza o termina con punto
             if s.startswith('.') or s.endswith('.'):
-                raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
-            
-            # Rechazar si es solo un signo
-            if s in ('+', '-'):
                 raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
             
             return float(s)
@@ -481,19 +483,14 @@ class Interpreter(object):
         nil -> "nil"
         number -> str de Python
         string -> string
-        función -> <function name>
         """
         if isinstance(value, bool):
             return "true" if value else "false"
         elif value is None:
             return "nil"
-        elif isinstance(value, (int, float)):
-            if isinstance(value, float) and value.is_integer():
-                return str(int(value)) # para que 1.0 sea 1 en la conversión a string
-            return str(value)
-        elif isinstance(value, str):
+        elif self.is_number(value):
+            return str(float(value))
+        elif self.is_string(value):
             return value
-        elif isinstance(value, Function):
-            return f"<function {value.declaration.name.lexeme}>"
         else:
             raise RuntimeError(f"Cannot cast {value} to string")
