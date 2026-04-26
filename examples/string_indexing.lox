@@ -20,6 +20,12 @@ print a[2][0]; // l
 var index = 2;
 print "hola"[index]; // l
 
+// Iterar sobre un string
+var original = "un string";
+var reconstruido = "";
+for (var i = 0; i < len(original); i = i + 1) reconstruido = reconstruido + original[i];
+print reconstruido; // un string
+
 // Errores
 
 // Indice fuera de rango
