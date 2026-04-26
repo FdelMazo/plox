@@ -30,7 +30,7 @@ from .Expr import (
 from .Function import Function, ReturnValue
 from .Token import TokenType
 from .Env import Env
-from .BuiltinFunctions import TypeFunction
+from .BuiltinFunctions import TypeFunction, LenFunction
 
 
 class Interpreter(object):
@@ -65,6 +65,7 @@ class Interpreter(object):
     # Incorpora al intérprete funciones nativas
     def _populate_native_functions(self):
         self.globals.define("type", TypeFunction())
+        self.globals.define("len", LenFunction())
 
     # ---------- Ejecutadores de Statements ---------- #
 

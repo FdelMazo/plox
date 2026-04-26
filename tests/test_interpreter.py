@@ -255,7 +255,6 @@ def test_index():
         value = Interpreter().evaluate(expr)
         assert value == expected
     
-    
     tokens = Scanner('"test"[1.5]').scan()
     expr = Parser(tokens).expression()
     with pytest.raises(RuntimeError) as excinfo:
@@ -283,3 +282,38 @@ def test_index():
         Interpreter().evaluate(expr)
 
     assert "Index out of range" in str(excinfo.value)
+
+def test_len_function():
+    tests = [
+        ('len("")', 0),
+        ('len("hola")', 4),
+        ('len("con espacios")', 12)
+    ]
+
+    for src, expected in tests:
+        tokens = Scanner(src).scan()
+        expr = Parser(tokens).expression()
+        value = Interpreter().evaluate(expr)
+        assert value == expected
+    
+    tokens = Scanner('len(1)').scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+
+    assert "Argument of `len` must be a string" in str(excinfo.value)
+
+    tokens = Scanner('len(true)').scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+
+    assert "Argument of `len` must be a string" in str(excinfo.value)
+
+    tokens = Scanner('len(nil)').scan()
+    expr = Parser(tokens).expression()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().evaluate(expr)
+
+    assert "Argument of `len` must be a string" in str(excinfo.value)
+
