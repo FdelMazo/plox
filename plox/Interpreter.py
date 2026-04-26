@@ -46,10 +46,6 @@ class Interpreter(object):
         # o en el entorno global (directamente no esta en el dict).
         self.local_scope_depths: dict[VariableExpr | AssignmentExpr, int] = {}
 
-       
-
-
-
     # Interpretar es ejecutar la lista de statements que tenemos
     def interpret(self, statements: list[Stmt]):
         lastvalue_produced = None
