@@ -50,3 +50,22 @@ class TypeFunction(BuiltinFunction):
             return "function"
         else:
             return "unknown"
+
+class LenFunction(BuiltinFunction):
+    """Built-in function that returns the len of a string"""
+
+    def __init__(self):
+        super().__init__(arity=1, name="len", params="value")
+
+    def __call__(self, interpreter: "Interpreter", arguments: list):
+        """
+        Return the length of the first argument if it is a string
+        Raises an error if the argument is not a string
+        """
+
+        value = arguments[0]
+        if not interpreter.is_string(value):
+            raise RuntimeError(f"Argument of `len` must be a string, got: {value}")
+
+        return len(value)
+
