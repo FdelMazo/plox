@@ -16,3 +16,5 @@ for lox_file in filter(lambda f: f.endswith(".lox"), sorted(os.listdir("real-tes
     print()
     if "ERROR".lower() in out.lower():
         sys.exit(1)
+
+print("Todo OK")
