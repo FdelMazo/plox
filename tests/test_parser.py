@@ -496,3 +496,19 @@ def test_index():
     assert isinstance(expr.callee, IndexExpr)
     assert isinstance(expr.callee.target, CallExpr)
 
+def test_const_decl():
+    tokens = Scanner("const x = 5;").scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, VarDecl)
+    assert stmt.is_const is True
+    assert stmt.name.lexeme == "x"
+    assert isinstance(stmt.initializer, LiteralExpr)
+    assert stmt.initializer.value == 5.0
+
+def test_const_decl_error():
+    tokens = Scanner("const x;").scan()
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(tokens).parse()
+    assert str(excinfo.value) == "Constant `x` must be initialized at declaration"

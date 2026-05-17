@@ -317,3 +317,27 @@ def test_len_function():
 
     assert "Argument of `len` must be a string" in str(excinfo.value)
 
+def test_const():
+    tokens = Scanner("const x = 42;").scan()
+    stmts = Parser(tokens).parse()
+    Interpreter().interpret(stmts)
+
+    tokens = Scanner("const x = 1; x = 2;").scan()
+    stmts = Parser(tokens).parse()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().interpret(stmts)
+    assert "Cannot assign to constant 'x'" in str(excinfo.value)
+
+    tokens = Scanner("const x = 1; x++;").scan()
+    stmts = Parser(tokens).parse()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().interpret(stmts)
+    assert "Cannot assign to constant 'x'" in str(excinfo.value)
+
+    tokens = Scanner("var x = 1; { const x = 2; } x = 99;").scan()
+    stmts = Parser(tokens).parse()
+    Interpreter().interpret(stmts)
+
+    tokens = Scanner("var x = 1; x = 2;").scan()
+    stmts = Parser(tokens).parse()
+    Interpreter().interpret(stmts)
