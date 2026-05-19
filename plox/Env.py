@@ -30,12 +30,12 @@ class Env(object):
             env = env.enclosing
         return env
 
-    def define(self, name: str, value: object, is_const: bool = False):
+    def define(self, name: str, value: object, is_constant: bool = False):
         # No estamos chequeando si la variable ya esta definida.
         # Lox nos permite hacer var x = 1; var x = 2;
         # mientras que otros lenguajes lo consideran un error
         self.values[name] = value
-        if is_const:
+        if is_constant:
             self.consts.add(name)
 
     def get(self, name: str, distance: int | None = None) -> object:
