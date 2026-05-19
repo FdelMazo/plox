@@ -502,7 +502,7 @@ def test_const_decl():
     assert len(stmts) == 1
     stmt = stmts[0]
     assert isinstance(stmt, VarDecl)
-    assert stmt.is_const is True
+    assert stmt.is_constant is True
     assert stmt.name.lexeme == "x"
     assert isinstance(stmt.initializer, LiteralExpr)
     assert stmt.initializer.value == 5.0

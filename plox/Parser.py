@@ -49,7 +49,7 @@ class Parser(object):
         
         # si me cruzo un const, parseo una variable declaration
         if self._match(TokenType.CONST):
-            return self.variable_declaration(is_const=True)
+            return self.variable_declaration(is_constant=True)
 
         # si me cruzo un fun, parseo una function declaration
         if self._match(TokenType.FUN):
@@ -308,7 +308,7 @@ class Parser(object):
         return FunDecl(functionname, parameters, body)
 
     # varDecl        → ( "var" | "const" ) IDENTIFIER ( "=" expression )? ";" ;
-    def variable_declaration(self, is_const: bool = False) -> VarDecl:
+    def variable_declaration(self, is_constant: bool = False) -> VarDecl:
         if not self._match(TokenType.IDENTIFIER):
             raise SyntaxError(
                 f"Expected variable declaration, got `{self._lookahead()}` instead"
@@ -317,7 +317,7 @@ class Parser(object):
         variablename = self._previous()
 
         # Const deben inicializarse sí o sí. `const x;` no es válido
-        if is_const:
+        if is_constant:
             if not self._match(TokenType.EQUAL):
                 raise SyntaxError(
                     f"Constant `{variablename.lexeme}` must be initialized at declaration"
@@ -335,7 +335,7 @@ class Parser(object):
                 f"Expected ';' after variable declaration, got `{self._lookahead()}` instead"
             )
 
-        return VarDecl(variablename, variablevalue, is_const)
+        return VarDecl(variablename, variablevalue, is_constant)
 
     # ---------- Reglas de Producción de Expresiones ---------- #
 
