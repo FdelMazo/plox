@@ -341,3 +341,15 @@ def test_const():
     tokens = Scanner("var x = 1; x = 2;").scan()
     stmts = Parser(tokens).parse()
     Interpreter().interpret(stmts)
+
+    tokens = Scanner("const x = 1; var x = 2;").scan()
+    stmts = Parser(tokens).parse()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().interpret(stmts)
+    assert "Cannot re-declare constant 'x'" in str(excinfo.value)
+
+    tokens = Scanner("const x = 1; const x = 2;").scan()
+    stmts = Parser(tokens).parse()
+    with pytest.raises(RuntimeError) as excinfo:
+        Interpreter().interpret(stmts)
+    assert "Cannot re-declare constant 'x'" in str(excinfo.value)
