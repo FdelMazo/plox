@@ -317,14 +317,13 @@ class Parser(object):
         variablename = self._previous()
 
         # Const deben inicializarse sí o sí. `const x;` no es válido
-        if is_constant:
-            if not self._match(TokenType.EQUAL):
-                raise SyntaxError(
-                    f"Constant `{variablename.lexeme}` must be initialized at declaration"
-                ) 
-            variablevalue = self.expression() # const x = valor;
-        # Si no se especifica un valor para la variable, se le asigna Nil
-        elif self._match(TokenType.EQUAL):  # var x = valor;
+        if is_constant and self._lookahead().token_type != TokenType.EQUAL:
+            raise SyntaxError(
+                f"Constant `{variablename.lexeme}` must be initialized at declaration"
+            )
+            
+        # Si no se especifica un valor para la variable mutable (var), se le asigna Nil
+        if self._match(TokenType.EQUAL):  # var x = valor; o const x = valor;
             variablevalue = self.expression()
         else:  # var x;
             variablevalue = None
