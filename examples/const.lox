@@ -45,3 +45,7 @@ NUM++;
 
 // Error al no inicializar
 const X;
+
+// Error al redeclarar una variable constante
+const y = 1;
+var y = 2;

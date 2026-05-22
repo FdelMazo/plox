@@ -34,6 +34,9 @@ class Env(object):
         # No estamos chequeando si la variable ya esta definida.
         # Lox nos permite hacer var x = 1; var x = 2;
         # mientras que otros lenguajes lo consideran un error
+        # Sin embargo, no se puede re-declarar una variable constante.
+        if name in self.consts:
+            raise RuntimeError(f"Cannot re-declare constant '{name}'")
         self.values[name] = value
         if is_constant:
             self.consts.add(name)
