@@ -55,6 +55,7 @@ class TokenType(Enum):
     TRUE = auto()
     VAR = auto()
     WHILE = auto()
+    CONST = auto()
 
     # type casting tokens
     BOOL_CAST = auto()
@@ -111,4 +112,5 @@ TokenKeywords = {
     "bool": TokenType.BOOL_CAST,
     "number": TokenType.NUMBER_CAST,
     "string": TokenType.STRING_CAST,
+    "const": TokenType.CONST,
 }

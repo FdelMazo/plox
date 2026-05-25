@@ -30,11 +30,11 @@ from .Expr import (
 
 
 class VarInformation:
-    def __init__(self, defined: bool, used: bool):
-        # Guardamos si la variable fue definida y si fue usada
+    def __init__(self, defined: bool, used: bool, is_constant: bool = False):
+        # Guardamos si la variable fue definida, si fue usada y si es constante
         self.defined = defined
         self.used = used
-
+        self.is_constant = is_constant
 
 class Resolver(object):
     def __init__(self, interpreter: Interpreter):
@@ -65,7 +65,7 @@ class Resolver(object):
                 warning = f'[warning] Variable "{name}" is never used.'
                 self.warnings.append(warning)
 
-    def declare(self, name: str):
+    def declare(self, name: str, is_constant: bool = False):
         # Declarar una variable es guardarla con defined=False en el tope del stack
         if not self.scopes:
             return
@@ -73,13 +73,13 @@ class Resolver(object):
         if name in self.scopes[-1]:
             raise NameError(f"Variable `{name}` already exists")
 
-        self.scopes[-1][name] = VarInformation(defined=False, used=False)
+        self.scopes[-1][name] = VarInformation(defined=False, used=False, is_constant=is_constant)
 
     def define(self, name: str):
-        # Definir una variable es guardarla con defined=True en el tope del stack
+        # Definir una variable es guardarla con defined=True, preservando el resto de la info
         if not self.scopes:
             return
-        self.scopes[-1][name] = VarInformation(defined=True, used=False)
+        self.scopes[-1][name].defined = True
 
     def mark_used(self, var_info: VarInformation):
         # Marca una variable como usada (le agrega la informacion a VarInformation)
@@ -106,7 +106,7 @@ class Resolver(object):
         # Esto esta desacoplado de esta manera para que podamos atajar
         # el error donde uno hace `var x = x;`, e intenta
         # referenciar una variable que todavía no fue definida
-        self.declare(statement.name.lexeme)
+        self.declare(statement.name.lexeme, statement.is_constant)
         if statement.initializer is not None:
             self.resolve(statement.initializer)
         self.define(statement.name.lexeme)
@@ -187,6 +187,10 @@ class Resolver(object):
         # se tiene que asignar el valor de la variable
         for i, scope in enumerate(reversed(self.scopes)):
             if expression.name.lexeme in scope:
+                if scope[expression.name.lexeme].is_constant:
+                    raise NameError(
+                        f"Cannot assign to constant '{expression.name.lexeme}'"
+                    )
                 self.interpreter.resolve_depth(expression, i)
                 return value
 

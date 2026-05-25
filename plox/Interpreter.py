@@ -88,7 +88,7 @@ class Interpreter(object):
     def _(self, statement: VarDecl):
         # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
         if statement.initializer is not None:
-            self.env.define(statement.name.lexeme, self.evaluate(statement.initializer))
+            self.env.define(statement.name.lexeme, self.evaluate(statement.initializer), statement.is_constant)
         else:
             self.env.define(statement.name.lexeme, statement.initializer)
 
