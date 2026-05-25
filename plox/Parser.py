@@ -322,7 +322,7 @@ class Parser(object):
                 f"Constant `{variablename.lexeme}` must be initialized at declaration"
             )
             
-        # Si no se especifica un valor para la variable mutable (var), se le asigna Nil
+        # Si no se especifica un valor para la variable, se le asigna Nil
         if self._match(TokenType.EQUAL):  # var x = valor; o const x = valor;
             variablevalue = self.expression()
         else:  # var x;
