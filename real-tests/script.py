@@ -2,12 +2,15 @@ import sys
 import subprocess
 import os
 
-LOX_BINARY = "plox"
+LOX_BINARY = ["plox"]
 
-for lox_file in filter(lambda f: f.endswith(".lox"), sorted(os.listdir("real-tests"))):
-    print(f"$ {LOX_BINARY} real-tests/{lox_file}")
+currentdir = os.path.dirname(os.path.abspath(__file__))
+
+for lox_file in filter(lambda f: f.endswith(".lox"), sorted(os.listdir(currentdir))):
+    print(f"$ {' '.join(LOX_BINARY)} real-tests/{lox_file}")
+
     result = subprocess.run(
-        [LOX_BINARY, f"real-tests/{lox_file}"],
+        [*LOX_BINARY, os.path.join(currentdir, lox_file)],
         stdout=subprocess.PIPE,
         stdin=subprocess.DEVNULL,
     )
@@ -17,4 +20,6 @@ for lox_file in filter(lambda f: f.endswith(".lox"), sorted(os.listdir("real-tes
     if "ERROR".lower() in out.lower():
         sys.exit(1)
 
-print("Todo OK")
+print(" -------- ")
+print("| Todo OK |")
+print(" -------- ")
