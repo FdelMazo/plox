@@ -1,13 +1,12 @@
-# !/usr/bin/env python3
 import sys
 import subprocess
 import os
 
 # Recibe por argumento el comando para ejecutar el intérprete de Lox, por ejemplo:
-# `./script.py plox`
-# `./script.py ploxb`
-# `./script.py "go run glox"`
-# `./script.py "npm run jslox"`
+# `python3 ./script.py plox`
+# `python3 ./script.py ploxb`
+# `python3 ./script.py "go run glox"`
+# `python3 ./script.py "npm run jslox"`
 
 LOX_BINARY = sys.argv[1].split() or ['plox']
 
