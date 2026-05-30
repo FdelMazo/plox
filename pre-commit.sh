@@ -14,7 +14,7 @@ fi
 
 
 if [ -f "real-tests/script.py" ]; then
-    python3 real-tests/script.py
+    python3 ./real-tests/script.py plox
 fi
 if [ $? -ne 0 ]; then
   exit 1

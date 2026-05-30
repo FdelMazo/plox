@@ -1,8 +1,15 @@
+# !/usr/bin/env python3
 import sys
 import subprocess
 import os
 
-LOX_BINARY = ["plox"]
+# Recibe por argumento el comando para ejecutar el intérprete de Lox, por ejemplo:
+# `./script.py plox`
+# `./script.py ploxb`
+# `./script.py "go run glox"`
+# `./script.py "npm run jslox"`
+
+LOX_BINARY = sys.argv[1].split() or ['plox']
 
 currentdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -14,9 +21,11 @@ for lox_file in filter(lambda f: f.endswith(".lox"), sorted(os.listdir(currentdi
         stdout=subprocess.PIPE,
         stdin=subprocess.DEVNULL,
     )
+
     out = result.stdout.decode().strip()
     print(out)
     print()
+
     if "ERROR".lower() in out.lower():
         sys.exit(1)
 

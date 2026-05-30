@@ -28,7 +28,7 @@ plox --help
 uv run pytest --verbose
 
 # Run language semantics tests
-python3 real-tests/script.py
+python3 ./real-tests/script.py plox
 ```
 
 En cada branch del repo hay distintas implementaciones de Lox:
