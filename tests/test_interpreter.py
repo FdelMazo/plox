@@ -3,6 +3,7 @@ from plox.Expr import BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr
 from plox.Interpreter import Interpreter
 from plox.Scanner import Scanner
 from plox.Parser import Parser
+from plox.Resolver import Resolver
 from plox.Token import TokenType
 
 
@@ -76,7 +77,8 @@ def test_errors():
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
-    assert "Operands of + must be either numbers or strings" in str(excinfo.value)
+    assert "Operands of + must be either numbers or strings" in str(
+        excinfo.value)
 
     tokens = Scanner('-"aaa"').scan()
     expr = Parser(tokens).expression()
@@ -352,3 +354,215 @@ def test_const():
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().interpret(stmts)
     assert "Cannot re-declare constant 'x'" in str(excinfo.value)
+
+
+def test_array_literal_and_indexing():
+    tokens = Scanner("[1, 2, [3, 4]]").scan()
+    expr = Parser(tokens).expression()
+    value = Interpreter().evaluate(expr)
+    assert isinstance(value, list)
+    assert value[0] == 1
+    assert value[2][1] == 4
+
+
+def test_array_index_assignment_statement_and_expression_return():
+    interp = Interpreter()
+    stmts = Parser(Scanner("var a = [1, 2, 3]; a[1] = 20;").scan()).parse()
+    interp.interpret(stmts)
+
+    tokens = Scanner("a[1]").scan()
+    expr = Parser(tokens).expression()
+    val = interp.evaluate(expr)
+    assert val == 20
+
+    tokens = Scanner("a[2] = 99").scan()
+    expr = Parser(tokens).expression()
+    ret = interp.evaluate(expr)
+    assert ret == 99
+    tokens = Scanner("a[2]").scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 99
+
+
+def test_dict_literal_and_indexing_and_assignment():
+    interp = Interpreter()
+    stmts = Parser(Scanner(
+        'var d = {"x": 1, "y": [0, 0]}; d["x"] = 42; d["y"][1] = 7;').scan()).parse()
+    interp.interpret(stmts)
+
+    tokens = Scanner('d["x"]').scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 42
+
+    tokens = Scanner('d["y"][1]').scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 7
+
+
+def test_index_assignment_errors():
+    interp = Interpreter()
+
+    stmts = Parser(Scanner("var n = 1; n[0] = 2;").scan()).parse()
+    with pytest.raises(RuntimeError):
+        interp.interpret(stmts)
+
+
+def test_mutability_when_passing_array_to_function():
+    interp = Interpreter()
+    src = """
+        fun setElementByReference(arr, index, value) {
+            arr[index] = value;
+        }
+        
+        var b = [1, 2, 3]; 
+        setElementByReference(b, 0, 10);
+    """
+
+    stmts = Parser(Scanner(src).scan()).parse()
+
+    resolver = Resolver(interp)
+    for s in stmts:
+        resolver.resolve(s)
+    interp.interpret(stmts)
+
+    tokens = Scanner("b[0]").scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 10
+
+    stmts = Parser(
+        Scanner("var c = b; setElementByReference(c, 1, 20);").scan()).parse()
+    interp.interpret(stmts)
+    tokens = Scanner("b[1]").scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 20
+
+
+def test_mutability_when_passing_dict_to_function():
+    interp = Interpreter()
+    src = """
+        fun setKeyByReference(dict, key, value) { 
+            dict[key] = value; 
+        } 
+        var d = {"key": "value"}; 
+        setKeyByReference(d, "key", "set value by dict reference");
+    """
+
+    stmts = Parser(Scanner(src).scan()).parse()
+    resolver = Resolver(interp)
+    for s in stmts:
+        resolver.resolve(s)
+    interp.interpret(stmts)
+
+    tokens = Scanner('d["key"]').scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == "set value by dict reference"
+
+    stmts = Parser(Scanner(
+        'var c = d; setKeyByReference(c, "other", "other value");').scan()).parse()
+    interp.interpret(stmts)
+    tokens = Scanner('d["other"]').scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == "other value"
+
+    stmts = Parser(
+        Scanner('var d = {"a":1}; var k = [1]; d[k] = 2;').scan()).parse()
+    with pytest.raises(RuntimeError):
+        interp.interpret(stmts)
+
+
+def test_keys_builtin():
+    expr = Parser(Scanner('keys({"a":1, "b":2})').scan()).expression()
+    assert Interpreter().evaluate(expr) == ["a", "b"]
+
+    expr = Parser(Scanner('keys([1,2])').scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_values_builtin():
+    expr = Parser(Scanner('values({"a":1, "b":2})').scan()).expression()
+    assert Interpreter().evaluate(expr) == [1, 2]
+
+    expr = Parser(Scanner('values(1)').scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_items_builtin():
+    expr = Parser(Scanner('items({"a":1, "b":2})').scan()).expression()
+    assert Interpreter().evaluate(expr) == [["a", 1], ["b", 2]]
+
+    expr = Parser(Scanner('items(1)').scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_append_builtin():
+    expr = Parser(Scanner('append([1,2], 3)').scan()).expression()
+    assert Interpreter().evaluate(expr) == [1, 2, 3]
+
+    expr = Parser(Scanner('append(1, 2)').scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_remove_builtin():
+    expr = Parser(Scanner('remove([1,2,3], 2)').scan()).expression()
+    assert Interpreter().evaluate(expr) == [1, 3]
+
+    expr = Parser(Scanner('remove({"x":1, "y":2}, "x")').scan()).expression()
+    assert Interpreter().evaluate(expr) == {"y": 2}
+
+    expr = Parser(Scanner('remove(1, 2)').scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_insert_builtin():
+    expr = Parser(Scanner('insert([1,3], 1, 2)').scan()).expression()
+    assert Interpreter().evaluate(expr) == [1, 2, 3]
+
+    expr = Parser(Scanner('insert({"a":1}, "b", 2)').scan()).expression()
+    assert Interpreter().evaluate(expr) == {"a": 1, "b": 2}
+
+    expr = Parser(Scanner('insert([1,2], 10, 3)').scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_search_builtin():
+    expr = Parser(Scanner('search([1,2,3], 2)').scan()).expression()
+    assert Interpreter().evaluate(expr) == 1
+
+    expr = Parser(Scanner('search([1,2], 9)').scan()).expression()
+    assert Interpreter().evaluate(expr) is None
+
+    expr = Parser(Scanner('search(1, 2)').scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_contains_builtin():
+    expr = Parser(Scanner('contains([1,2,3], 2)').scan()).expression()
+    assert Interpreter().evaluate(expr) is True
+
+    expr = Parser(Scanner('contains({"k":1}, "k")').scan()).expression()
+    assert Interpreter().evaluate(expr) is True
+
+    expr = Parser(Scanner('contains(1, 2)').scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_sort_array_builtin():
+    expr = Parser(Scanner('sort([3,1,2])').scan()).expression()
+    assert Interpreter().evaluate(expr) == [1, 2, 3]
+
+    expr = Parser(Scanner('sort(1)').scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_sort_dict_builtin():
+    expr = Parser(Scanner('sort({"b":2, "a":1})').scan()).expression()
+    assert Interpreter().evaluate(expr) == {"a": 1, "b": 2}
