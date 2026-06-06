@@ -124,7 +124,7 @@ def test_dict_expr_parsing():
 
 
 def test_array_expr_parsing():
-    tokens = Scanner("[1, \"a\", true]").scan()
+    tokens = Scanner('[1, "a", true]').scan()
     expr = Parser(tokens).expression()
     assert isinstance(expr, ArrayExpr)
     assert len(expr.elements) == 3
