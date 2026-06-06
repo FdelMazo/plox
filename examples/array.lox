@@ -1,0 +1,60 @@
+// Ejemplo de uso de arrays
+// Uso basico
+
+var a = [1, 2, 3];
+print a[0]; // 1
+print a[1]; // 2
+print a[2]; // 3
+// print a[3]; // Runtime error: Index out of bounds
+a[0] = 10;
+print a[0]; // 10
+print a; // [10, 2, 3]
+
+// Pasar un array a una función y modificarlo por referencia
+fun setElementByReference(arr, index, value) {
+    arr[index] = value;
+}
+
+var b = [1, 2, 3];
+setElementByReference(b, 0, 10);
+print b[0]; // 10
+setElementByReference(b, 1, 20);
+print b[1]; // 20
+setElementByReference(b, 2, 30);
+print b[2]; // 30
+print b; // [10, 20, 30]
+
+// Pasar un array a una función y modificarlo por referencia,
+// pero con una variable intermedia que referencia al mismo array
+var c = b;
+setElementByReference(c, 0, 100);
+print b[0]; // 100
+setElementByReference(c, 1, 200);
+print b[1]; // 200
+setElementByReference(c, 2, 300);
+print b[2]; // 300
+print b; // [100, 200, 300]
+
+// Bultin functions
+var d = [1, 2, 3];
+print len(d); // 3
+print contains(d, 2); // true
+print contains(d, 4); // false
+var e = insert(d, 3, 4); 
+var f = insert(e, 2, 5); 
+// print insert(d, 10, 1); // Index out of bound error
+// print insert(d, -1, 20); // Index out of bound error
+print len(d); // 3
+print len(e); // 4
+print len(f); // 5
+print d; // [1, 2, 3]
+print e; // [1, 2, 3, 4]
+print f; // [1, 2, 5, 3, 4]
+var g = remove(d, 1);
+print g; // [2, 3]
+print type(d); // "array"
+print search(f, 4); // 2
+print search(f, 6); // nil
+var h = append(f, 5); // [1, 2, 5, 3, 4, 5]
+print h; // [1, 2, 5, 3, 4, 5]
+print sort(h); // [1, 2, 3, 4, 5, 5]

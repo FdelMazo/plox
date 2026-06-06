@@ -1,0 +1,48 @@
+// Ejemplo de uso de diccionarios
+// Uso basico
+
+var a = {"key": "value"};
+print a["key"]; // "value"
+print a["other"]; // nil
+a["other"] = "other value";
+print a["other"]; // "other value"
+
+// Pasar un diccionario a una función y modificarlo por referencia
+fun setKeyByReference(dict, key, value) {
+    dict[key] = value;
+}
+
+var b = {"key": "value"};
+setKeyByReference(b, "key", "set value by dict reference");
+print b["key"]; // "set value by dict reference"
+
+// Pasar un diccionario a una función y modificarlo por referencia,
+// pero con una variable intermedia que referencia al mismo diccionario
+var c = b;
+setKeyByReference(c, "key", "set value by dict reference 2");
+print b["key"]; // "set value by dict reference 2"
+
+// Bultin functions
+
+var d = {"key": "value"};
+print len(d); // 1
+
+print keys(d); // ["key"]
+print values(d); // ["value"]
+print items(d); // [["key", "value"]]
+print contains(d, "key"); // true
+print contains(d, "other"); // false
+var e = insert(d, "other", "other value"); 
+print e; // {"key": "value", "other": "other value"}
+var f = remove(e, "key"); 
+print f; // {"other": "other value"}
+print type(d); // "dictionary"
+print len(d); // 1
+print len(e); // 2
+print len(f); // 1
+
+var non_sorted = {"b": 2, "a": 1, "c": 3};
+var non_sorted2 = {"b": 5, "a": 10, "c": 3};
+print sort(non_sorted); // {"a": 1, "b": 2, "c": 3} 
+print sort(non_sorted2); // {"a": 10, "b": 5, "c": 3} Se ordena por clave, no por valor
+print sort(values(non_sorted2)); // [3, 5, 10] Se ordena por valor, no por clave
