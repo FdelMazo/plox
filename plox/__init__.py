@@ -12,16 +12,19 @@ from .BuiltinFunctions import (
     SortFunction,
 )
 
+
 BUILTIN_FUNCTIONS = {
-    "len": LenFunction(),
-    "type": TypeFunction(),
-    "keys": KeysFunction(),
-    "values": ValuesFunction(),
-    "items": ItemsFunction(),
-    "append": AppendFunction(),
-    "remove": RemoveFunction(),
-    "insert": InsertFunction(),
-    "search": SearchFunction(),
-    "contains": ContainsFunction(),
-    "sort": SortFunction(),
+    func.name: func for func in (
+        LenFunction(),
+        TypeFunction(),
+        KeysFunction(),
+        ValuesFunction(),
+        ItemsFunction(),
+        AppendFunction(),
+        RemoveFunction(),
+        InsertFunction(),
+        SearchFunction(),
+        ContainsFunction(),
+        SortFunction(),
+    )
 }
