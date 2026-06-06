@@ -1,8 +1,11 @@
 from .Token import Token, TokenType
 from .Expr import (
+    DictExpr,
     Expr,
     BinaryExpr,
     GroupingExpr,
+    IndexAssignExpr,
+    ArrayExpr,
     LiteralExpr,
     UnaryExpr,
     CastExpr,
@@ -356,13 +359,18 @@ class Parser(object):
         # Por el momento, solo podemos asignar sobre identificadores de variables, pero también podríamos agregar
         # asignaciones a propiedades de objetos como `obj.attr() = 'a'`, o a elementos de arrays como `arr[0] = 'a'`
         if self._match(TokenType.EQUAL):
-            if not isinstance(expr, VariableExpr):
-                raise SyntaxError(
-                    f"Invalid assignment target, got `{self._lookahead()}` instead"
-                )
-
             value = self.assignment()
-            return AssignmentExpr(expr.name, value)
+
+            if isinstance(expr, VariableExpr):
+                return AssignmentExpr(expr.name, value)
+
+            if isinstance(expr, IndexExpr):
+                # Si el lvalue es un index, lo parseamos como una asignación a índice
+                return IndexAssignExpr(expr.target, expr.index, value)
+
+            raise SyntaxError(
+                f"Invalid assignment target, got `{self._lookahead()}` instead"
+            )
 
         return expr
 
@@ -631,6 +639,57 @@ class Parser(object):
                     f"Expected ')' after grouping expression, got `{self._lookahead()}` instead"
                 )
             return GroupingExpr(expr)
+
+        if self._match(TokenType.LEFT_BRACE):
+            entries: list[tuple[Expr, Expr]] = []
+
+            # Mientras no me cruce una llave de cierre, sigo parseando entradas del diccionario
+            while (
+                not self._is_at_end()
+                and self._lookahead().token_type != TokenType.RIGHT_BRACE
+            ):
+                key = self.expression()
+
+                if not self._match(TokenType.COLON):
+                    raise SyntaxError(
+                        f"Expected ':' after dictionary key, got `{self._lookahead()}` instead"
+                    )
+
+                value = self.expression()
+                entries.append((key, value))
+
+                # Si me cruzo una coma, sigo parseando entradas
+                if not self._match(TokenType.COMMA):
+                    break
+
+            if not self._match(TokenType.RIGHT_BRACE):
+                raise SyntaxError(
+                    f"Expected '}}' after dictionary entries, got `{self._lookahead()}` instead"
+                )
+
+            return DictExpr(entries)
+
+        if self._match(TokenType.LEFT_BRACKET):
+            elements: list[Expr] = []
+
+            # Mientras no me cruce un corchete de cierre, sigo parseando elementos del array
+            while (
+                not self._is_at_end()
+                and self._lookahead().token_type != TokenType.RIGHT_BRACKET
+            ):
+                element = self.expression()
+                elements.append(element)
+
+                # Si me cruzo una coma, sigo parseando elementos
+                if not self._match(TokenType.COMMA):
+                    break
+
+            if not self._match(TokenType.RIGHT_BRACKET):
+                raise SyntaxError(
+                    f"Expected ']' after list elements, got `{self._lookahead()}` instead"
+                )
+
+            return ArrayExpr(elements)
 
         # Si llegué aca sin matchear ningun otro token, entonces
         # me quede colgado esperando una expresion del usuario
