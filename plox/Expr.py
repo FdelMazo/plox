@@ -86,6 +86,17 @@ class IndexExpr(Expr):
         return f"<{self.target}[{self.index}]>"
 
 
+# index assign     → primary "[" expression "]" "=" expression ;
+class IndexAssignExpr(Expr):
+    def __init__(self, target: Expr, index: Expr, value: Expr):
+        self.target = target
+        self.index = index
+        self.value = value
+
+    def __repr__(self) -> str:
+        return f"<{self.target}[{self.index}] = {self.value}>"
+
+
 # variable       → IDENTIFIER ;
 class VariableExpr(Expr):
     def __init__(self, name: Token):
@@ -135,3 +146,24 @@ class TernaryExpr(Expr):
 
     def __repr__(self) -> str:
         return f"({self.condition} ? {self.true_branch} : {self.false_branch})"
+
+
+# dictionary            → "{" (expression ":" expression) ("," expression ":" expression)* "}" ;
+class DictExpr(Expr):
+    def __init__(self, entries: list[tuple[Expr, Expr]]):
+        self.entries = entries
+
+    def __repr__(self) -> str:
+        entries_str = ", ".join(
+            f"{key}: {value}" for key, value in self.entries)
+        return f"{{{entries_str}}}"
+
+
+# array            → "[" expression ("," expression)* "]" ;
+class ArrayExpr(Expr):
+    def __init__(self, elements: list[Expr]):
+        self.elements = elements
+
+    def __repr__(self) -> str:
+        elements_str = ", ".join(str(element) for element in self.elements)
+        return f"[{elements_str}]"
