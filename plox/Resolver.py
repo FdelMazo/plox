@@ -36,6 +36,7 @@ class VarInformation:
         self.used = used
         self.is_constant = is_constant
 
+
 class Resolver(object):
     def __init__(self, interpreter: Interpreter):
         # Nos guardamos un stack de scopes, para saber cuan anidados estamos
@@ -73,7 +74,9 @@ class Resolver(object):
         if name in self.scopes[-1]:
             raise NameError(f"Variable `{name}` already exists")
 
-        self.scopes[-1][name] = VarInformation(defined=False, used=False, is_constant=is_constant)
+        self.scopes[-1][name] = VarInformation(
+            defined=False, used=False, is_constant=is_constant
+        )
 
     def define(self, name: str):
         # Definir una variable es guardarla con defined=True, preservando el resto de la info
@@ -125,7 +128,7 @@ class Resolver(object):
             self.resolve(stmt)
         self.end_scope()
 
-    ## El resto de los statements son triviales de resolver
+    # El resto de los statements son triviales de resolver
 
     @resolve.register
     def _(self, statement: ExpressionStmt):
@@ -202,7 +205,7 @@ class Resolver(object):
         # no queda nada por resolver!
         return
 
-    ## El resto de las resoluciones son triviales de resolver
+    # El resto de las resoluciones son triviales de resolver
 
     @resolve.register
     def _(self, expression: GroupingExpr):
