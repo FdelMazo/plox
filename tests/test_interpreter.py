@@ -566,3 +566,42 @@ def test_sort_array_builtin():
 def test_sort_dict_builtin():
     expr = Parser(Scanner('sort({"b":2, "a":1})').scan()).expression()
     assert Interpreter().evaluate(expr) == {"a": 1, "b": 2}
+
+def test_const_array():
+    interp = Interpreter()
+    stmts = Parser(Scanner("const a = [1, 2, 3]; a[1] = 20;").scan()).parse()
+    interp.interpret(stmts)
+
+    tokens = Scanner("a[1]").scan()
+    expr = Parser(tokens).expression()
+    val = interp.evaluate(expr)
+    assert val == 20
+
+    tokens = Scanner("a[2] = 99").scan()
+    expr = Parser(tokens).expression()
+    ret = interp.evaluate(expr)
+    assert ret == 99
+    tokens = Scanner("a[2]").scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 99
+    
+    tokens = Scanner("const b = [1, 2, 3]; b = [3, 2, 1];").scan()
+    stmts = Parser(tokens).parse()
+    with pytest.raises(RuntimeError) as excinfo:
+        interp.interpret(stmts)
+    assert "Cannot assign to constant 'b'" in str(excinfo.value)
+    
+def test_const_dict():
+    interp = Interpreter()
+    stmts = Parser(Scanner('const d = {"x": 1}; d["x"] = 42;').scan()).parse()
+    interp.interpret(stmts)
+
+    tokens = Scanner('d["x"]').scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 42
+
+    tokens = Scanner('const e = {"x": 1}; e = {"y": 2};').scan()
+    stmts = Parser(tokens).parse()
+    with pytest.raises(RuntimeError) as excinfo:
+        interp.interpret(stmts)
+    assert "Cannot assign to constant 'e'" in str(excinfo.value)
