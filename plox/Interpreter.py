@@ -13,9 +13,12 @@ from .Stmt import (
     ReturnStmt,
 )
 from .Expr import (
+    DictExpr,
     Expr,
     BinaryExpr,
     GroupingExpr,
+    IndexAssignExpr,
+    ArrayExpr,
     LiteralExpr,
     UnaryExpr,
     CastExpr,
@@ -30,7 +33,8 @@ from .Expr import (
 from .Function import Function, ReturnValue
 from .Token import TokenType
 from .Env import Env
-from .BuiltinFunctions import TypeFunction, LenFunction
+from . import BUILTIN_FUNCTIONS
+from .Utils import is_valid_dict_key
 
 
 class Interpreter(object):
@@ -64,8 +68,8 @@ class Interpreter(object):
 
     # Incorpora al intérprete funciones nativas
     def _populate_native_functions(self):
-        self.globals.define("type", TypeFunction())
-        self.globals.define("len", LenFunction())
+        for name, func in BUILTIN_FUNCTIONS.items():
+            self.globals.define(name, func)
 
     # ---------- Ejecutadores de Statements ---------- #
 
