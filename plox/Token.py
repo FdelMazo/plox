@@ -62,6 +62,9 @@ class TokenType(Enum):
     NUMBER_CAST = auto()
     STRING_CAST = auto()
 
+    SWITCH = auto()
+    CASE = auto()
+    DEFAULT = auto()
     # fin de archivo
     EOF = auto()
 
@@ -113,4 +116,7 @@ TokenKeywords = {
     "number": TokenType.NUMBER_CAST,
     "string": TokenType.STRING_CAST,
     "const": TokenType.CONST,
+    "switch": TokenType.SWITCH,
+    "case": TokenType.CASE,
+    "default": TokenType.DEFAULT,
 }

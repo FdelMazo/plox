@@ -395,3 +395,26 @@ def test_plus_plus_token_and_plus_token():
     expected_tokens_type = [TokenType.PLUS_PLUS, TokenType.PLUS, TokenType.EOF]
 
     assert tokens_type == expected_tokens_type
+
+def test_switch_case_default_keywords():
+    tokens = Scanner("switch case default").scan()
+    tokens_type = [token.token_type for token in tokens]
+
+    expected_tokens_type = [
+        TokenType.SWITCH,
+        TokenType.CASE,
+        TokenType.DEFAULT,
+        TokenType.EOF,
+    ]
+
+    assert tokens_type == expected_tokens_type
+
+
+def test_switch_not_identifier():
+    tokens = Scanner("switch").scan()
+    assert tokens[0].token_type == TokenType.SWITCH
+    assert tokens[0].lexeme == "switch"
+
+    tokens = Scanner("switching").scan()
+    assert tokens[0].token_type == TokenType.IDENTIFIER
+    assert tokens[0].lexeme == "switching"
