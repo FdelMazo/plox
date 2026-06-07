@@ -61,6 +61,7 @@ class Plox:
             return
 
         resolver = Resolver(self.interpreter)
+        had_resolve_error = False
         for statement in statements:
             try:
                 resolver.resolve(statement)
@@ -70,9 +71,13 @@ class Plox:
                         print(colored(warning, "yellow"))
 
             except Exception as e:
+                had_resolve_error = True
                 if self.debug:
                     traceback.print_exc()
                 print(colored(f"Resolve Error: {e}", "light_red"))
+
+        if had_resolve_error:
+            return
 
         # en modo resolve, imprimimos los scopes locales del intérprete
         if self.mode == "resolve":
