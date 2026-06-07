@@ -1,0 +1,49 @@
+fun assert(input, expected) {
+    if (input != expected) {
+        print "ERROR";
+    } else {
+        print "OK";
+    }
+}
+
+fun double(x) { return x * 2; }
+fun triple(x) { return x * 3; }
+fun square(x) { return x * x; }
+
+fun transform(op, x) {
+    switch (op) {
+        case "double": return double(x);
+        case "triple": return triple(x);
+        case "square": return square(x);
+        default: return x;
+    }
+}
+
+fun day_name(n) {
+    switch (n) {
+        case 1: return "lunes";
+        case 2: return "martes";
+        case 3: return "miercoles";
+        default: return "desconocido";
+    }
+}
+
+fun parity(n) {
+    switch (n % 2) {
+        case 0: return "par";
+        case 1: return "impar";
+    }
+}
+
+print "--- SWITCH ---";
+assert(transform("double", 5), 10);
+assert(transform("triple", 5), 15);
+assert(transform("square", 5), 25);
+assert(transform("noop", 5), 5);
+
+assert(day_name(1), "lunes");
+assert(day_name(3), "miercoles");
+assert(day_name(99), "desconocido");
+
+assert(parity(4), "par");
+assert(parity(7), "impar");
