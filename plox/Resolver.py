@@ -11,6 +11,7 @@ from .Stmt import (
     IfStmt,
     WhileStmt,
     ReturnStmt,
+    SwitchStmt,
 )
 from .Expr import (
     Expr,
@@ -151,6 +152,17 @@ class Resolver(object):
     def _(self, statement: WhileStmt):
         self.resolve(statement.condition)
         self.resolve(statement.body)
+
+    @resolve.register
+    def _(self, statement: SwitchStmt):
+        self.resolve(statement.subject)
+        for case_value, case_body in statement.cases:
+            self.resolve(case_value)
+            for stmt in case_body:
+                self.resolve(stmt)
+        if statement.default is not None:
+            for stmt in statement.default:
+                self.resolve(stmt)
 
     # ---------- Resolver Expresiones ---------- #
 
