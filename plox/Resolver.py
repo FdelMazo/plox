@@ -1,3 +1,4 @@
+from enum import Enum, auto
 from functools import singledispatchmethod
 
 from .Interpreter import Interpreter
@@ -28,6 +29,9 @@ from .Expr import (
     PostfixExpr,
 )
 
+class FunctionType(Enum):
+    NONE = auto()
+    FUNCTION = auto()
 
 class VarInformation:
     def __init__(self, defined: bool, used: bool, is_constant: bool = False):
@@ -45,6 +49,9 @@ class Resolver(object):
 
         # Nos guardamos una lista con los warnings generados
         self.warnings: list[str] = []
+
+        # Verificamos si estamos dentro de una función para detectar returns globales
+        self.current_function: FunctionType = FunctionType.NONE
 
         # Una referencia al intérprete, para poder resolver las variables
         self.interpreter = interpreter
@@ -117,6 +124,9 @@ class Resolver(object):
         # fun nombre() { <scope nuevo> }
         self.declare(statement.name.lexeme)
         self.define(statement.name.lexeme)
+
+        enclosing_function = self.current_function
+        self.current_function = FunctionType.FUNCTION
         self.begin_scope()
         for param in statement.parameters:
             self.declare(param.lexeme)
@@ -124,6 +134,7 @@ class Resolver(object):
         for stmt in statement.body:
             self.resolve(stmt)
         self.end_scope()
+        self.current_function = enclosing_function
 
     ## El resto de los statements son triviales de resolver
 
@@ -137,6 +148,8 @@ class Resolver(object):
 
     @resolve.register
     def _(self, statement: ReturnStmt):
+        if self.current_function == FunctionType.NONE:
+            raise SyntaxError("Can't return from top-level code")
         if statement.value is not None:
             self.resolve(statement.value)
 
