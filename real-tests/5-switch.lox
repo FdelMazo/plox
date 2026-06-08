@@ -1,8 +1,7 @@
 fun assert(input, expected) {
-    if (input != expected) {
-        print "ERROR";
-    } else {
-        print "OK";
+    switch (input == expected) {
+        case true: print "OK";
+        default: print "ERROR";
     }
 }
 
