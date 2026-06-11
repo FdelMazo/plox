@@ -11,6 +11,9 @@ from .Stmt import (
     IfStmt,
     WhileStmt,
     ReturnStmt,
+    BreakStmt,
+    ContinueStmt,
+    ForStmt,
 )
 from .Expr import (
     Expr,
@@ -151,6 +154,27 @@ class Resolver(object):
     def _(self, statement: WhileStmt):
         self.resolve(statement.condition)
         self.resolve(statement.body)
+
+    @resolve.register
+    def _(self, statement: ForStmt):
+        # El for abre su propio scope para el inicializador
+        self.begin_scope()
+        if statement.initializer is not None:
+            self.resolve(statement.initializer)
+        if statement.condition is not None:
+            self.resolve(statement.condition)
+        if statement.increment is not None:
+            self.resolve(statement.increment)
+        self.resolve(statement.body)
+        self.end_scope()
+
+    @resolve.register
+    def _(self, statement: BreakStmt):
+        pass
+
+    @resolve.register
+    def _(self, statement: ContinueStmt):
+        pass
 
     # ---------- Resolver Expresiones ---------- #
 
