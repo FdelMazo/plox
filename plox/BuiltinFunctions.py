@@ -79,7 +79,7 @@ class LenFunction(BuiltinFunction):
             case list() as lst:
                 return len(lst)
             case _:
-                raise RuntimeError(f"Argument of `len` must be a string, got: {value}")
+                raise RuntimeError(f"Argument of `len` must be an array, dict or string, got: {value}")
 
 
 class KeysFunction(BuiltinFunction):

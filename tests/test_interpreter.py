@@ -300,21 +300,21 @@ def test_len_function():
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
-    assert "Argument of `len` must be a string" in str(excinfo.value)
+    assert "Argument of `len` must be an array, dict or string" in str(excinfo.value)
 
     tokens = Scanner("len(true)").scan()
     expr = Parser(tokens).expression()
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
-    assert "Argument of `len` must be a string" in str(excinfo.value)
+    assert "Argument of `len` must be an array, dict or string" in str(excinfo.value)
 
     tokens = Scanner("len(nil)").scan()
     expr = Parser(tokens).expression()
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
-    assert "Argument of `len` must be a string" in str(excinfo.value)
+    assert "Argument of `len` must be an array, dict or string" in str(excinfo.value)
 
 
 def test_const():
