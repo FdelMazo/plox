@@ -49,7 +49,7 @@ class Parser(object):
         # si me cruzo un var, parseo una variable declaration
         if self._match(TokenType.VAR):
             return self.variable_declaration()
-
+        
         # si me cruzo un const, parseo una variable declaration
         if self._match(TokenType.CONST):
             return self.variable_declaration(is_constant=True)
@@ -324,7 +324,7 @@ class Parser(object):
             raise SyntaxError(
                 f"Constant `{variablename.lexeme}` must be initialized at declaration"
             )
-
+            
         # Si no se especifica un valor para la variable, se le asigna Nil
         if self._match(TokenType.EQUAL):  # var x = valor; o const x = valor;
             variablevalue = self.expression()
@@ -382,9 +382,11 @@ class Parser(object):
 
         # Si me crucé un "?", parseo las dos branches de la expresión ternaria
         if self._match(TokenType.QUESTION):
+
             # permitimos que la branch true pueda ser otra asignacion
             true_branch = self.assignment()
             if not self._match(TokenType.COLON):
+
                 # si no me crucé un ":", tengo un error
                 raise SyntaxError(
                     f"Expected ':' after ternary true-branch, got `{self._lookahead()}` instead"
@@ -502,13 +504,10 @@ class Parser(object):
             right = self.unary()
             return UnaryExpr(operator, right)
 
-        # Type casting
-        if self._match(
-            TokenType.BOOL_CAST, TokenType.NUMBER_CAST, TokenType.STRING_CAST
-        ):
+        # Type casting 
+        if self._match(TokenType.BOOL_CAST, TokenType.NUMBER_CAST, TokenType.STRING_CAST):
             type_token = self._previous()
-            # permitimos anidación de castings también, como bool number "123" -> bool(number("123"))
-            right = self.unary()
+            right = self.unary() # permitimos anidación de castings también, como bool number "123" -> bool(number("123"))
             return CastExpr(type_token, right)
 
         if self._match(TokenType.PLUS_PLUS):
@@ -567,10 +566,10 @@ class Parser(object):
     def call(self) -> Expr:
         expr = self.primary()
 
-        while not self._is_at_end() and self._lookahead().token_type in [
-            TokenType.LEFT_PAREN,
-            TokenType.LEFT_BRACKET,
-        ]:
+        while (
+            not self._is_at_end() 
+            and self._lookahead().token_type in [TokenType.LEFT_PAREN, TokenType.LEFT_BRACKET]
+        ):
             # Si me cruzo un paréntesis abierto, tengo una llamada a función
             # y tengo que parsear los argumentos
             if self._match(TokenType.LEFT_PAREN):

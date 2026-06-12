@@ -153,30 +153,30 @@ def test_ternary():
 def test_casting():
     tests = [
         # number casting
-        ("number true", 1.0),
-        ("number false", 0.0),
+        ('number true', 1.0),
+        ('number false', 0.0),
         ('number "42"', 42.0),
         ('number "3.14"', 3.14),
         # bool casting (en Lox: solo false y nil son falsy, todo lo demás es truthy)
-        ("bool true", True),
-        ("bool 0", True),
-        ("bool 42", True),
+        ('bool true', True),
+        ('bool 0', True),
+        ('bool 42', True),
         ('bool ""', True),
         ('bool "hello"', True),
-        ("bool false", False),
-        ("bool nil", False),
+        ('bool false', False),
+        ('bool nil', False),
         # string casting
-        ("string true", "true"),
-        ("string false", "false"),
-        ("string nil", "nil"),
-        ("string 42", "42.0"),
-        ("string 5.0", "5.0"),
+        ('string true', "true"),
+        ('string false', "false"),
+        ('string nil', "nil"),
+        ('string 42', "42.0"),
+        ('string 5.0', "5.0"),
         # nested casting
         ('string(number "42")', "42.0"),
         ('bool(number "0")', True),
-        ("bool(bool false)", False),
-        ("number(string 3.19)", 3.19),
-        ("number(string 4.1) + 1", 5.1),
+        ('bool(bool false)', False),
+        ('number(string 3.19)', 3.19),
+        ('number(string 4.1) + 1', 5.1),
         ('number number number "123"', 123.0),
     ]
 
@@ -185,7 +185,6 @@ def test_casting():
         expr = Parser(tokens).expression()
         value = Interpreter().evaluate(expr)
         assert value == expected
-
 
 def test_casting_errors():
     # Casting string no numérico a number
@@ -228,9 +227,9 @@ def test_type_function():
 def test_type_function_with_casting():
     tests = [
         ('type(number "42")', "number"),
-        ("type(string 42)", "string"),
-        ("type(bool 0)", "bool"),
-        ("type(bool nil)", "bool"),
+        ('type(string 42)', "string"),
+        ('type(bool 0)', "bool"),
+        ('type(bool nil)', "bool"),
     ]
 
     for src, expected in tests:
@@ -256,7 +255,7 @@ def test_index():
         expr = Parser(tokens).expression()
         value = Interpreter().evaluate(expr)
         assert value == expected
-
+    
     tokens = Scanner('"test"[1.5]').scan()
     expr = Parser(tokens).expression()
     with pytest.raises(RuntimeError) as excinfo:
@@ -285,37 +284,39 @@ def test_index():
 
     assert "Index out of range" in str(excinfo.value)
 
-
 def test_len_function():
-    tests = [('len("")', 0), ('len("hola")', 4), ('len("con espacios")', 12)]
+    tests = [
+        ('len("")', 0),
+        ('len("hola")', 4),
+        ('len("con espacios")', 12)
+    ]
 
     for src, expected in tests:
         tokens = Scanner(src).scan()
         expr = Parser(tokens).expression()
         value = Interpreter().evaluate(expr)
         assert value == expected
-
-    tokens = Scanner("len(1)").scan()
+    
+    tokens = Scanner('len(1)').scan()
     expr = Parser(tokens).expression()
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
     assert "Argument of `len` must be an array, dict or string" in str(excinfo.value)
 
-    tokens = Scanner("len(true)").scan()
+    tokens = Scanner('len(true)').scan()
     expr = Parser(tokens).expression()
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
     assert "Argument of `len` must be an array, dict or string" in str(excinfo.value)
 
-    tokens = Scanner("len(nil)").scan()
+    tokens = Scanner('len(nil)').scan()
     expr = Parser(tokens).expression()
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
     assert "Argument of `len` must be an array, dict or string" in str(excinfo.value)
-
 
 def test_const():
     tokens = Scanner("const x = 42;").scan()
