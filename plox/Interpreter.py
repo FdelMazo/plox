@@ -11,6 +11,7 @@ from .Stmt import (
     IfStmt,
     WhileStmt,
     ReturnStmt,
+    SwitchStmt,
 )
 from .Expr import (
     Expr,
@@ -129,6 +130,18 @@ class Interpreter(object):
     @execute.register
     def _(self, statement: BlockStmt):
         return self.execute_block(statement.statements, Env(enclosing=self.env))
+
+    @execute.register
+    def _(self, statement: SwitchStmt):
+        subject = self.evaluate(statement.subject)
+        for case_value, case_body in statement.cases:
+            if subject == self.evaluate(case_value):
+                for stmt in case_body:
+                    self.execute(stmt)
+                return
+        if statement.default is not None:
+            for stmt in statement.default:
+                self.execute(stmt)
 
     def execute_block(self, statements: list[Stmt], block_env: Env):
         # Para ejecutar un bloque de statements, tenemos que crear un nuevo entorno
