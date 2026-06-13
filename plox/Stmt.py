@@ -35,7 +35,9 @@ class BlockStmt(Stmt):
 
 # varDecl        → ("var" | "const") IDENTIFIER ( "=" expression )? ";" ;
 class VarDecl(Stmt):
-    def __init__(self, name: Token, initializer: Expr | None, is_constant: bool = False):
+    def __init__(
+        self, name: Token, initializer: Expr | None, is_constant: bool = False
+    ):
         self.name = name
         self.initializer = initializer
         self.is_constant = is_constant

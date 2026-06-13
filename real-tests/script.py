@@ -8,7 +8,7 @@ import os
 # `python3 ./script.py "go run glox"`
 # `python3 ./script.py "npm run jslox"`
 
-LOX_BINARY = sys.argv[1].split() if len(sys.argv) > 1 else ['plox']
+LOX_BINARY = sys.argv[1].split() if len(sys.argv) > 1 else ["plox"]
 
 currentdir = os.path.dirname(os.path.abspath(__file__))
 

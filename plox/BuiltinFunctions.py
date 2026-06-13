@@ -51,6 +51,7 @@ class TypeFunction(BuiltinFunction):
         else:
             return "unknown"
 
+
 class LenFunction(BuiltinFunction):
     """Built-in function that returns the len of a string"""
 
@@ -68,4 +69,3 @@ class LenFunction(BuiltinFunction):
             raise RuntimeError(f"Argument of `len` must be a string, got: {value}")
 
         return len(value)
-
