@@ -1,5 +1,5 @@
 from functools import singledispatchmethod
-from typing import Union, cast
+from typing import Any, Union, cast
 
 from .Stmt import (
     Stmt,
@@ -13,9 +13,12 @@ from .Stmt import (
     ReturnStmt,
 )
 from .Expr import (
+    DictExpr,
     Expr,
     BinaryExpr,
     GroupingExpr,
+    IndexAssignExpr,
+    ArrayExpr,
     LiteralExpr,
     UnaryExpr,
     CastExpr,
@@ -30,7 +33,7 @@ from .Expr import (
 from .Function import Function, ReturnValue
 from .Token import TokenType
 from .Env import Env
-from .BuiltinFunctions import TypeFunction, LenFunction
+from . import BUILTIN_FUNCTIONS
 
 
 class Interpreter(object):
@@ -64,8 +67,8 @@ class Interpreter(object):
 
     # Incorpora al intérprete funciones nativas
     def _populate_native_functions(self):
-        self.globals.define("type", TypeFunction())
-        self.globals.define("len", LenFunction())
+        for name, func in BUILTIN_FUNCTIONS.items():
+            self.globals.define(name, func)
 
     # ---------- Ejecutadores de Statements ---------- #
 
@@ -377,26 +380,62 @@ class Interpreter(object):
     def _(self, expression: IndexExpr):
         target = self.evaluate(expression.target)
 
-        # Si lo que se trata de indexar no es un string, levantamos un error
+        # Si lo que se trata de indexar no es un array, dict o string, levantamos un error
         # A futuro, en caso de que mas tipos sean indexables, habría que extender el chequeo
-        if not self.is_string(target):
-            raise RuntimeError(f"Only strings support indexing, got: `{target}`")
+        match target:
+            case str() as string:
+                index = self.evaluate(expression.index)
+                index = self.get_numeric_index(index, len(string))
+                return string[int(index)]
 
-        index = self.evaluate(expression.index)
+            case dict() as dictionary:
+                index = self.evaluate(expression.index)
 
-        # Revisamos que se esté usando un número de índice y que el mismo no tenga parte fraccionaria ni sea negativo
-        if not self.is_number(index) or int(index) != index or index < 0:
-            raise RuntimeError(f"Index must be a positive whole number, got: `{index}`")
+                if not self.is_valid_dict_key(index):
+                    raise RuntimeError(
+                        f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{index}`"
+                    )
 
-        index = int(index)
+                return dictionary.get(index)
 
-        # Revisamos que no esté fuera de rango
-        if index >= len(target):
-            raise RuntimeError(
-                f"Index out of range (len: {len(target)}, index: {index})"
-            )
+            case list() as lst:
+                index = self.evaluate(expression.index)
+                index = self.get_numeric_index(index, len(lst))
+                return lst[int(index)]
 
-        return target[int(index)]
+            case _:
+                raise RuntimeError(
+                    f"Only arrays, dictionaries and strings support indexing, got: `{target}`"
+                )
+
+    @evaluate.register
+    def _(self, expression: IndexAssignExpr):
+        target = self.evaluate(expression.target)
+
+        match target:
+            case dict() as dictionary:
+                index = self.evaluate(expression.index)
+                if not self.is_valid_dict_key(index):
+                    raise RuntimeError(
+                        f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{index}`"
+                    )
+
+                value = self.evaluate(expression.value)
+                dictionary[index] = value
+                return value
+
+            case list() as lst:
+                index = self.evaluate(expression.index)
+                index = self.get_numeric_index(index, len(lst))
+
+                value = self.evaluate(expression.value)
+                lst[index] = value
+                return value
+
+            case _:
+                raise RuntimeError(
+                    f"Only arrays, dictionaries and strings support index assignment, got: `{target}`"
+                )
 
     @evaluate.register
     def _(self, expression: TernaryExpr):
@@ -442,6 +481,17 @@ class Interpreter(object):
         # devolvemos el valor viejo
         return oldvalue
 
+    @evaluate.register
+    def _(self, expression: DictExpr):
+        return {
+            self.evaluate(key): self.evaluate(value)
+            for key, value in expression.entries
+        }
+
+    @evaluate.register
+    def _(self, expression: ArrayExpr):
+        return [self.evaluate(element) for element in expression.elements]
+
     # ---------- Helpers ---------- #
 
     # Devuelve si el valor es truthy (es decir, si evalua a verdadero)
@@ -459,6 +509,30 @@ class Interpreter(object):
     # Devuelve si los valores recibidos son una cadena según Lox
     def is_string(self, *values):
         return all(type(value) is str for value in values)
+
+    def get_numeric_index(self, index, indexable_length):
+        index_type = type(index)
+        is_numeric = index_type == int or index_type == float
+        if not (is_numeric and int(index) == index and index >= 0):
+            raise RuntimeError(f"Index must be a positive whole number, got: `{index}`")
+
+        index = int(index)
+        # Revisamos que no esté fuera de rango
+        if index >= indexable_length:
+            raise RuntimeError(
+                f"Index out of range (len: {indexable_length}, index: {index})"
+            )
+
+        return index
+
+    def is_valid_dict_key(self, *values: Any):
+        return all(
+            self.is_string(value)
+            or self.is_number(value)
+            or isinstance(value, bool)
+            or value is None
+            for value in values
+        )
 
     # ---------- Type Casting ---------- #
 

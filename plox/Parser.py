@@ -1,8 +1,11 @@
 from .Token import Token, TokenType
 from .Expr import (
+    DictExpr,
     Expr,
     BinaryExpr,
     GroupingExpr,
+    IndexAssignExpr,
+    ArrayExpr,
     LiteralExpr,
     UnaryExpr,
     CastExpr,
@@ -71,8 +74,11 @@ class Parser(object):
         if self._match(TokenType.FOR):
             return self.for_statement()
 
-        # si me cruzo una llave, busco un block statement
-        if self._match(TokenType.LEFT_BRACE):
+        if self._lookahead().token_type is TokenType.LEFT_BRACE:
+            if self._looks_like_dict():
+                return self.expression_statement()
+            # consume la llave y parseo el block
+            self._advance()
             return self.block_statement()
 
         # si me cruzo un print, parseo un print statement
@@ -356,13 +362,18 @@ class Parser(object):
         # Por el momento, solo podemos asignar sobre identificadores de variables, pero también podríamos agregar
         # asignaciones a propiedades de objetos como `obj.attr() = 'a'`, o a elementos de arrays como `arr[0] = 'a'`
         if self._match(TokenType.EQUAL):
-            if not isinstance(expr, VariableExpr):
-                raise SyntaxError(
-                    f"Invalid assignment target, got `{self._lookahead()}` instead"
-                )
-
             value = self.assignment()
-            return AssignmentExpr(expr.name, value)
+
+            if isinstance(expr, VariableExpr):
+                return AssignmentExpr(expr.name, value)
+
+            if isinstance(expr, IndexExpr):
+                # Si el lvalue es un index, lo parseamos como una asignación a índice
+                return IndexAssignExpr(expr.target, expr.index, value)
+
+            raise SyntaxError(
+                f"Invalid assignment target, got `{self._lookahead()}` instead"
+            )
 
         return expr
 
@@ -631,9 +642,89 @@ class Parser(object):
                 )
             return GroupingExpr(expr)
 
+        if self._match(TokenType.LEFT_BRACE):
+            entries: list[tuple[Expr, Expr]] = []
+
+            # Mientras no me cruce una llave de cierre, sigo parseando entradas del diccionario
+            while (
+                not self._is_at_end()
+                and self._lookahead().token_type != TokenType.RIGHT_BRACE
+            ):
+                key = self.expression()
+
+                if not self._match(TokenType.COLON):
+                    raise SyntaxError(
+                        f"Expected ':' after dictionary key, got `{self._lookahead()}` instead"
+                    )
+
+                value = self.expression()
+                entries.append((key, value))
+
+                # Si me cruzo una coma, sigo parseando entradas
+                if not self._match(TokenType.COMMA):
+                    break
+
+            if not self._match(TokenType.RIGHT_BRACE):
+                raise SyntaxError(
+                    f"Expected '}}' after dictionary entries, got `{self._lookahead()}` instead"
+                )
+
+            return DictExpr(entries)
+
+        if self._match(TokenType.LEFT_BRACKET):
+            elements: list[Expr] = []
+
+            # Mientras no me cruce un corchete de cierre, sigo parseando elementos del array
+            while (
+                not self._is_at_end()
+                and self._lookahead().token_type != TokenType.RIGHT_BRACKET
+            ):
+                element = self.expression()
+                elements.append(element)
+
+                # Si me cruzo una coma, sigo parseando elementos
+                if not self._match(TokenType.COMMA):
+                    break
+
+            if not self._match(TokenType.RIGHT_BRACKET):
+                raise SyntaxError(
+                    f"Expected ']' after list elements, got `{self._lookahead()}` instead"
+                )
+
+            return ArrayExpr(elements)
+
         # Si llegué aca sin matchear ningun otro token, entonces
         # me quede colgado esperando una expresion del usuario
         raise SyntaxError(f"Expected expression, got `{self._lookahead()}` instead")
+
+    def _looks_like_dict(self) -> bool:
+        """
+        Distingue entre block statement y dict expression.
+        Si en el nivel de la llave que tenemos adelante encontramos un token de ':',
+        entonces es un dict, sino es un block statement.
+        """
+
+        index = self.current
+        braces_depth = 0
+        tokens = self.tokens
+
+        while index < len(tokens):
+            token = tokens[index].token_type
+            if token is TokenType.LEFT_BRACE:
+                braces_depth += 1
+            elif token is TokenType.RIGHT_BRACE:
+                # si cerramos la llave que abre en current sin haber visto ':'
+                # no es dict
+                if braces_depth == 1:
+                    return False
+                braces_depth -= 1
+            # nos importa el { principal
+            elif token is TokenType.COLON and braces_depth == 1:
+                return True
+
+            index += 1
+
+        return False
 
     # ---------- Helpers ---------- #
 

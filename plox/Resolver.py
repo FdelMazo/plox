@@ -14,9 +14,12 @@ from .Stmt import (
     ReturnStmt,
 )
 from .Expr import (
+    DictExpr,
     Expr,
     BinaryExpr,
     GroupingExpr,
+    IndexAssignExpr,
+    ArrayExpr,
     LiteralExpr,
     UnaryExpr,
     CastExpr,
@@ -29,9 +32,11 @@ from .Expr import (
     PostfixExpr,
 )
 
+
 class FunctionType(Enum):
     NONE = auto()
     FUNCTION = auto()
+
 
 class VarInformation:
     def __init__(self, defined: bool, used: bool, is_constant: bool = False):
@@ -254,6 +259,12 @@ class Resolver(object):
         self.resolve(expression.index)
 
     @resolve.register
+    def _(self, expr: IndexAssignExpr):
+        self.resolve(expr.target)
+        self.resolve(expr.index)
+        self.resolve(expr.value)
+
+    @resolve.register
     def _(self, expression: TernaryExpr):
         self.resolve(expression.condition)
         self.resolve(expression.true_branch)
@@ -262,3 +273,14 @@ class Resolver(object):
     @resolve.register
     def _(self, expr: PostfixExpr):
         self.resolve(expr.left)
+
+    @resolve.register
+    def _(self, expr: DictExpr):
+        for key, value in expr.entries:
+            self.resolve(key)
+            self.resolve(value)
+
+    @resolve.register
+    def _(self, expr: ArrayExpr):
+        for element in expr.elements:
+            self.resolve(element)

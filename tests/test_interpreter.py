@@ -3,6 +3,7 @@ from plox.Expr import BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr
 from plox.Interpreter import Interpreter
 from plox.Scanner import Scanner
 from plox.Parser import Parser
+from plox.Resolver import Resolver
 from plox.Token import TokenType
 
 
@@ -299,21 +300,21 @@ def test_len_function():
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
-    assert "Argument of `len` must be a string" in str(excinfo.value)
+    assert "Argument of `len` must be an array, dict or string" in str(excinfo.value)
 
     tokens = Scanner("len(true)").scan()
     expr = Parser(tokens).expression()
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
-    assert "Argument of `len` must be a string" in str(excinfo.value)
+    assert "Argument of `len` must be an array, dict or string" in str(excinfo.value)
 
     tokens = Scanner("len(nil)").scan()
     expr = Parser(tokens).expression()
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().evaluate(expr)
 
-    assert "Argument of `len` must be a string" in str(excinfo.value)
+    assert "Argument of `len` must be an array, dict or string" in str(excinfo.value)
 
 
 def test_const():
@@ -352,3 +353,212 @@ def test_const():
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().interpret(stmts)
     assert "Cannot re-declare constant 'x'" in str(excinfo.value)
+
+
+def test_array_literal_and_indexing():
+    tokens = Scanner("[1, 2, [3, 4]]").scan()
+    expr = Parser(tokens).expression()
+    value = Interpreter().evaluate(expr)
+    assert isinstance(value, list)
+    assert value[0] == 1
+    assert value[2][1] == 4
+
+
+def test_array_index_assignment_statement_and_expression_return():
+    interp = Interpreter()
+    stmts = Parser(Scanner("var a = [1, 2, 3]; a[1] = 20;").scan()).parse()
+    interp.interpret(stmts)
+
+    tokens = Scanner("a[1]").scan()
+    expr = Parser(tokens).expression()
+    val = interp.evaluate(expr)
+    assert val == 20
+
+    tokens = Scanner("a[2] = 99").scan()
+    expr = Parser(tokens).expression()
+    ret = interp.evaluate(expr)
+    assert ret == 99
+    tokens = Scanner("a[2]").scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 99
+
+
+def test_dict_literal_and_indexing_and_assignment():
+    interp = Interpreter()
+    stmts = Parser(
+        Scanner('var d = {"x": 1, "y": [0, 0]}; d["x"] = 42; d["y"][1] = 7;').scan()
+    ).parse()
+    interp.interpret(stmts)
+
+    tokens = Scanner('d["x"]').scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 42
+
+    tokens = Scanner('d["y"][1]').scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 7
+
+
+def test_dict_literal_evaluation_and_indexing_on_literal():
+    interp = Interpreter()
+
+    # evaluate dict literal expression
+    tokens = Scanner('{"a": 1}').scan()
+    expr = Parser(tokens).expression()
+    value = interp.evaluate(expr)
+    assert isinstance(value, dict)
+    assert value.get("a") == 1
+
+    # index directly on a dict literal
+    tokens = Scanner('{"a": 1}["a"]').scan()
+    expr = Parser(tokens).expression()
+    value = interp.evaluate(expr)
+    assert value == 1
+
+
+def test_array_literal_evaluation_and_indexing_on_literal():
+    interp = Interpreter()
+
+    # evaluate array literal expression
+    tokens = Scanner("[1, 2, 3]").scan()
+    expr = Parser(tokens).expression()
+    value = interp.evaluate(expr)
+    assert isinstance(value, list)
+    assert value[0] == 1
+
+    # index directly on an array literal
+    tokens = Scanner("[1, 2, 3][2]").scan()
+    expr = Parser(tokens).expression()
+    value = interp.evaluate(expr)
+    assert value == 3
+
+
+def test_index_assignment_errors():
+    interp = Interpreter()
+
+    stmts = Parser(Scanner("var n = 1; n[0] = 2;").scan()).parse()
+    with pytest.raises(RuntimeError):
+        interp.interpret(stmts)
+
+
+def test_mutability_when_passing_array_to_function():
+    interp = Interpreter()
+    src = """
+        fun setElementByReference(arr, index, value) {
+            arr[index] = value;
+        }
+        
+        var b = [1, 2, 3]; 
+        setElementByReference(b, 0, 10);
+    """
+
+    stmts = Parser(Scanner(src).scan()).parse()
+
+    resolver = Resolver(interp)
+    for s in stmts:
+        resolver.resolve(s)
+    interp.interpret(stmts)
+
+    tokens = Scanner("b[0]").scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 10
+
+    stmts = Parser(
+        Scanner("var c = b; setElementByReference(c, 1, 20);").scan()
+    ).parse()
+    interp.interpret(stmts)
+    tokens = Scanner("b[1]").scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 20
+
+
+def test_mutability_when_passing_dict_to_function():
+    interp = Interpreter()
+    src = """
+        fun setKeyByReference(dict, key, value) { 
+            dict[key] = value; 
+        } 
+        var d = {"key": "value"}; 
+        setKeyByReference(d, "key", "set value by dict reference");
+    """
+
+    stmts = Parser(Scanner(src).scan()).parse()
+    resolver = Resolver(interp)
+    for s in stmts:
+        resolver.resolve(s)
+    interp.interpret(stmts)
+
+    tokens = Scanner('d["key"]').scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == "set value by dict reference"
+
+    stmts = Parser(
+        Scanner('var c = d; setKeyByReference(c, "other", "other value");').scan()
+    ).parse()
+    interp.interpret(stmts)
+    tokens = Scanner('d["other"]').scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == "other value"
+
+    stmts = Parser(Scanner('var d = {"a":1}; var k = [1]; d[k] = 2;').scan()).parse()
+    with pytest.raises(RuntimeError):
+        interp.interpret(stmts)
+
+
+def test_keys_builtin():
+    expr = Parser(Scanner('keys({"a":1, "b":2})').scan()).expression()
+    assert Interpreter().evaluate(expr) == ["a", "b"]
+
+    expr = Parser(Scanner("keys([1,2])").scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_values_builtin():
+    expr = Parser(Scanner('values({"a":1, "b":2})').scan()).expression()
+    assert Interpreter().evaluate(expr) == [1, 2]
+
+    expr = Parser(Scanner("values(1)").scan()).expression()
+    with pytest.raises(RuntimeError):
+        Interpreter().evaluate(expr)
+
+
+def test_const_array():
+    interp = Interpreter()
+    stmts = Parser(Scanner("const a = [1, 2, 3]; a[1] = 20;").scan()).parse()
+    interp.interpret(stmts)
+
+    tokens = Scanner("a[1]").scan()
+    expr = Parser(tokens).expression()
+    val = interp.evaluate(expr)
+    assert val == 20
+
+    tokens = Scanner("a[2] = 99").scan()
+    expr = Parser(tokens).expression()
+    ret = interp.evaluate(expr)
+    assert ret == 99
+    tokens = Scanner("a[2]").scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 99
+
+    tokens = Scanner("const b = [1, 2, 3]; b = [3, 2, 1];").scan()
+    stmts = Parser(tokens).parse()
+    with pytest.raises(RuntimeError) as excinfo:
+        interp.interpret(stmts)
+    assert "Cannot assign to constant 'b'" in str(excinfo.value)
+
+
+def test_const_dict():
+    interp = Interpreter()
+    stmts = Parser(Scanner('const d = {"x": 1}; d["x"] = 42;').scan()).parse()
+    interp.interpret(stmts)
+
+    tokens = Scanner('d["x"]').scan()
+    expr = Parser(tokens).expression()
+    assert interp.evaluate(expr) == 42
+
+    tokens = Scanner('const e = {"x": 1}; e = {"y": 2};').scan()
+    stmts = Parser(tokens).parse()
+    with pytest.raises(RuntimeError) as excinfo:
+        interp.interpret(stmts)
+    assert "Cannot assign to constant 'e'" in str(excinfo.value)
