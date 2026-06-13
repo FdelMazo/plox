@@ -49,7 +49,7 @@ class Parser(object):
         # si me cruzo un var, parseo una variable declaration
         if self._match(TokenType.VAR):
             return self.variable_declaration()
-        
+
         # si me cruzo un const, parseo una variable declaration
         if self._match(TokenType.CONST):
             return self.variable_declaration(is_constant=True)
@@ -74,8 +74,11 @@ class Parser(object):
         if self._match(TokenType.FOR):
             return self.for_statement()
 
-        # si me cruzo una llave, busco un block statement
-        if self._match(TokenType.LEFT_BRACE):
+        if self._lookahead().token_type is TokenType.LEFT_BRACE:
+            if self._looks_like_dict():
+                return self.expression_statement()
+            # consume la llave y parseo el block
+            self._advance()
             return self.block_statement()
 
         # si me cruzo un print, parseo un print statement
@@ -324,7 +327,7 @@ class Parser(object):
             raise SyntaxError(
                 f"Constant `{variablename.lexeme}` must be initialized at declaration"
             )
-            
+
         # Si no se especifica un valor para la variable, se le asigna Nil
         if self._match(TokenType.EQUAL):  # var x = valor; o const x = valor;
             variablevalue = self.expression()
@@ -382,11 +385,9 @@ class Parser(object):
 
         # Si me crucé un "?", parseo las dos branches de la expresión ternaria
         if self._match(TokenType.QUESTION):
-
             # permitimos que la branch true pueda ser otra asignacion
             true_branch = self.assignment()
             if not self._match(TokenType.COLON):
-
                 # si no me crucé un ":", tengo un error
                 raise SyntaxError(
                     f"Expected ':' after ternary true-branch, got `{self._lookahead()}` instead"
@@ -504,10 +505,13 @@ class Parser(object):
             right = self.unary()
             return UnaryExpr(operator, right)
 
-        # Type casting 
-        if self._match(TokenType.BOOL_CAST, TokenType.NUMBER_CAST, TokenType.STRING_CAST):
+        # Type casting
+        if self._match(
+            TokenType.BOOL_CAST, TokenType.NUMBER_CAST, TokenType.STRING_CAST
+        ):
             type_token = self._previous()
-            right = self.unary() # permitimos anidación de castings también, como bool number "123" -> bool(number("123"))
+            # permitimos anidación de castings también, como bool number "123" -> bool(number("123"))
+            right = self.unary()
             return CastExpr(type_token, right)
 
         if self._match(TokenType.PLUS_PLUS):
@@ -566,10 +570,10 @@ class Parser(object):
     def call(self) -> Expr:
         expr = self.primary()
 
-        while (
-            not self._is_at_end() 
-            and self._lookahead().token_type in [TokenType.LEFT_PAREN, TokenType.LEFT_BRACKET]
-        ):
+        while not self._is_at_end() and self._lookahead().token_type in [
+            TokenType.LEFT_PAREN,
+            TokenType.LEFT_BRACKET,
+        ]:
             # Si me cruzo un paréntesis abierto, tengo una llamada a función
             # y tengo que parsear los argumentos
             if self._match(TokenType.LEFT_PAREN):
@@ -693,6 +697,35 @@ class Parser(object):
         # Si llegué aca sin matchear ningun otro token, entonces
         # me quede colgado esperando una expresion del usuario
         raise SyntaxError(f"Expected expression, got `{self._lookahead()}` instead")
+
+    def _looks_like_dict(self) -> bool:
+        """
+        Distingue entre block statement y dict expression.
+        Si en el nivel de la llave que tenemos adelante encontramos un token de ':',
+        entonces es un dict, sino es un block statement.
+        """
+
+        index = self.current
+        braces_depth = 0
+        tokens = self.tokens
+
+        while index < len(tokens):
+            token = tokens[index].token_type
+            if token is TokenType.LEFT_BRACE:
+                braces_depth += 1
+            elif token is TokenType.RIGHT_BRACE:
+                # si cerramos la llave que abre en current sin haber visto ':'
+                # no es dict
+                if braces_depth == 1:
+                    return False
+                braces_depth -= 1
+            # nos importa el { principal
+            elif token is TokenType.COLON and braces_depth == 1:
+                return True
+
+            index += 1
+
+        return False
 
     # ---------- Helpers ---------- #
 

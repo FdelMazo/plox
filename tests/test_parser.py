@@ -364,6 +364,54 @@ def test_block_stmts():
     assert "Expected '}'" in str(excinfo.value)
 
 
+def test_dict_expression_statement_and_indexing():
+    # dict used as a standalone expression followed by semicolon
+    tokens = Scanner('{"a": 1};').scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, ExpressionStmt)
+    assert isinstance(stmt.expression, DictExpr)
+    k0, v0 = stmt.expression.entries[0]
+    assert isinstance(k0, LiteralExpr) and k0.value == "a"
+    assert isinstance(v0, LiteralExpr) and v0.value == 1.0
+
+    # dict literal immediately indexed
+    tokens = Scanner('{"a": 1}["a"];').scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, ExpressionStmt)
+    # expression should be an IndexExpr with a DictExpr as target
+    assert isinstance(stmt.expression, IndexExpr)
+    assert isinstance(stmt.expression.target, DictExpr)
+    assert isinstance(stmt.expression.index, LiteralExpr)
+    assert stmt.expression.index.value == "a"
+
+
+def test_array_expression_statement_and_indexing():
+    # array used as a standalone expression followed by semicolon
+    tokens = Scanner("[1, 2, 3];").scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, ExpressionStmt)
+    assert isinstance(stmt.expression, ArrayExpr)
+    assert len(stmt.expression.elements) == 3
+
+    # array literal immediately indexed
+    tokens = Scanner("[1, 2, 3][1];").scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, ExpressionStmt)
+    # expression should be an IndexExpr with an ArrayExpr as target
+    assert isinstance(stmt.expression, IndexExpr)
+    assert isinstance(stmt.expression.target, ArrayExpr)
+    assert isinstance(stmt.expression.index, LiteralExpr)
+    assert stmt.expression.index.value == 1.0
+
+
 def test_control_flow():
     tokens = Scanner("if (true) 1; else 2;").scan()
     stmts = Parser(tokens).parse()
@@ -521,8 +569,9 @@ def test_power():
     assert isinstance(expr.right.right, LiteralExpr)
     assert expr.right.right.value == 4.0
 
+
 def test_index():
-    tokens = Scanner("\"hola\"[3]").scan()
+    tokens = Scanner('"hola"[3]').scan()
     expr = Parser(tokens).expression()
     assert isinstance(expr, IndexExpr)
 
@@ -544,6 +593,7 @@ def test_index():
     assert isinstance(expr.callee, IndexExpr)
     assert isinstance(expr.callee.target, CallExpr)
 
+
 def test_const_decl():
     tokens = Scanner("const x = 5;").scan()
     stmts = Parser(tokens).parse()
@@ -554,6 +604,7 @@ def test_const_decl():
     assert stmt.name.lexeme == "x"
     assert isinstance(stmt.initializer, LiteralExpr)
     assert stmt.initializer.value == 5.0
+
 
 def test_const_decl_error():
     tokens = Scanner("const x;").scan()

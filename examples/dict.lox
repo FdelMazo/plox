@@ -54,3 +54,7 @@ const_dict["a"] = 10; // Es posible modificar el valor de una clave en un diccio
 print const_dict["a"]; // 10
 
 // const_dict = {"a": 100, "b": 200}; // Runtime error: Cannot reassign to constant variable
+
+{"a": 1, "b": 2}; // {"a": 1.0, "b": 2.0}
+{"a": 1, "b": 2}["a"]; // 1.0
+{"a": 1, "b": 2}["b"]; // 2.0
