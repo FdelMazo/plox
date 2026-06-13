@@ -149,7 +149,7 @@ class Resolver(object):
     @resolve.register
     def _(self, statement: ReturnStmt):
         if self.current_function == FunctionType.NONE:
-            raise SyntaxError("Can't return from top-level code")
+            raise SyntaxError("Cannot return from top-level code")
         if statement.value is not None:
             self.resolve(statement.value)
 
