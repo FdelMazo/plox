@@ -29,23 +29,6 @@ print len(d); // 1
 
 print keys(d); // ["key"]
 print values(d); // ["value"]
-print items(d); // [["key", "value"]]
-print contains(d, "key"); // true
-print contains(d, "other"); // false
-var e = insert(d, "other", "other value"); 
-print e; // {"key": "value", "other": "other value"}
-var f = remove(e, "key"); 
-print f; // {"other": "other value"}
-print type(d); // "dictionary"
-print len(d); // 1
-print len(e); // 2
-print len(f); // 1
-
-var non_sorted = {"b": 2, "a": 1, "c": 3};
-var non_sorted2 = {"b": 5, "a": 10, "c": 3};
-print sort(non_sorted); // {"a": 1, "b": 2, "c": 3} 
-print sort(non_sorted2); // {"a": 10, "b": 5, "c": 3} Se ordena por clave, no por valor
-print sort(values(non_sorted2)); // [3, 5, 10] Se ordena por valor, no por clave
 
 // Constantes de diccionario
 const const_dict = {"a": 1, "b": 2};
@@ -55,6 +38,7 @@ print const_dict["a"]; // 10
 
 // const_dict = {"a": 100, "b": 200}; // Runtime error: Cannot reassign to constant variable
 
+// Literales
 {"a": 1, "b": 2}; // {"a": 1.0, "b": 2.0}
 {"a": 1, "b": 2}["a"]; // 1.0
 {"a": 1, "b": 2}["b"]; // 2.0

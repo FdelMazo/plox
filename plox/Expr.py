@@ -154,8 +154,7 @@ class DictExpr(Expr):
         self.entries = entries
 
     def __repr__(self) -> str:
-        entries_str = ", ".join(
-            f"{key}: {value}" for key, value in self.entries)
+        entries_str = ", ".join(f"{key}: {value}" for key, value in self.entries)
         return f"{{{entries_str}}}"
 
 

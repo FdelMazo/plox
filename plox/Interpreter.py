@@ -1,5 +1,5 @@
 from functools import singledispatchmethod
-from typing import Union, cast
+from typing import Any, Union, cast
 
 from .Stmt import (
     Stmt,
@@ -34,7 +34,6 @@ from .Function import Function, ReturnValue
 from .Token import TokenType
 from .Env import Env
 from . import BUILTIN_FUNCTIONS
-from .Utils import is_valid_dict_key
 
 
 class Interpreter(object):
@@ -392,7 +391,7 @@ class Interpreter(object):
             case dict() as dictionary:
                 index = self.evaluate(expression.index)
 
-                if not is_valid_dict_key(index):
+                if not self.is_valid_dict_key(index):
                     raise RuntimeError(
                         f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{index}`"
                     )
@@ -416,7 +415,7 @@ class Interpreter(object):
         match target:
             case dict() as dictionary:
                 index = self.evaluate(expression.index)
-                if not is_valid_dict_key(index):
+                if not self.is_valid_dict_key(index):
                     raise RuntimeError(
                         f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{index}`"
                     )
@@ -525,6 +524,15 @@ class Interpreter(object):
             )
 
         return index
+
+    def is_valid_dict_key(self, *values: Any):
+        return all(
+            self.is_string(value)
+            or self.is_number(value)
+            or isinstance(value, bool)
+            or value is None
+            for value in values
+        )
 
     # ---------- Type Casting ---------- #
 
