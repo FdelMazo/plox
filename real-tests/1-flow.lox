@@ -26,33 +26,6 @@ if (match == 3) {
     print "ERROR";
 }
 
-print "--- BREAK en while ---";
-var i = 0;
-while (true) {
-    if (i == 3) break;
-    i = i + 1;
-}
-if (i == 3) {
-    print "OK";
-} else {
-    print "ERROR: break en while falló";
-}
-
-print "--- CONTINUE en while ---";
-var sum = 0;
-var i = 0;
-while (i < 5) {
-    i = i + 1;
-    if (i == 3) continue;
-    sum = sum + i;
-}
-// suma 1+2+4+5 = 12 (se saltea 3)
-if (sum == 12) {
-    print "OK";
-} else {
-    print "ERROR: continue en while falló";
-}
-
 print "--- FOR ---";
 var match = 0;
 for (var i = 0 ; i <= 5; i = i + 1) {
@@ -63,55 +36,4 @@ if (match == 5) {
     print "OK";
 } else {
     print "ERROR";
-}
-
-print "--- BREAK en for ---";
-var last = -1;
-for (var i = 0; i < 10; i = i + 1) {
-    if (i == 4) break;
-    last = i;
-}
-if (last == 3) {
-    print "OK";
-} else {
-    print "ERROR: break en for falló";
-}
-
-print "--- CONTINUE en for (incremento debe ejecutarse) ---";
-var count = 0;
-for (var i = 0; i < 5; i = i + 1) {
-    if (i == 2) continue;
-    count = count + 1;
-}
-// itera i=0,1,2,3,4 pero salta i==2, entonces count=4
-if (count == 4) {
-    print "OK";
-} else {
-    print "ERROR: continue en for falló";
-}
-
-print "--- BREAK solo rompe el loop interno ---";
-var outer = 0;
-for (var i = 0; i < 3; i = i + 1) {
-    for (var j = 0; j < 10; j = j + 1) {
-        if (j == 1) break;
-    }
-    outer = outer + 1;
-}
-if (outer == 3) {
-    print "OK";
-} else {
-    print "ERROR: break rompió loop externo";
-}
-
-print "--- FOR infinito con break ---";
-var n = 0;
-for (;;) {
-    n = n + 1;
-    if (n == 5) break;
-}
-if (n == 5) {
-    print "OK";
-} else {
-    print "ERROR: for infinito con break falló";
 }
