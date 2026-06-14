@@ -1,3 +1,4 @@
+from enum import Enum, auto
 from functools import singledispatchmethod
 
 from .Interpreter import Interpreter
@@ -29,13 +30,17 @@ from .Expr import (
     PostfixExpr,
 )
 
+class FunctionType(Enum):
+    NONE = auto()
+    FUNCTION = auto()
 
 class VarInformation:
     def __init__(self, defined: bool, used: bool, is_constant: bool = False):
         # Guardamos si la variable fue definida, si fue usada y si es constante
         self.defined = defined
         self.used = used
-        self.is_constant = is_constant
+        self.is_constant = is_constant  # xD
+
 
 class Resolver(object):
     def __init__(self, interpreter: Interpreter):
@@ -46,6 +51,9 @@ class Resolver(object):
 
         # Nos guardamos una lista con los warnings generados
         self.warnings: list[str] = []
+
+        # Verificamos si estamos dentro de una función para detectar returns globales
+        self.current_function: FunctionType = FunctionType.NONE
 
         # Una referencia al intérprete, para poder resolver las variables
         self.interpreter = interpreter
@@ -74,7 +82,9 @@ class Resolver(object):
         if name in self.scopes[-1]:
             raise NameError(f"Variable `{name}` already exists")
 
-        self.scopes[-1][name] = VarInformation(defined=False, used=False, is_constant=is_constant)
+        self.scopes[-1][name] = VarInformation(
+            defined=False, used=False, is_constant=is_constant
+        )
 
     def define(self, name: str):
         # Definir una variable es guardarla con defined=True, preservando el resto de la info
@@ -118,6 +128,9 @@ class Resolver(object):
         # fun nombre() { <scope nuevo> }
         self.declare(statement.name.lexeme)
         self.define(statement.name.lexeme)
+
+        enclosing_function = self.current_function
+        self.current_function = FunctionType.FUNCTION
         self.begin_scope()
         for param in statement.parameters:
             self.declare(param.lexeme)
@@ -125,6 +138,7 @@ class Resolver(object):
         for stmt in statement.body:
             self.resolve(stmt)
         self.end_scope()
+        self.current_function = enclosing_function
 
     ## El resto de los statements son triviales de resolver
 
@@ -138,6 +152,8 @@ class Resolver(object):
 
     @resolve.register
     def _(self, statement: ReturnStmt):
+        if self.current_function == FunctionType.NONE:
+            raise SyntaxError("Cannot return from top-level code")
         if statement.value is not None:
             self.resolve(statement.value)
 
