@@ -355,22 +355,16 @@ def test_const():
     assert "Cannot re-declare constant 'x'" in str(excinfo.value)
 
 
-def _run(src: str) -> str:
-    """Helper: interpreta src y devuelve lo impreso (sin Resolver, para tests simples)."""
-    import io, sys
+def _run(src: str, capsys) -> str:
+    """Helper: interpreta src y devuelve lo impreso."""
     tokens = Scanner(src).scan()
     stmts = Parser(tokens).parse()
-    interp = Interpreter()
-    buf = io.StringIO()
-    sys.stdout = buf
-    interp.interpret(stmts)
-    sys.stdout = sys.__stdout__
-    return buf.getvalue().strip()
+    Interpreter().interpret(stmts)
+    return capsys.readouterr().out
 
 
-def _run_with_resolver(src: str) -> str:
+def _run_with_resolver(src: str, capsys) -> str:
     """Helper: interpreta src con Resolver (necesario cuando hay variables en scope anidado)."""
-    import io, sys
     from plox.Resolver import Resolver
     tokens = Scanner(src).scan()
     stmts = Parser(tokens).parse()
@@ -378,61 +372,63 @@ def _run_with_resolver(src: str) -> str:
     resolver = Resolver(interp)
     for stmt in stmts:
         resolver.resolve(stmt)
-    buf = io.StringIO()
-    sys.stdout = buf
     interp.interpret(stmts)
-    sys.stdout = sys.__stdout__
-    return buf.getvalue().strip()
+    return capsys.readouterr().out
 
 
-def test_break_in_while():
-    result = _run("var i = 0; while (true) { if (i == 3) break; print i; i = i + 1; }")
-    assert result == "0.0\n1.0\n2.0"
+def test_break_in_while(capsys):
+    result = _run("var i = 0; while (true) { if (i == 3) break; print i; i = i + 1; }", capsys)
+    assert result == "0.0\n1.0\n2.0\n"
 
 
-def test_break_in_while_never_entered():
-    result = _run("var i = 0; while (false) { break; print i; }")
+def test_break_in_while_never_entered(capsys):
+    result = _run("var i = 0; while (false) { break; print i; }", capsys)
     assert result == ""
 
 
-def test_continue_in_while():
-    result = _run("var i = 0; while (i < 5) { i = i + 1; if (i == 3) continue; print i; }")
-    assert result == "1.0\n2.0\n4.0\n5.0"
+
+def test_continue_in_while(capsys):
+    result = _run("var i = 0; while (i < 5) { i = i + 1; if (i == 3) continue; print i; }", capsys)
+    assert result == "1.0\n2.0\n4.0\n5.0\n"
 
 
-def test_break_in_for():
+def test_break_in_for(capsys):
     result = _run_with_resolver(
-        "for (var i = 0; i < 5; i = i + 1) { if (i == 3) break; print i; }"
+        "for (var i = 0; i < 5; i = i + 1) { if (i == 3) break; print i; }",
+        capsys,
     )
-    assert result == "0.0\n1.0\n2.0"
+    assert result == "0.0\n1.0\n2.0\n"
 
 
-def test_continue_in_for():
+def test_continue_in_for(capsys):
     # continue en for: el incremento (i = i + 1) debe ejecutarse igual
     result = _run_with_resolver(
-        "for (var i = 0; i < 5; i = i + 1) { if (i == 2) continue; print i; }"
+        "for (var i = 0; i < 5; i = i + 1) { if (i == 2) continue; print i; }",
+        capsys,
     )
-    assert result == "0.0\n1.0\n3.0\n4.0"
+    assert result == "0.0\n1.0\n3.0\n4.0\n"
 
 
-def test_break_only_innermost_loop():
+def test_break_only_innermost_loop(capsys):
     result = _run_with_resolver(
         "for (var i = 0; i < 3; i = i + 1) {"
         "  for (var j = 0; j < 3; j = j + 1) { if (j == 1) break; print j; }"
         "  print i;"
-        "}"
+        "}",
+        capsys,
     )
-    assert result == "0.0\n0.0\n0.0\n1.0\n0.0\n2.0"
+    assert result == "0.0\n0.0\n0.0\n1.0\n0.0\n2.0\n"
 
 
-def test_continue_only_innermost_loop():
+def test_continue_only_innermost_loop(capsys):
     result = _run_with_resolver(
         "for (var i = 0; i < 2; i = i + 1) {"
         "  for (var j = 0; j < 3; j = j + 1) { if (j == 1) continue; print j; }"
         "  print i;"
-        "}"
+        "}",
+        capsys,
     )
-    assert result == "0.0\n2.0\n0.0\n0.0\n2.0\n1.0"
+    assert result == "0.0\n2.0\n0.0\n0.0\n2.0\n1.0\n"
 
 
 def test_break_outside_loop_raises():
@@ -459,10 +455,11 @@ def test_continue_outside_loop_inside_function_raises():
     assert "outside of a loop" in str(excinfo.value)
 
 
-def test_break_for_infinite_loop():
+def test_break_for_infinite_loop(capsys):
     result = _run_with_resolver(
         "var count = 0;"
         "for (;;) { if (count == 3) break; count = count + 1; }"
-        "print count;"
+        "print count;",
+        capsys,
     )
-    assert result == "3.0"
+    assert result == "3.0\n"
