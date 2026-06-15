@@ -138,7 +138,7 @@ class Interpreter(object):
     @execute.register
     def _(self, statement: SwitchStmt):
         for case_value, case_body in statement.cases:
-            if self.evaluate_case(statement.subject, case_value):
+            if self.evaluate_case(case_value):
                 for stmt in case_body:
                     self.execute(stmt)
                 return
@@ -464,11 +464,8 @@ class Interpreter(object):
             return False
         return True
 
-    def evaluate_case(self, subject, case):
-        equals = Token(TokenType.EQUAL_EQUAL, lexeme="==", literal=None, line=0)
-        binExpression = BinaryExpr(subject, equals, case)
-        eval = self.evaluate(binExpression)
-        return self.is_truthy(eval)
+    def evaluate_case(self, subject):
+        return self.is_truthy(self.evaluate(subject))
 
     # Devuelve si los valores recibidos son un número según Lox
     def is_number(self, *values):

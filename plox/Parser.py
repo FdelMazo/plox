@@ -174,7 +174,7 @@ class Parser(object):
                 f"Expected '{{' before switch cases, got `{self._lookahead()}` instead"
             )
 
-        cases: list[tuple[Expr, list[Stmt]]] = []
+        cases: list[tuple[BinaryExpr, list[Stmt]]] = []
         default: list[Stmt] | None = None
 
         while not self._is_at_end() and self._lookahead().token_type != TokenType.RIGHT_BRACE:
@@ -194,7 +194,9 @@ class Parser(object):
                 ):
                     case_body.append(self.statement())
 
-                cases.append((case_value, case_body))
+                equals = Token(TokenType.EQUAL_EQUAL, lexeme="==", literal=None, line=0)
+                comparation = BinaryExpr(subject, equals, case_value)
+                cases.append((comparation, case_body))
 
             elif self._match(TokenType.DEFAULT):
                 if not self._match(TokenType.COLON):

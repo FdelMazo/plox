@@ -1,4 +1,4 @@
-from .Expr import Expr
+from .Expr import BinaryExpr, Expr
 from .Token import Token
 
 
@@ -98,7 +98,7 @@ class SwitchStmt(Stmt):
     def __init__(
         self,
         subject: Expr,
-        cases: list[tuple[Expr, list[Stmt]]],
+        cases: list[tuple[BinaryExpr, list[Stmt]]],
         default: list[Stmt] | None,
     ):
         self.subject = subject
