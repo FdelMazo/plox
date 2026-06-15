@@ -1,7 +1,7 @@
 // Ejemplo de uso de diccionarios
 // Uso basico
 
-var a = {"key": "value"};
+var a = ["key": "value"];
 print a["key"]; // "value"
 print a["other"]; // nil
 a["other"] = "other value";
@@ -12,7 +12,7 @@ fun setKeyByReference(dict, key, value) {
     dict[key] = value;
 }
 
-var b = {"key": "value"};
+var b = ["key": "value"];
 setKeyByReference(b, "key", "set value by dict reference");
 print b["key"]; // "set value by dict reference"
 
@@ -24,21 +24,21 @@ print b["key"]; // "set value by dict reference 2"
 
 // Bultin functions
 
-var d = {"key": "value"};
+var d = ["key": "value"];
 print len(d); // 1
 
 print keys(d); // ["key"]
 print values(d); // ["value"]
 
 // Constantes de diccionario
-const const_dict = {"a": 1, "b": 2};
+const const_dict = ["a": 1, "b": 2];
 print const_dict["a"]; // 1
 const_dict["a"] = 10; // Es posible modificar el valor de una clave en un diccionario constante
 print const_dict["a"]; // 10
 
-// const_dict = {"a": 100, "b": 200}; // Runtime error: Cannot reassign to constant variable
+// const_dict = ["a": 100, "b": 200]; // Runtime error: Cannot reassign to constant variable
 
 // Literales
-{"a": 1, "b": 2}; // {"a": 1.0, "b": 2.0}
-{"a": 1, "b": 2}["a"]; // 1.0
-{"a": 1, "b": 2}["b"]; // 2.0
+["a": 1, "b": 2]; // ["a": 1.0, "b": 2.0]
+["a": 1, "b": 2]["a"]; // 1.0
+["a": 1, "b": 2]["b"]; // 2.0

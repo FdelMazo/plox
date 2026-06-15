@@ -386,7 +386,7 @@ def test_array_index_assignment_statement_and_expression_return():
 def test_dict_literal_and_indexing_and_assignment():
     interp = Interpreter()
     stmts = Parser(
-        Scanner('var d = {"x": 1, "y": [0, 0]}; d["x"] = 42; d["y"][1] = 7;').scan()
+        Scanner('var d = ["x": 1, "y": [0, 0]]; d["x"] = 42; d["y"][1] = 7;').scan()
     ).parse()
     interp.interpret(stmts)
 
@@ -403,14 +403,14 @@ def test_dict_literal_evaluation_and_indexing_on_literal():
     interp = Interpreter()
 
     # evaluate dict literal expression
-    tokens = Scanner('{"a": 1}').scan()
+    tokens = Scanner('["a": 1]').scan()
     expr = Parser(tokens).expression()
     value = interp.evaluate(expr)
     assert isinstance(value, dict)
     assert value.get("a") == 1
 
     # index directly on a dict literal
-    tokens = Scanner('{"a": 1}["a"]').scan()
+    tokens = Scanner('["a": 1]["a"]').scan()
     expr = Parser(tokens).expression()
     value = interp.evaluate(expr)
     assert value == 1
@@ -478,7 +478,7 @@ def test_mutability_when_passing_dict_to_function():
         fun setKeyByReference(dict, key, value) { 
             dict[key] = value; 
         } 
-        var d = {"key": "value"}; 
+        var d = ["key": "value"]; 
         setKeyByReference(d, "key", "set value by dict reference");
     """
 
@@ -500,13 +500,13 @@ def test_mutability_when_passing_dict_to_function():
     expr = Parser(tokens).expression()
     assert interp.evaluate(expr) == "other value"
 
-    stmts = Parser(Scanner('var d = {"a":1}; var k = [1]; d[k] = 2;').scan()).parse()
+    stmts = Parser(Scanner('var d = ["a":1]; var k = [1]; d[k] = 2;').scan()).parse()
     with pytest.raises(RuntimeError):
         interp.interpret(stmts)
 
 
 def test_keys_builtin():
-    expr = Parser(Scanner('keys({"a":1, "b":2})').scan()).expression()
+    expr = Parser(Scanner('keys(["a":1, "b":2])').scan()).expression()
     assert Interpreter().evaluate(expr) == ["a", "b"]
 
     expr = Parser(Scanner("keys([1,2])").scan()).expression()
@@ -515,7 +515,7 @@ def test_keys_builtin():
 
 
 def test_values_builtin():
-    expr = Parser(Scanner('values({"a":1, "b":2})').scan()).expression()
+    expr = Parser(Scanner('values(["a":1, "b":2])').scan()).expression()
     assert Interpreter().evaluate(expr) == [1, 2]
 
     expr = Parser(Scanner("values(1)").scan()).expression()
@@ -550,14 +550,14 @@ def test_const_array():
 
 def test_const_dict():
     interp = Interpreter()
-    stmts = Parser(Scanner('const d = {"x": 1}; d["x"] = 42;').scan()).parse()
+    stmts = Parser(Scanner('const d = ["x": 1]; d["x"] = 42;').scan()).parse()
     interp.interpret(stmts)
 
     tokens = Scanner('d["x"]').scan()
     expr = Parser(tokens).expression()
     assert interp.evaluate(expr) == 42
 
-    tokens = Scanner('const e = {"x": 1}; e = {"y": 2};').scan()
+    tokens = Scanner('const e = ["x": 1]; e = ["y": 2];').scan()
     stmts = Parser(tokens).parse()
     with pytest.raises(RuntimeError) as excinfo:
         interp.interpret(stmts)

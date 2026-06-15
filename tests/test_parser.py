@@ -111,7 +111,7 @@ def test_index_assign_expr_parsing():
 
 
 def test_dict_expr_parsing():
-    tokens = Scanner('{"x": 1, "y": 2}').scan()
+    tokens = Scanner('["x": 1, "y": 2]').scan()
     expr = Parser(tokens).expression()
     assert isinstance(expr, DictExpr)
     assert len(expr.entries) == 2
@@ -366,7 +366,7 @@ def test_block_stmts():
 
 def test_dict_expression_statement_and_indexing():
     # dict used as a standalone expression followed by semicolon
-    tokens = Scanner('{"a": 1};').scan()
+    tokens = Scanner('["a": 1];').scan()
     stmts = Parser(tokens).parse()
     assert len(stmts) == 1
     stmt = stmts[0]
@@ -377,7 +377,7 @@ def test_dict_expression_statement_and_indexing():
     assert isinstance(v0, LiteralExpr) and v0.value == 1.0
 
     # dict literal immediately indexed
-    tokens = Scanner('{"a": 1}["a"];').scan()
+    tokens = Scanner('["a": 1]["a"];').scan()
     stmts = Parser(tokens).parse()
     assert len(stmts) == 1
     stmt = stmts[0]

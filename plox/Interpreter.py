@@ -483,10 +483,18 @@ class Interpreter(object):
 
     @evaluate.register
     def _(self, expression: DictExpr):
-        return {
-            self.evaluate(key): self.evaluate(value)
-            for key, value in expression.entries
-        }
+        _dict = dict()
+        for key, value in expression.entries:
+            evaluated_key = self.evaluate(key)
+            if not self.is_valid_dict_key(evaluated_key):
+                raise RuntimeError(
+                    f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{evaluated_key}`"
+                )
+
+            evaluated_value = self.evaluate(value)
+            _dict[evaluated_key] = evaluated_value
+
+        return _dict
 
     @evaluate.register
     def _(self, expression: ArrayExpr):
