@@ -352,3 +352,113 @@ def test_const():
     with pytest.raises(RuntimeError) as excinfo:
         Interpreter().interpret(stmts)
     assert "Cannot re-declare constant 'x'" in str(excinfo.value)
+
+
+def _run(src: str, capsys) -> str:
+    """Helper: interpreta src y devuelve lo impreso."""
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    Interpreter().interpret(stmts)
+    return capsys.readouterr().out
+
+
+def _run_with_resolver(src: str, capsys) -> str:
+    """Helper: interpreta src con Resolver (necesario cuando hay variables en scope anidado)."""
+    from plox.Resolver import Resolver
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    interp = Interpreter()
+    resolver = Resolver(interp)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+    interp.interpret(stmts)
+    return capsys.readouterr().out
+
+
+def test_break_in_while(capsys):
+    result = _run("var i = 0; while (true) { if (i == 3) break; print i; i = i + 1; }", capsys)
+    assert result == "0.0\n1.0\n2.0\n"
+
+
+def test_break_in_while_never_entered(capsys):
+    result = _run("var i = 0; while (false) { break; print i; }", capsys)
+    assert result == ""
+
+
+
+def test_continue_in_while(capsys):
+    result = _run("var i = 0; while (i < 5) { i = i + 1; if (i == 3) continue; print i; }", capsys)
+    assert result == "1.0\n2.0\n4.0\n5.0\n"
+
+
+def test_break_in_for(capsys):
+    result = _run_with_resolver(
+        "for (var i = 0; i < 5; i = i + 1) { if (i == 3) break; print i; }",
+        capsys,
+    )
+    assert result == "0.0\n1.0\n2.0\n"
+
+
+def test_continue_in_for(capsys):
+    # continue en for: el incremento (i = i + 1) debe ejecutarse igual
+    result = _run_with_resolver(
+        "for (var i = 0; i < 5; i = i + 1) { if (i == 2) continue; print i; }",
+        capsys,
+    )
+    assert result == "0.0\n1.0\n3.0\n4.0\n"
+
+
+def test_break_only_innermost_loop(capsys):
+    result = _run_with_resolver(
+        "for (var i = 0; i < 3; i = i + 1) {"
+        "  for (var j = 0; j < 3; j = j + 1) { if (j == 1) break; print j; }"
+        "  print i;"
+        "}",
+        capsys,
+    )
+    assert result == "0.0\n0.0\n0.0\n1.0\n0.0\n2.0\n"
+
+
+def test_continue_only_innermost_loop(capsys):
+    result = _run_with_resolver(
+        "for (var i = 0; i < 2; i = i + 1) {"
+        "  for (var j = 0; j < 3; j = j + 1) { if (j == 1) continue; print j; }"
+        "  print i;"
+        "}",
+        capsys,
+    )
+    assert result == "0.0\n2.0\n0.0\n0.0\n2.0\n1.0\n"
+
+
+def test_break_outside_loop_raises():
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(Scanner("break;").scan()).parse()
+    assert "outside of a loop" in str(excinfo.value)
+
+
+def test_continue_outside_loop_raises():
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(Scanner("continue;").scan()).parse()
+    assert "outside of a loop" in str(excinfo.value)
+
+
+def test_break_outside_loop_inside_function_raises():
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(Scanner("fun f() { break; }").scan()).parse()
+    assert "outside of a loop" in str(excinfo.value)
+
+
+def test_continue_outside_loop_inside_function_raises():
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(Scanner("fun f() { continue; }").scan()).parse()
+    assert "outside of a loop" in str(excinfo.value)
+
+
+def test_break_for_infinite_loop(capsys):
+    result = _run_with_resolver(
+        "var count = 0;"
+        "for (;;) { if (count == 3) break; count = count + 1; }"
+        "print count;",
+        capsys,
+    )
+    assert result == "3.0\n"

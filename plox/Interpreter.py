@@ -11,6 +11,9 @@ from .Stmt import (
     IfStmt,
     WhileStmt,
     ReturnStmt,
+    BreakStmt,
+    ContinueStmt,
+    ForStmt,
 )
 from .Expr import (
     Expr,
@@ -27,7 +30,7 @@ from .Expr import (
     TernaryExpr,
     PostfixExpr,
 )
-from .Function import Function, ReturnValue
+from .Function import Function, ReturnValue, BreakSignal, ContinueSignal
 from .Token import TokenType
 from .Env import Env
 from .BuiltinFunctions import TypeFunction, LenFunction
@@ -128,7 +131,43 @@ class Interpreter(object):
     def _(self, statement: WhileStmt):
         # El while se implementa con... un while
         while self.is_truthy(self.evaluate(statement.condition)):
-            self.execute(statement.body)
+            try:
+                self.execute(statement.body)
+            except BreakSignal:
+                break
+            except ContinueSignal:
+                continue
+
+    @execute.register
+    def _(self, statement: ForStmt):
+        # El for tiene su propio nodo para que continue ejecute el incremento
+        for_env = Env(enclosing=self.env)
+        previous_env = self.env
+        self.env = for_env
+        try:
+            if statement.initializer is not None:
+                self.execute(statement.initializer)
+            condition = statement.condition
+            while condition is None or self.is_truthy(self.evaluate(condition)):
+                try:
+                    self.execute(statement.body)
+                except BreakSignal:
+                    return
+                except ContinueSignal:
+                    pass
+                # El incremento se ejecuta siempre, incluso si hubo continue
+                if statement.increment is not None:
+                    self.evaluate(statement.increment)
+        finally:
+            self.env = previous_env
+
+    @execute.register
+    def _(self, statement: BreakStmt):
+        raise BreakSignal()
+
+    @execute.register
+    def _(self, statement: ContinueStmt):
+        raise ContinueSignal()
 
     @execute.register
     def _(self, statement: BlockStmt):
