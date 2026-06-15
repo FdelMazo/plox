@@ -8,6 +8,9 @@ from plox.Expr import (
     PostfixExpr,
     TernaryExpr,
     IndexExpr,
+    IndexAssignExpr,
+    DictExpr,
+    ArrayExpr,
     CallExpr,
 )
 from plox.Scanner import Scanner
@@ -85,6 +88,51 @@ def test_unary():
     assert expr.operator.token_type == TokenType.MINUS
     assert isinstance(expr.right, LiteralExpr)
     assert expr.right.value == 123.0
+
+
+def test_index_expr_parsing():
+    tokens = Scanner("a[2]").scan()
+    expr = Parser(tokens).expression()
+    assert isinstance(expr, IndexExpr)
+    assert isinstance(expr.target, VariableExpr)
+    assert expr.target.name.lexeme == "a"
+    assert isinstance(expr.index, LiteralExpr)
+    assert expr.index.value == 2.0
+
+
+def test_index_assign_expr_parsing():
+    tokens = Scanner("a[2] = 5").scan()
+    expr = Parser(tokens).expression()
+    assert isinstance(expr, IndexAssignExpr)
+    assert isinstance(expr.target, VariableExpr)
+    assert expr.target.name.lexeme == "a"
+    assert isinstance(expr.index, LiteralExpr)
+    assert expr.index.value == 2.0
+    assert isinstance(expr.value, LiteralExpr)
+    assert expr.value.value == 5.0
+
+
+def test_dict_expr_parsing():
+    tokens = Scanner('["x": 1, "y": 2]').scan()
+    expr = Parser(tokens).expression()
+    assert isinstance(expr, DictExpr)
+    assert len(expr.entries) == 2
+    k0, v0 = expr.entries[0]
+    assert isinstance(k0, LiteralExpr) and k0.value == "x"
+    assert isinstance(v0, LiteralExpr) and v0.value == 1.0
+    k1, v1 = expr.entries[1]
+    assert isinstance(k1, LiteralExpr) and k1.value == "y"
+    assert isinstance(v1, LiteralExpr) and v1.value == 2.0
+
+
+def test_array_expr_parsing():
+    tokens = Scanner('[1, "a", true]').scan()
+    expr = Parser(tokens).expression()
+    assert isinstance(expr, ArrayExpr)
+    assert len(expr.elements) == 3
+    assert isinstance(expr.elements[0], LiteralExpr) and expr.elements[0].value == 1.0
+    assert isinstance(expr.elements[1], LiteralExpr) and expr.elements[1].value == "a"
+    assert isinstance(expr.elements[2], LiteralExpr) and expr.elements[2].value is True
 
 
 def test_error_parens():
@@ -316,6 +364,54 @@ def test_block_stmts():
     with pytest.raises(Exception) as excinfo:
         Parser(tokens).parse()
     assert "Expected '}'" in str(excinfo.value)
+
+
+def test_dict_expression_statement_and_indexing():
+    # dict used as a standalone expression followed by semicolon
+    tokens = Scanner('["a": 1];').scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, ExpressionStmt)
+    assert isinstance(stmt.expression, DictExpr)
+    k0, v0 = stmt.expression.entries[0]
+    assert isinstance(k0, LiteralExpr) and k0.value == "a"
+    assert isinstance(v0, LiteralExpr) and v0.value == 1.0
+
+    # dict literal immediately indexed
+    tokens = Scanner('["a": 1]["a"];').scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, ExpressionStmt)
+    # expression should be an IndexExpr with a DictExpr as target
+    assert isinstance(stmt.expression, IndexExpr)
+    assert isinstance(stmt.expression.target, DictExpr)
+    assert isinstance(stmt.expression.index, LiteralExpr)
+    assert stmt.expression.index.value == "a"
+
+
+def test_array_expression_statement_and_indexing():
+    # array used as a standalone expression followed by semicolon
+    tokens = Scanner("[1, 2, 3];").scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, ExpressionStmt)
+    assert isinstance(stmt.expression, ArrayExpr)
+    assert len(stmt.expression.elements) == 3
+
+    # array literal immediately indexed
+    tokens = Scanner("[1, 2, 3][1];").scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, ExpressionStmt)
+    # expression should be an IndexExpr with an ArrayExpr as target
+    assert isinstance(stmt.expression, IndexExpr)
+    assert isinstance(stmt.expression.target, ArrayExpr)
+    assert isinstance(stmt.expression.index, LiteralExpr)
+    assert stmt.expression.index.value == 1.0
 
 
 def test_control_flow():

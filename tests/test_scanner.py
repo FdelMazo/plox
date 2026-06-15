@@ -398,6 +398,7 @@ def test_plus_plus_token_and_plus_token():
 
     assert tokens_type == expected_tokens_type
 
+
 def test_switch_case_default_keywords():
     tokens = Scanner("switch case default").scan()
     tokens_type = [token.token_type for token in tokens]

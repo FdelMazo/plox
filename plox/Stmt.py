@@ -106,11 +106,11 @@ class SwitchStmt(Stmt):
         self.default = default
 
     def __repr__(self) -> str:
-        cases_str = "; ".join(
-            f"CASE {val}: {stmts}" for val, stmts in self.cases
-        )
+        cases_str = "; ".join(f"CASE {val}: {stmts}" for val, stmts in self.cases)
         default_str = f" DEFAULT: {self.default}" if self.default is not None else ""
         return f"SWITCH {self.subject} {{ {cases_str}{default_str} }}"
+
+
 # breakStmt     → "break" ";" ;
 class BreakStmt(Stmt):
     def __repr__(self) -> str:
@@ -133,4 +133,6 @@ class ForStmt(Stmt):
         self.body = body
 
     def __repr__(self) -> str:
-        return f"FOR ({self.initializer}; {self.condition}; {self.increment}) {self.body}"
+        return (
+            f"FOR ({self.initializer}; {self.condition}; {self.increment}) {self.body}"
+        )
