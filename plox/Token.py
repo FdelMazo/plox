@@ -56,6 +56,8 @@ class TokenType(Enum):
     VAR = auto()
     WHILE = auto()
     CONST = auto()
+    BREAK = auto()
+    CONTINUE = auto()
 
     # type casting tokens
     BOOL_CAST = auto()
@@ -119,4 +121,6 @@ TokenKeywords = {
     "switch": TokenType.SWITCH,
     "case": TokenType.CASE,
     "default": TokenType.DEFAULT,
+    "break": TokenType.BREAK,
+    "continue": TokenType.CONTINUE,
 }
