@@ -24,6 +24,7 @@ from .Stmt import (
     IfStmt,
     WhileStmt,
     ReturnStmt,
+    SwitchStmt,
     BreakStmt,
     ContinueStmt,
     ForStmt,
@@ -82,6 +83,10 @@ class Parser(object):
         # si me cruzo un for, parseo un for statement
         if self._match(TokenType.FOR):
             return self.for_statement()
+
+        # si me cruzo un switch, parseo un switch statement
+        if self._match(TokenType.SWITCH):
+            return self.switch_statement()
 
         # si me cruzo una llave, busco un block statement
         if self._match(TokenType.LEFT_BRACE):
@@ -161,6 +166,79 @@ class Parser(object):
         self._loop_depth -= 1
 
         return WhileStmt(condition, body)
+
+    # switchStmt    → "switch" "(" expression ")" "{" switchCase* defaultCase? "}" ;
+    # switchCase    → "case" expression ":" statement* ;
+    # defaultCase   → "default" ":" statement* ;
+    def switch_statement(self) -> SwitchStmt:
+        if not self._match(TokenType.LEFT_PAREN):
+            raise SyntaxError(
+                f"Expected '(' after 'switch', got `{self._lookahead()}` instead"
+            )
+
+        subject = self.expression()
+
+        if not self._match(TokenType.RIGHT_PAREN):
+            raise SyntaxError(
+                f"Expected ')' after switch subject, got `{self._lookahead()}` instead"
+            )
+
+        if not self._match(TokenType.LEFT_BRACE):
+            raise SyntaxError(
+                f"Expected '{{' before switch cases, got `{self._lookahead()}` instead"
+            )
+
+        cases: list[tuple[BinaryExpr, list[Stmt]]] = []
+        default: list[Stmt] | None = None
+
+        while not self._is_at_end() and self._lookahead().token_type != TokenType.RIGHT_BRACE:
+            if self._match(TokenType.CASE):
+                case_value = self.expression()
+
+                if not self._match(TokenType.COLON):
+                    raise SyntaxError(
+                        f"Expected ':' after case value, got `{self._lookahead()}` instead"
+                    )
+
+                case_body: list[Stmt] = []
+                while (
+                    not self._is_at_end()
+                    and self._lookahead().token_type
+                    not in (TokenType.CASE, TokenType.DEFAULT, TokenType.RIGHT_BRACE)
+                ):
+                    case_body.append(self.statement())
+
+                equals = Token(TokenType.EQUAL_EQUAL, lexeme="==", literal=None, line=0)
+                comparation = BinaryExpr(subject, equals, case_value)
+                cases.append((comparation, case_body))
+
+            elif self._match(TokenType.DEFAULT):
+                if not self._match(TokenType.COLON):
+                    raise SyntaxError(
+                        f"Expected ':' after 'default', got `{self._lookahead()}` instead"
+                    )
+
+                default_body: list[Stmt] = []
+                while (
+                    not self._is_at_end()
+                    and self._lookahead().token_type
+                    not in (TokenType.CASE, TokenType.DEFAULT, TokenType.RIGHT_BRACE)
+                ):
+                    default_body.append(self.statement())
+
+                default = default_body
+
+            else:
+                raise SyntaxError(
+                    f"Expected 'case' or 'default', got `{self._lookahead()}` instead"
+                )
+
+        if not self._match(TokenType.RIGHT_BRACE):
+            raise SyntaxError(
+                f"Expected '}}' after switch body, got `{self._lookahead()}` instead"
+            )
+
+        return SwitchStmt(subject, cases, default)
 
     # ifStmt        → "if" "(" expression ")" statement ( "else" statement )? ;
     def if_statement(self) -> IfStmt:
