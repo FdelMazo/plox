@@ -25,6 +25,8 @@ from plox.Stmt import (
     ReturnStmt,
     IfStmt,
     WhileStmt,
+    SwitchStmt,
+    ForStmt,
 )
 from plox.Expr import VariableExpr
 
@@ -437,43 +439,42 @@ def test_for():
     assert len(stmts) == 1
     stmt = stmts[0]
 
-    assert isinstance(stmt, BlockStmt)
-    assert isinstance(stmt.statements[0], VarDecl)
-    assert stmt.statements[0].name.lexeme == "i"
-    assert isinstance(stmt.statements[1], WhileStmt)
-    ws = stmt.statements[1]
-    assert isinstance(ws.condition, BinaryExpr)
-    assert ws.condition.operator.token_type == TokenType.LESS
+    # El for ahora es un ForStmt propio (no desugareado)
+    assert isinstance(stmt, ForStmt)
+    assert isinstance(stmt.initializer, VarDecl)
+    assert stmt.initializer.name.lexeme == "i"
+    assert isinstance(stmt.condition, BinaryExpr)
+    assert stmt.condition.operator.token_type == TokenType.LESS
+    assert isinstance(stmt.increment, AssignmentExpr)
+    assert isinstance(stmt.body, BlockStmt)
+    assert isinstance(stmt.body.statements[0], PrintStmt)
 
-    assert isinstance(ws.body, BlockStmt)
-    assert isinstance(ws.body.statements[0], BlockStmt)
-    assert isinstance(ws.body.statements[0].statements[0], PrintStmt)
-    assert isinstance(ws.body.statements[1], ExpressionStmt)
-    assert isinstance(ws.body.statements[1].expression, AssignmentExpr)
-
+    # for sin inicializador: el campo initializer es None
     tokens = Scanner("for ( ; i < 3 ; i = i + 1) { print 0; }").scan()
     stmts = Parser(tokens).parse()
     assert len(stmts) == 1
-    assert isinstance(stmts[0], WhileStmt)
+    stmt = stmts[0]
+    assert isinstance(stmt, ForStmt)
+    assert stmt.initializer is None
+    assert isinstance(stmt.condition, BinaryExpr)
 
+    # for sin condición: condition es None (el intérprete lo trata como true)
     tokens = Scanner("for (var i = 0 ;  ; i = i + 1) { print 0; }").scan()
     stmts = Parser(tokens).parse()
-    assert isinstance(stmts[0], BlockStmt)
     stmt = stmts[0]
-    assert isinstance(stmt.statements[0], VarDecl)
-    assert isinstance(stmt.statements[1], WhileStmt)
-    assert isinstance(stmt.statements[1].condition, LiteralExpr)
-    assert stmt.statements[1].condition.value is True
+    assert isinstance(stmt, ForStmt)
+    assert stmt.condition is None
+    assert isinstance(stmt.initializer, VarDecl)
 
+    # for sin incremento: increment es None
     tokens = Scanner("for (var i = 0 ; i < 3 ; ) { print 0; }").scan()
     stmts = Parser(tokens).parse()
-    assert isinstance(stmts[0], BlockStmt)
     stmt = stmts[0]
-    assert isinstance(stmt.statements[1], WhileStmt)
-    inner_body = stmt.statements[1].body
-    assert isinstance(inner_body, BlockStmt)
-    assert len(inner_body.statements) == 1
-    assert isinstance(inner_body.statements[0], PrintStmt)
+    assert isinstance(stmt, ForStmt)
+    assert stmt.increment is None
+    assert isinstance(stmt.body, BlockStmt)
+    assert len(stmt.body.statements) == 1
+    assert isinstance(stmt.body.statements[0], PrintStmt)
 
 
 def test_postfix_inc():
@@ -611,3 +612,120 @@ def test_const_decl_error():
     with pytest.raises(SyntaxError) as excinfo:
         Parser(tokens).parse()
     assert str(excinfo.value) == "Constant `x` must be initialized at declaration"
+
+
+def test_switch_basic():
+    src = "switch (x) { case 1: print 1; }"
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    stmt = stmts[0]
+    assert isinstance(stmt, SwitchStmt)
+    assert isinstance(stmt.subject, VariableExpr)
+    assert stmt.subject.name.lexeme == "x"
+    assert len(stmt.cases) == 1
+    assert stmt.default is None
+
+    case_val, case_body = stmt.cases[0]
+    assert isinstance(case_val, BinaryExpr)
+    assert len(case_body) == 1
+    assert isinstance(case_body[0], PrintStmt)
+
+
+def test_switch_multiple_cases():
+    src = "switch (x) { case 1: print 1; case 2: print 2; case 3: print 3; }"
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    stmt = stmts[0]
+    assert isinstance(stmt, SwitchStmt)
+    assert len(stmt.cases) == 3
+    assert stmt.default is None
+
+    for i, (case_val, case_body) in enumerate(stmt.cases, start=1):
+        assert len(case_body) == 1
+        assert isinstance(case_body[0], PrintStmt)
+
+
+def test_switch_with_default():
+    src = "switch (x) { case 1: print 1; default: print 99; }"
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    stmt = stmts[0]
+    assert isinstance(stmt, SwitchStmt)
+    assert len(stmt.cases) == 1
+    assert stmt.default is not None
+    assert len(stmt.default) == 1
+    assert isinstance(stmt.default[0], PrintStmt)
+
+
+def test_switch_default_only():
+    src = "switch (x) { default: print 0; }"
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    stmt = stmts[0]
+    assert isinstance(stmt, SwitchStmt)
+    assert len(stmt.cases) == 0
+    assert stmt.default is not None
+    assert isinstance(stmt.default[0], PrintStmt)
+
+
+def test_switch_empty():
+    src = "switch (x) {}"
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    stmt = stmts[0]
+    assert isinstance(stmt, SwitchStmt)
+    assert len(stmt.cases) == 0
+    assert stmt.default is None
+
+
+def test_switch_multiple_stmts_in_case():
+    src = "switch (x) { case 1: var a = 1; print a; }"
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    stmt = stmts[0]
+    assert isinstance(stmt, SwitchStmt)
+    assert len(stmt.cases) == 1
+
+    _case_val, case_body = stmt.cases[0]
+    assert len(case_body) == 2
+    assert isinstance(case_body[0], VarDecl)
+    assert isinstance(case_body[1], PrintStmt)
+
+
+def test_switch_case_block_body():
+    src = "switch (x) { case 1: { var a = 1; print a; } }"
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    stmt = stmts[0]
+    assert isinstance(stmt, SwitchStmt)
+    _case_val, case_body = stmt.cases[0]
+    assert len(case_body) == 1
+    assert isinstance(case_body[0], BlockStmt)
+
+
+def test_switch_errors():
+    tokens = Scanner("switch x { }").scan()
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected '('" in str(excinfo.value)
+
+    tokens = Scanner("switch (x { }").scan()
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected ')'" in str(excinfo.value)
+
+    tokens = Scanner("switch (x) case 1: print 1;").scan()
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected '{'" in str(excinfo.value)
+
+    tokens = Scanner("switch (x) { case 1 print 1; }").scan()
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected ':'" in str(excinfo.value)
+
+    tokens = Scanner("switch (x) { default print 1; }").scan()
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected ':'" in str(excinfo.value)

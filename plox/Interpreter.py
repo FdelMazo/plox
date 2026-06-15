@@ -1,6 +1,5 @@
 from functools import singledispatchmethod
-from typing import Any, Union, cast
-
+from typing import Any, cast
 from .Stmt import (
     Stmt,
     ExpressionStmt,
@@ -11,6 +10,10 @@ from .Stmt import (
     IfStmt,
     WhileStmt,
     ReturnStmt,
+    SwitchStmt,
+    BreakStmt,
+    ContinueStmt,
+    ForStmt,
 )
 from .Expr import (
     DictExpr,
@@ -30,7 +33,7 @@ from .Expr import (
     TernaryExpr,
     PostfixExpr,
 )
-from .Function import Function, ReturnValue
+from .Function import Function, ReturnValue, BreakSignal, ContinueSignal
 from .Token import TokenType
 from .Env import Env
 from . import BUILTIN_FUNCTIONS
@@ -131,11 +134,58 @@ class Interpreter(object):
     def _(self, statement: WhileStmt):
         # El while se implementa con... un while
         while self.is_truthy(self.evaluate(statement.condition)):
-            self.execute(statement.body)
+            try:
+                self.execute(statement.body)
+            except BreakSignal:
+                break
+            except ContinueSignal:
+                continue
+
+    @execute.register
+    def _(self, statement: ForStmt):
+        # El for tiene su propio nodo para que continue ejecute el incremento
+        for_env = Env(enclosing=self.env)
+        previous_env = self.env
+        self.env = for_env
+        try:
+            if statement.initializer is not None:
+                self.execute(statement.initializer)
+            condition = statement.condition
+            while condition is None or self.is_truthy(self.evaluate(condition)):
+                try:
+                    self.execute(statement.body)
+                except BreakSignal:
+                    return
+                except ContinueSignal:
+                    pass
+                # El incremento se ejecuta siempre, incluso si hubo continue
+                if statement.increment is not None:
+                    self.evaluate(statement.increment)
+        finally:
+            self.env = previous_env
+
+    @execute.register
+    def _(self, statement: BreakStmt):
+        raise BreakSignal()
+
+    @execute.register
+    def _(self, statement: ContinueStmt):
+        raise ContinueSignal()
 
     @execute.register
     def _(self, statement: BlockStmt):
         return self.execute_block(statement.statements, Env(enclosing=self.env))
+
+    @execute.register
+    def _(self, statement: SwitchStmt):
+        for case_value, case_body in statement.cases:
+            if self.evaluate_case(case_value):
+                for stmt in case_body:
+                    self.execute(stmt)
+                return
+        if statement.default is not None:
+            for stmt in statement.default:
+                self.execute(stmt)
 
     def execute_block(self, statements: list[Stmt], block_env: Env):
         # Para ejecutar un bloque de statements, tenemos que crear un nuevo entorno
@@ -509,6 +559,9 @@ class Interpreter(object):
         if value is None or value is False:
             return False
         return True
+
+    def evaluate_case(self, subject):
+        return self.is_truthy(self.evaluate(subject))
 
     # Devuelve si los valores recibidos son un número según Lox
     def is_number(self, *values):

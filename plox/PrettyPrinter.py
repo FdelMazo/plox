@@ -11,6 +11,9 @@ from .Stmt import (
     Stmt,
     VarDecl,
     WhileStmt,
+    BreakStmt,
+    ContinueStmt,
+    ForStmt,
 )
 from .Expr import (
     DictExpr,
@@ -138,6 +141,28 @@ class PrettyPrinter:
         self._shift([stmt.condition])
 
         self._store_stmt("body:", "WhileStmt(body)")
+        self._shift([stmt.body])
+
+    @_accept.register
+    def _(self, stmt: BreakStmt):
+        self._store_stmt("", "BreakStmt")
+
+    @_accept.register
+    def _(self, stmt: ContinueStmt):
+        self._store_stmt("", "ContinueStmt")
+
+    @_accept.register
+    def _(self, stmt: ForStmt):
+        self._store_stmt("for:", "ForStmt(init)")
+        if stmt.initializer is not None:
+            self._shift([stmt.initializer])
+        self._store_stmt("cond:", "ForStmt(cond)")
+        if stmt.condition is not None:
+            self._shift([stmt.condition])
+        self._store_stmt("incr:", "ForStmt(incr)")
+        if stmt.increment is not None:
+            self._shift([stmt.increment])
+        self._store_stmt("body:", "ForStmt(body)")
         self._shift([stmt.body])
 
     # ---------- Handlers de Expresiones ---------- #

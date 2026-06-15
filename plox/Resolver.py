@@ -12,6 +12,10 @@ from .Stmt import (
     IfStmt,
     WhileStmt,
     ReturnStmt,
+    SwitchStmt,
+    BreakStmt,
+    ContinueStmt,
+    ForStmt,
 )
 from .Expr import (
     DictExpr,
@@ -172,6 +176,38 @@ class Resolver(object):
     def _(self, statement: WhileStmt):
         self.resolve(statement.condition)
         self.resolve(statement.body)
+
+    @resolve.register
+    def _(self, statement: SwitchStmt):
+        self.resolve(statement.subject)
+        for case_value, case_body in statement.cases:
+            self.resolve(case_value)
+            for stmt in case_body:
+                self.resolve(stmt)
+        if statement.default is not None:
+            for stmt in statement.default:
+                self.resolve(stmt)
+
+    @resolve.register
+    def _(self, statement: ForStmt):
+        # El for abre su propio scope para el inicializador
+        self.begin_scope()
+        if statement.initializer is not None:
+            self.resolve(statement.initializer)
+        if statement.condition is not None:
+            self.resolve(statement.condition)
+        if statement.increment is not None:
+            self.resolve(statement.increment)
+        self.resolve(statement.body)
+        self.end_scope()
+
+    @resolve.register
+    def _(self, statement: BreakStmt):
+        pass
+
+    @resolve.register
+    def _(self, statement: ContinueStmt):
+        pass
 
     # ---------- Resolver Expresiones ---------- #
 

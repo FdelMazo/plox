@@ -27,6 +27,10 @@ from .Stmt import (
     IfStmt,
     WhileStmt,
     ReturnStmt,
+    SwitchStmt,
+    BreakStmt,
+    ContinueStmt,
+    ForStmt,
 )
 
 
@@ -34,6 +38,7 @@ class Parser(object):
     def __init__(self, tokens: list[Token]):
         self.tokens = tokens  # la lista de tokens ya escaneados
         self.current = 0  # el token en el que estamos parados
+        self._loop_depth = 0  # para validar break/continue fuera de bucles
 
     # Obtiene la lista de statements parseados
     def parse(self) -> list[Stmt]:
@@ -62,6 +67,14 @@ class Parser(object):
         if self._match(TokenType.RETURN):
             return self.return_statement()
 
+        # si me cruzo un break, parseo un break statement
+        if self._match(TokenType.BREAK):
+            return self.break_statement()
+
+        # si me cruzo un continue, parseo un continue statement
+        if self._match(TokenType.CONTINUE):
+            return self.continue_statement()
+
         # si me cruzo un if, parseo un if statement
         if self._match(TokenType.IF):
             return self.if_statement()
@@ -74,6 +87,11 @@ class Parser(object):
         if self._match(TokenType.FOR):
             return self.for_statement()
 
+        # si me cruzo un switch, parseo un switch statement
+        if self._match(TokenType.SWITCH):
+            return self.switch_statement()
+
+        # si me cruzo una llave, busco un block statement
         if self._match(TokenType.LEFT_BRACE):
             return self.block_statement()
 
@@ -146,9 +164,87 @@ class Parser(object):
                 f"Expected ')' after condition, got `{self._lookahead()}` instead"
             )
 
+        self._loop_depth += 1
         body = self.statement()
+        self._loop_depth -= 1
 
         return WhileStmt(condition, body)
+
+    # switchStmt    → "switch" "(" expression ")" "{" switchCase* defaultCase? "}" ;
+    # switchCase    → "case" expression ":" statement* ;
+    # defaultCase   → "default" ":" statement* ;
+    def switch_statement(self) -> SwitchStmt:
+        if not self._match(TokenType.LEFT_PAREN):
+            raise SyntaxError(
+                f"Expected '(' after 'switch', got `{self._lookahead()}` instead"
+            )
+
+        subject = self.expression()
+
+        if not self._match(TokenType.RIGHT_PAREN):
+            raise SyntaxError(
+                f"Expected ')' after switch subject, got `{self._lookahead()}` instead"
+            )
+
+        if not self._match(TokenType.LEFT_BRACE):
+            raise SyntaxError(
+                f"Expected '{{' before switch cases, got `{self._lookahead()}` instead"
+            )
+
+        cases: list[tuple[BinaryExpr, list[Stmt]]] = []
+        default: list[Stmt] | None = None
+
+        while (
+            not self._is_at_end()
+            and self._lookahead().token_type != TokenType.RIGHT_BRACE
+        ):
+            if self._match(TokenType.CASE):
+                case_value = self.expression()
+
+                if not self._match(TokenType.COLON):
+                    raise SyntaxError(
+                        f"Expected ':' after case value, got `{self._lookahead()}` instead"
+                    )
+
+                case_body: list[Stmt] = []
+                while not self._is_at_end() and self._lookahead().token_type not in (
+                    TokenType.CASE,
+                    TokenType.DEFAULT,
+                    TokenType.RIGHT_BRACE,
+                ):
+                    case_body.append(self.statement())
+
+                equals = Token(TokenType.EQUAL_EQUAL, lexeme="==", literal=None, line=0)
+                comparation = BinaryExpr(subject, equals, case_value)
+                cases.append((comparation, case_body))
+
+            elif self._match(TokenType.DEFAULT):
+                if not self._match(TokenType.COLON):
+                    raise SyntaxError(
+                        f"Expected ':' after 'default', got `{self._lookahead()}` instead"
+                    )
+
+                default_body: list[Stmt] = []
+                while not self._is_at_end() and self._lookahead().token_type not in (
+                    TokenType.CASE,
+                    TokenType.DEFAULT,
+                    TokenType.RIGHT_BRACE,
+                ):
+                    default_body.append(self.statement())
+
+                default = default_body
+
+            else:
+                raise SyntaxError(
+                    f"Expected 'case' or 'default', got `{self._lookahead()}` instead"
+                )
+
+        if not self._match(TokenType.RIGHT_BRACE):
+            raise SyntaxError(
+                f"Expected '}}' after switch body, got `{self._lookahead()}` instead"
+            )
+
+        return SwitchStmt(subject, cases, default)
 
     # ifStmt        → "if" "(" expression ")" statement ( "else" statement )? ;
     def if_statement(self) -> IfStmt:
@@ -180,11 +276,8 @@ class Parser(object):
     def for_statement(self) -> Stmt:
         # El for se compone de 3 cláusulas: un inicializador, una condición y un incremento
         # Y estas 3 cláusulas son opcionales!
-
-        # En vez de agregar un statement a nuestra gramática, vamos a reutilizar lo que ya tenemos:
-        # implementamos el for como un syntactic sugar de un while.
-        # Parseamos el inicializador, la condición y el incremento, y los agrupamos en un bloque que sea
-        # { inicializador; while (condición) { cuerpo; incremento; } }
+        # Usamos un nodo ForStmt propio (en vez de desugaring a WhileStmt)
+        # para que continue pueda ejecutar el incremento correctamente.
 
         # Después de un for, espero un paréntesis abierto
         if not self._match(TokenType.LEFT_PAREN):
@@ -193,7 +286,7 @@ class Parser(object):
             )
 
         initializer: None | VarDecl | ExpressionStmt = None
-        # Si ya me cruzo un punto y coma, me saltee el inicializaodr
+        # Si ya me cruzo un punto y coma, me salteé el inicializador
         if self._match(TokenType.SEMICOLON):
             initializer = None
         elif self._match(TokenType.VAR):
@@ -221,25 +314,32 @@ class Parser(object):
                 f"Expected ')' after for loop clauses, got `{self._lookahead()}` instead"
             )
 
-        # Tomamos el cuerpo del form
+        # Tomamos el cuerpo del for
+        self._loop_depth += 1
         body = self.statement()
+        self._loop_depth -= 1
 
-        # Si tengo un incremento, lo agrego al final del cuerpo que voy a ejecutar en cada iteración
-        if increment is not None:
-            body = BlockStmt([body, ExpressionStmt(increment)])
+        return ForStmt(initializer, condition, increment, body)
 
-        # Si no tengo una condición, la reemplazo por un literal que siempre evalue a verdadero
-        if condition is None:
-            condition = LiteralExpr(True)
+    # breakStmt     → "break" ";" ;
+    def break_statement(self) -> BreakStmt:
+        if self._loop_depth == 0:
+            raise SyntaxError("Cannot use 'break' outside of a loop")
+        if not self._match(TokenType.SEMICOLON):
+            raise SyntaxError(
+                f"Expected ';' after 'break', got `{self._lookahead()}` instead"
+            )
+        return BreakStmt()
 
-        body = WhileStmt(condition, body)
-
-        # Si tengo un inicializador, entonces reemplazo los statements que tengo por un
-        # bloque que arranque por el inicializador, y después interprete el while
-        if initializer is not None:
-            body = BlockStmt([initializer, body])
-
-        return body
+    # continueStmt  → "continue" ";" ;
+    def continue_statement(self) -> ContinueStmt:
+        if self._loop_depth == 0:
+            raise SyntaxError("Cannot use 'continue' outside of a loop")
+        if not self._match(TokenType.SEMICOLON):
+            raise SyntaxError(
+                f"Expected ';' after 'continue', got `{self._lookahead()}` instead"
+            )
+        return ContinueStmt()
 
     # returnStmt     → "return" expression? ";" ;
     def return_statement(self) -> ReturnStmt:

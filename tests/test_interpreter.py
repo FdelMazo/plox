@@ -317,6 +317,61 @@ def test_len_function():
     assert "Argument of `len` must be an array, dict or string" in str(excinfo.value)
 
 
+def test_switch(capsys):
+    tokens = Scanner("switch (1) { case 1: print 'one'; case 2: print 'two'; }").scan()
+    Interpreter().interpret(Parser(tokens).parse())
+    assert capsys.readouterr().out == "one\n"
+
+    tokens = Scanner("switch (2) { case 1: print 'one'; case 2: print 'two'; }").scan()
+    Interpreter().interpret(Parser(tokens).parse())
+    assert capsys.readouterr().out == "two\n"
+
+    tokens = Scanner("switch ('hello') { case 'hello': print 'matched'; }").scan()
+    Interpreter().interpret(Parser(tokens).parse())
+    assert capsys.readouterr().out == "matched\n"
+
+    # no match and no default — no output
+    tokens = Scanner("switch (99) { case 1: print 'one'; }").scan()
+    Interpreter().interpret(Parser(tokens).parse())
+    assert capsys.readouterr().out == ""
+
+    # no match falls through to default
+    tokens = Scanner(
+        "switch (99) { case 1: print 'one'; default: print 'other'; }"
+    ).scan()
+    Interpreter().interpret(Parser(tokens).parse())
+    assert capsys.readouterr().out == "other\n"
+
+    # default only
+    tokens = Scanner("switch (99) { default: print 'default'; }").scan()
+    Interpreter().interpret(Parser(tokens).parse())
+    assert capsys.readouterr().out == "default\n"
+
+    # no fallthrough — only the matching case runs
+    tokens = Scanner("switch (1) { case 1: print 'a'; case 1: print 'b'; }").scan()
+    Interpreter().interpret(Parser(tokens).parse())
+    assert capsys.readouterr().out == "a\n"
+
+    # multiple statements in a case body
+    tokens = Scanner("switch (1) { case 1: print 'x'; print 'y'; }").scan()
+    Interpreter().interpret(Parser(tokens).parse())
+    assert capsys.readouterr().out == "x\ny\n"
+
+    # subject is an expression, not just a literal
+    tokens = Scanner(
+        "switch (1 + 1) { case 1: print 'one'; case 2: print 'two'; }"
+    ).scan()
+    Interpreter().interpret(Parser(tokens).parse())
+    assert capsys.readouterr().out == "two\n"
+
+    # switch on a variable
+    tokens = Scanner(
+        "var x = 3; switch (x) { case 3: print 'three'; default: print 'other'; }"
+    ).scan()
+    Interpreter().interpret(Parser(tokens).parse())
+    assert capsys.readouterr().out == "three\n"
+
+
 def test_const():
     tokens = Scanner("const x = 42;").scan()
     stmts = Parser(tokens).parse()
@@ -562,3 +617,117 @@ def test_const_dict():
     with pytest.raises(RuntimeError) as excinfo:
         interp.interpret(stmts)
     assert "Cannot assign to constant 'e'" in str(excinfo.value)
+
+
+def _run(src: str, capsys) -> str:
+    """Helper: interpreta src y devuelve lo impreso."""
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    Interpreter().interpret(stmts)
+    return capsys.readouterr().out
+
+
+def _run_with_resolver(src: str, capsys) -> str:
+    """Helper: interpreta src con Resolver (necesario cuando hay variables en scope anidado)."""
+    from plox.Resolver import Resolver
+
+    tokens = Scanner(src).scan()
+    stmts = Parser(tokens).parse()
+    interp = Interpreter()
+    resolver = Resolver(interp)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+    interp.interpret(stmts)
+    return capsys.readouterr().out
+
+
+def test_break_in_while(capsys):
+    result = _run(
+        "var i = 0; while (true) { if (i == 3) break; print i; i = i + 1; }", capsys
+    )
+    assert result == "0.0\n1.0\n2.0\n"
+
+
+def test_break_in_while_never_entered(capsys):
+    result = _run("var i = 0; while (false) { break; print i; }", capsys)
+    assert result == ""
+
+
+def test_continue_in_while(capsys):
+    result = _run(
+        "var i = 0; while (i < 5) { i = i + 1; if (i == 3) continue; print i; }", capsys
+    )
+    assert result == "1.0\n2.0\n4.0\n5.0\n"
+
+
+def test_break_in_for(capsys):
+    result = _run_with_resolver(
+        "for (var i = 0; i < 5; i = i + 1) { if (i == 3) break; print i; }",
+        capsys,
+    )
+    assert result == "0.0\n1.0\n2.0\n"
+
+
+def test_continue_in_for(capsys):
+    # continue en for: el incremento (i = i + 1) debe ejecutarse igual
+    result = _run_with_resolver(
+        "for (var i = 0; i < 5; i = i + 1) { if (i == 2) continue; print i; }",
+        capsys,
+    )
+    assert result == "0.0\n1.0\n3.0\n4.0\n"
+
+
+def test_break_only_innermost_loop(capsys):
+    result = _run_with_resolver(
+        "for (var i = 0; i < 3; i = i + 1) {"
+        "  for (var j = 0; j < 3; j = j + 1) { if (j == 1) break; print j; }"
+        "  print i;"
+        "}",
+        capsys,
+    )
+    assert result == "0.0\n0.0\n0.0\n1.0\n0.0\n2.0\n"
+
+
+def test_continue_only_innermost_loop(capsys):
+    result = _run_with_resolver(
+        "for (var i = 0; i < 2; i = i + 1) {"
+        "  for (var j = 0; j < 3; j = j + 1) { if (j == 1) continue; print j; }"
+        "  print i;"
+        "}",
+        capsys,
+    )
+    assert result == "0.0\n2.0\n0.0\n0.0\n2.0\n1.0\n"
+
+
+def test_break_outside_loop_raises():
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(Scanner("break;").scan()).parse()
+    assert "outside of a loop" in str(excinfo.value)
+
+
+def test_continue_outside_loop_raises():
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(Scanner("continue;").scan()).parse()
+    assert "outside of a loop" in str(excinfo.value)
+
+
+def test_break_outside_loop_inside_function_raises():
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(Scanner("fun f() { break; }").scan()).parse()
+    assert "outside of a loop" in str(excinfo.value)
+
+
+def test_continue_outside_loop_inside_function_raises():
+    with pytest.raises(SyntaxError) as excinfo:
+        Parser(Scanner("fun f() { continue; }").scan()).parse()
+    assert "outside of a loop" in str(excinfo.value)
+
+
+def test_break_for_infinite_loop(capsys):
+    result = _run_with_resolver(
+        "var count = 0;"
+        "for (;;) { if (count == 3) break; count = count + 1; }"
+        "print count;",
+        capsys,
+    )
+    assert result == "3.0\n"

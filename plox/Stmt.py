@@ -1,4 +1,4 @@
-from .Expr import Expr
+from .Expr import BinaryExpr, Expr
 from .Token import Token
 
 
@@ -89,3 +89,50 @@ class WhileStmt(Stmt):
 
     def __repr__(self) -> str:
         return f"WHILE {self.condition} {self.body}"
+
+
+# switchStmt    → "switch" "(" expression ")" "{" switchCase* defaultCase? "}" ;
+# switchCase    → "case" expression ":" statement* ;
+# defaultCase   → "default" ":" statement* ;
+class SwitchStmt(Stmt):
+    def __init__(
+        self,
+        subject: Expr,
+        cases: list[tuple[BinaryExpr, list[Stmt]]],
+        default: list[Stmt] | None,
+    ):
+        self.subject = subject
+        self.cases = cases  # list of (case_value_expr, case_body_stmts)
+        self.default = default
+
+    def __repr__(self) -> str:
+        cases_str = "; ".join(f"CASE {val}: {stmts}" for val, stmts in self.cases)
+        default_str = f" DEFAULT: {self.default}" if self.default is not None else ""
+        return f"SWITCH {self.subject} {{ {cases_str}{default_str} }}"
+
+
+# breakStmt     → "break" ";" ;
+class BreakStmt(Stmt):
+    def __repr__(self) -> str:
+        return "BREAK"
+
+
+# continueStmt  → "continue" ";" ;
+class ContinueStmt(Stmt):
+    def __repr__(self) -> str:
+        return "CONTINUE"
+
+
+# forStmt  → "for" "(" (varDecl | exprStmt | ";") expr? ";" expr? ")" statement ;
+# Se mantiene como nodo propio para que continue pueda ejecutar el incremento
+class ForStmt(Stmt):
+    def __init__(self, initializer, condition, increment, body):
+        self.initializer = initializer
+        self.condition = condition
+        self.increment = increment
+        self.body = body
+
+    def __repr__(self) -> str:
+        return (
+            f"FOR ({self.initializer}; {self.condition}; {self.increment}) {self.body}"
+        )
