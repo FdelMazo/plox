@@ -111,3 +111,26 @@ class SwitchStmt(Stmt):
         )
         default_str = f" DEFAULT: {self.default}" if self.default is not None else ""
         return f"SWITCH {self.subject} {{ {cases_str}{default_str} }}"
+# breakStmt     → "break" ";" ;
+class BreakStmt(Stmt):
+    def __repr__(self) -> str:
+        return "BREAK"
+
+
+# continueStmt  → "continue" ";" ;
+class ContinueStmt(Stmt):
+    def __repr__(self) -> str:
+        return "CONTINUE"
+
+
+# forStmt  → "for" "(" (varDecl | exprStmt | ";") expr? ";" expr? ")" statement ;
+# Se mantiene como nodo propio para que continue pueda ejecutar el incremento
+class ForStmt(Stmt):
+    def __init__(self, initializer, condition, increment, body):
+        self.initializer = initializer
+        self.condition = condition
+        self.increment = increment
+        self.body = body
+
+    def __repr__(self) -> str:
+        return f"FOR ({self.initializer}; {self.condition}; {self.increment}) {self.body}"

@@ -116,7 +116,7 @@ def test_identifiers():
 
 def test_keywords():
     tokens = Scanner(
-        "and else false fun for if nil or print return true var while const"
+        "and else false fun for if nil or print return true var while const break continue"
     ).scan()
     tokens_type = [token.token_type for token in tokens]
 
@@ -135,6 +135,8 @@ def test_keywords():
         TokenType.VAR,
         TokenType.WHILE,
         TokenType.CONST,
+        TokenType.BREAK,
+        TokenType.CONTINUE,
         TokenType.EOF,
     ]
 
