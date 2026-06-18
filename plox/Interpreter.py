@@ -1,7 +1,7 @@
 from functools import singledispatchmethod
 from typing import Any, cast
 
-from plox.Utils import golden_rule_print
+from plox.Utils import golden_rule_print, stringify
 from .Stmt import (
     Stmt,
     ExpressionStmt,
@@ -256,7 +256,7 @@ class Interpreter(object):
                 # El operador - solo funciona sobre números
                 if not self.is_number(right):
                     raise RuntimeError(
-                        f"Operand of - must be a number, got: `-{right}`"
+                        f"Operand of - must be a number, got: `-{stringify(right)}`"
                     )
                 return -right
             case TokenType.BANG:
@@ -292,6 +292,8 @@ class Interpreter(object):
         # evaluamos y chequeamos todo y luego levantamos el error.
         left = self.evaluate(expression.left)
         right = self.evaluate(expression.right)
+        left_stringified = stringify(left)
+        right_stringified = stringify(right)
 
         # Es acá donde más ojo hay que poner en qué utilizamos del lenguaje de la implementación,
         # y sobre qué agregamos lógica propia.
@@ -318,65 +320,67 @@ class Interpreter(object):
                 # Es decir, en Lox, "a" + 1 es un error. (en JavaScript, por ejemplo, sería "a1").
                 if not self.is_number(left, right) and not self.is_string(left, right):
                     raise RuntimeError(
-                        f"Operands of + must be either numbers or strings, got: `{left} + {right}`"
+                        f"Operands of + must be either numbers or strings, got: `{left_stringified} + {right_stringified}`"
                     )
                 return left + right
             case TokenType.MINUS:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of - must be numbers, got: `{left} - {right}`"
+                        f"Operands of - must be numbers, got: `{left_stringified} - {right_stringified}`"
                     )
                 return left - right
             case TokenType.STAR:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of * must be numbers, got: `{left} * {right}`"
+                        f"Operands of * must be numbers, got: `{left_stringified} * {right_stringified}`"
                     )
                 return left * right
             case TokenType.SLASH:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of / must be numbers, got: `{left} / {right}`"
+                        f"Operands of / must be numbers, got: `{left_stringified} / {right_stringified}`"
                     )
                 elif right == 0:
-                    raise RuntimeError(f"Division by {right} is not allowed")
+                    raise RuntimeError(
+                        f"Division by {right_stringified} is not allowed"
+                    )
                 return left / right
             case TokenType.STAR_STAR:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of ** must be numbers, got: `{left} ** {right}`"
+                        f"Operands of ** must be numbers, got: `{left_stringified} ** {right_stringified}`"
                     )
                 return left**right
             case TokenType.PERCENT:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of % must be numbers, got: `{left} % {right}`"
+                        f"Operands of % must be numbers, got: `{left_stringified} % {right_stringified}`"
                     )
                 elif right == 0:
-                    raise RuntimeError(f"Modulo by {right} is not allowed")
+                    raise RuntimeError(f"Modulo by {right_stringified} is not allowed")
                 return left % right
             case TokenType.GREATER:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of > must be numbers, got: `{left} > {right}`"
+                        f"Operands of > must be numbers, got: `{left_stringified} > {right_stringified}`"
                     )
                 return left > right
             case TokenType.GREATER_EQUAL:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of >= must be numbers, got: `{left} >= {right}`"
+                        f"Operands of >= must be numbers, got: `{left_stringified} >= {right_stringified}`"
                     )
                 return left >= right
             case TokenType.LESS:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of < must be numbers, got: `{left} < {right}`"
+                        f"Operands of < must be numbers, got: `{left_stringified} < {right_stringified}`"
                     )
                 return left < right
             case TokenType.LESS_EQUAL:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of <= must be numbers, got: `{left} <= {right}`"
+                        f"Operands of <= must be numbers, got: `{left_stringified} <= {right_stringified}`"
                     )
                 return left <= right
             case TokenType.EQUAL_EQUAL:
@@ -418,7 +422,9 @@ class Interpreter(object):
 
         # Si el llamado no es una función, levantamos un error
         if not callable(callee):
-            raise RuntimeError(f"Cannot call non-callable object: `{callee}`")
+            raise RuntimeError(
+                f"Cannot call non-callable object: `{stringify(callee)}`"
+            )
 
         # Si no se cumple la aridad, levantamos un error
         if len(arguments) != callee.arity:
@@ -445,7 +451,7 @@ class Interpreter(object):
 
                 if not self.is_valid_dict_key(index):
                     raise RuntimeError(
-                        f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{index}`"
+                        f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{stringify(index)}`"
                     )
 
                 return dictionary.get(index)
@@ -457,7 +463,7 @@ class Interpreter(object):
 
             case _:
                 raise RuntimeError(
-                    f"Only arrays, dictionaries and strings support indexing, got: `{target}`"
+                    f"Only arrays, dictionaries and strings support indexing, got: `{stringify(target)}`"
                 )
 
     @evaluate.register
@@ -469,7 +475,7 @@ class Interpreter(object):
                 index = self.evaluate(expression.index)
                 if not self.is_valid_dict_key(index):
                     raise RuntimeError(
-                        f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{index}`"
+                        f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{stringify(index)}`"
                     )
 
                 value = self.evaluate(expression.value)
@@ -486,7 +492,7 @@ class Interpreter(object):
 
             case _:
                 raise RuntimeError(
-                    f"Only arrays, dictionaries and strings support index assignment, got: `{target}`"
+                    f"Only arrays, dictionaries and strings support index assignment, got: `{stringify(target)}`"
                 )
 
     @evaluate.register
@@ -540,7 +546,7 @@ class Interpreter(object):
             evaluated_key = self.evaluate(key)
             if not self.is_valid_dict_key(evaluated_key):
                 raise RuntimeError(
-                    f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{evaluated_key}`"
+                    f"Only strings, numbers, booleans and nil can be used as dictionary keys, got: `{stringify(evaluated_key)}`"
                 )
 
             evaluated_value = self.evaluate(value)
@@ -577,13 +583,15 @@ class Interpreter(object):
         index_type = type(index)
         is_numeric = index_type == int or index_type == float
         if not (is_numeric and int(index) == index and index >= 0):
-            raise RuntimeError(f"Index must be a positive whole number, got: `{index}`")
+            raise RuntimeError(
+                f"Index must be a positive whole number, got: `{stringify(index)}`"
+            )
 
         index = int(index)
         # Revisamos que no esté fuera de rango
         if index >= indexable_length:
             raise RuntimeError(
-                f"Index out of range (len: {indexable_length}, index: {index})"
+                f"Index out of range (len: {stringify(indexable_length)}, index: {stringify(index)})"
             )
 
         return index
@@ -653,14 +661,18 @@ class Interpreter(object):
         nil -> "nil"
         number -> str de Python
         string -> string
+        dict -> [clave1: valor1, clave2: valor2, ...]
+        array -> [elem1, elem2, ...]
+        cualquier otro valor -> error
         """
-        if isinstance(value, bool):
-            return "true" if value else "false"
-        elif value is None:
-            return "nil"
-        elif self.is_number(value):
-            return str(float(value))
-        elif self.is_string(value):
-            return value
+        if (
+            isinstance(value, bool)
+            or value is None
+            or self.is_number(value)
+            or self.is_string(value)
+            or isinstance(value, dict)
+            or isinstance(value, list)
+        ):
+            return stringify(value)
         else:
-            raise RuntimeError(f"Cannot cast {value} to string")
+            raise RuntimeError(f"Cannot cast {stringify(value)} to string")
