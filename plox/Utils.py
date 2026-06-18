@@ -25,7 +25,9 @@ def stringify(value: Any) -> str:
             return f"{'[' + items + ']'}"
         case str():
             return f"'{value}'"
-        case int():
-            return f"{value}.0"
+        case int() | float():
+            if isinstance(value, float) and value.is_integer():
+                return str(int(value))
+            return str(value)
         case _:
             return str(value)

@@ -169,10 +169,10 @@ def test_casting():
         ("string true", "true"),
         ("string false", "false"),
         ("string nil", "nil"),
-        ("string 42", "42.0"),
-        ("string 5.0", "5.0"),
+        ("string 42", "42"),
+        ("string 5.0", "5"),
         # nested casting
-        ('string(number "42")', "42.0"),
+        ('string(number "42")', "42"),
         ('bool(number "0")', True),
         ("bool(bool false)", False),
         ("number(string 3.19)", 3.19),
@@ -645,7 +645,7 @@ def test_break_in_while(capsys):
     result = _run(
         "var i = 0; while (true) { if (i == 3) break; print i; i = i + 1; }", capsys
     )
-    assert result == "0.0\n1.0\n2.0\n"
+    assert result == "0\n1\n2\n"
 
 
 def test_break_in_while_never_entered(capsys):
@@ -657,7 +657,7 @@ def test_continue_in_while(capsys):
     result = _run(
         "var i = 0; while (i < 5) { i = i + 1; if (i == 3) continue; print i; }", capsys
     )
-    assert result == "1.0\n2.0\n4.0\n5.0\n"
+    assert result == "1\n2\n4\n5\n"
 
 
 def test_break_in_for(capsys):
@@ -665,7 +665,7 @@ def test_break_in_for(capsys):
         "for (var i = 0; i < 5; i = i + 1) { if (i == 3) break; print i; }",
         capsys,
     )
-    assert result == "0.0\n1.0\n2.0\n"
+    assert result == "0\n1\n2\n"
 
 
 def test_continue_in_for(capsys):
@@ -674,7 +674,7 @@ def test_continue_in_for(capsys):
         "for (var i = 0; i < 5; i = i + 1) { if (i == 2) continue; print i; }",
         capsys,
     )
-    assert result == "0.0\n1.0\n3.0\n4.0\n"
+    assert result == "0\n1\n3\n4\n"
 
 
 def test_break_only_innermost_loop(capsys):
@@ -685,7 +685,7 @@ def test_break_only_innermost_loop(capsys):
         "}",
         capsys,
     )
-    assert result == "0.0\n0.0\n0.0\n1.0\n0.0\n2.0\n"
+    assert result == "0\n0\n0\n1\n0\n2\n"
 
 
 def test_continue_only_innermost_loop(capsys):
@@ -696,7 +696,7 @@ def test_continue_only_innermost_loop(capsys):
         "}",
         capsys,
     )
-    assert result == "0.0\n2.0\n0.0\n0.0\n2.0\n1.0\n"
+    assert result == "0\n2\n0\n0\n2\n1\n"
 
 
 def test_break_outside_loop_raises():
@@ -730,7 +730,7 @@ def test_break_for_infinite_loop(capsys):
         "print count;",
         capsys,
     )
-    assert result == "3.0\n"
+    assert result == "3\n"
 
 
 def test_golden_rule(capsys):
@@ -745,8 +745,7 @@ def test_golden_rule(capsys):
     tokens = Parser(Scanner("print 5;").scan()).parse()
     interpreter.interpret(tokens)
     out = capsys.readouterr().out
-    assert out == "5.0\n"
-    assert out != "5\n"
+    assert out == "5\n"
 
     # float
     tokens = Parser(Scanner("print 3.14;").scan()).parse()
@@ -756,7 +755,7 @@ def test_golden_rule(capsys):
     # array
     tokens = Parser(Scanner("print [1, 2, 3];").scan()).parse()
     interpreter.interpret(tokens)
-    assert capsys.readouterr().out == "[1.0, 2.0, 3.0]\n"
+    assert capsys.readouterr().out == "[1, 2, 3]\n"
 
     # nil
     tokens = Parser(Scanner("print nil;").scan()).parse()
@@ -782,5 +781,5 @@ def test_golden_rule(capsys):
     tokens = Parser(Scanner('print ["a": 1, "b": 2];').scan()).parse()
     interpreter.interpret(tokens)
     out = capsys.readouterr().out
-    assert out == "['a': 1.0, 'b': 2.0]\n"
-    assert out != "{'a': 1.0, 'b': 2.0}\n"
+    assert out == "['a': 1, 'b': 2]\n"
+    assert out != "{'a': 1, 'b': 2}\n"
