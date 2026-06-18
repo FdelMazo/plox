@@ -1,5 +1,7 @@
 from functools import singledispatchmethod
 from typing import Any, cast
+
+from plox.Utils import golden_rule_print
 from .Stmt import (
     Stmt,
     ExpressionStmt,
@@ -88,7 +90,7 @@ class Interpreter(object):
     def _(self, statement: PrintStmt):
         # Ejecutar un print statement es evaluar la expresión e imprimir el resultado
         value = self.evaluate(statement.expression)
-        print(value)
+        golden_rule_print(value)
 
     @execute.register
     def _(self, statement: VarDecl):

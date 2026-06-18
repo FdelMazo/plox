@@ -320,15 +320,15 @@ def test_len_function():
 def test_switch(capsys):
     tokens = Scanner("switch (1) { case 1: print 'one'; case 2: print 'two'; }").scan()
     Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "one\n"
+    assert capsys.readouterr().out == "'one'\n"
 
     tokens = Scanner("switch (2) { case 1: print 'one'; case 2: print 'two'; }").scan()
     Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "two\n"
+    assert capsys.readouterr().out == "'two'\n"
 
     tokens = Scanner("switch ('hello') { case 'hello': print 'matched'; }").scan()
     Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "matched\n"
+    assert capsys.readouterr().out == "'matched'\n"
 
     # no match and no default — no output
     tokens = Scanner("switch (99) { case 1: print 'one'; }").scan()
@@ -340,36 +340,36 @@ def test_switch(capsys):
         "switch (99) { case 1: print 'one'; default: print 'other'; }"
     ).scan()
     Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "other\n"
+    assert capsys.readouterr().out == "'other'\n"
 
     # default only
     tokens = Scanner("switch (99) { default: print 'default'; }").scan()
     Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "default\n"
+    assert capsys.readouterr().out == "'default'\n"
 
     # no fallthrough — only the matching case runs
     tokens = Scanner("switch (1) { case 1: print 'a'; case 1: print 'b'; }").scan()
     Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "a\n"
+    assert capsys.readouterr().out == "'a'\n"
 
     # multiple statements in a case body
     tokens = Scanner("switch (1) { case 1: print 'x'; print 'y'; }").scan()
     Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "x\ny\n"
+    assert capsys.readouterr().out == "'x'\n'y'\n"
 
     # subject is an expression, not just a literal
     tokens = Scanner(
         "switch (1 + 1) { case 1: print 'one'; case 2: print 'two'; }"
     ).scan()
     Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "two\n"
+    assert capsys.readouterr().out == "'two'\n"
 
     # switch on a variable
     tokens = Scanner(
         "var x = 3; switch (x) { case 3: print 'three'; default: print 'other'; }"
     ).scan()
     Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "three\n"
+    assert capsys.readouterr().out == "'three'\n"
 
 
 def test_const():
@@ -731,3 +731,56 @@ def test_break_for_infinite_loop(capsys):
         capsys,
     )
     assert result == "3.0\n"
+
+
+def test_golden_rule(capsys):
+    interpreter = Interpreter()
+
+    # string
+    tokens = Parser(Scanner('print "esto es un string";').scan()).parse()
+    interpreter.interpret(tokens)
+    assert capsys.readouterr().out == "'esto es un string'\n"
+
+    # int
+    tokens = Parser(Scanner("print 5;").scan()).parse()
+    interpreter.interpret(tokens)
+    out = capsys.readouterr().out
+    assert out == "5.0\n"
+    assert out != "5\n"
+
+    # float
+    tokens = Parser(Scanner("print 3.14;").scan()).parse()
+    interpreter.interpret(tokens)
+    assert capsys.readouterr().out == "3.14\n"
+
+    # array
+    tokens = Parser(Scanner("print [1, 2, 3];").scan()).parse()
+    interpreter.interpret(tokens)
+    assert capsys.readouterr().out == "[1.0, 2.0, 3.0]\n"
+
+    # nil
+    tokens = Parser(Scanner("print nil;").scan()).parse()
+    interpreter.interpret(tokens)
+    out = capsys.readouterr().out
+    assert out == "nil\n"
+    assert out != "None\n"
+
+    # bool
+    tokens = Parser(Scanner("print true;").scan()).parse()
+    interpreter.interpret(tokens)
+    out = capsys.readouterr().out
+    assert out == "true\n"
+    assert out != "True\n"
+
+    tokens = Parser(Scanner("print false;").scan()).parse()
+    interpreter.interpret(tokens)
+    out = capsys.readouterr().out
+    assert out == "false\n"
+    assert out != "False\n"
+
+    # dict
+    tokens = Parser(Scanner('print ["a": 1, "b": 2];').scan()).parse()
+    interpreter.interpret(tokens)
+    out = capsys.readouterr().out
+    assert out == "['a': 1.0, 'b': 2.0]\n"
+    assert out != "{'a': 1.0, 'b': 2.0}\n"

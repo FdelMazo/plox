@@ -1,0 +1,31 @@
+from typing import Any
+
+
+def golden_rule_print(*args, **kwargs):
+    transformed_args = (_stringify(arg) for arg in args)
+
+    print(*transformed_args, **kwargs)  # type: ignore
+
+
+def _stringify(value: Any) -> str:
+    """
+    Golden rule: Convierte cualquier valor de Python a una representación de cadena que se parezca a cómo se mostraría en Lox.
+    """
+    match value:
+        case None:
+            return "nil"
+        case bool():
+            return "true" if value else "false"
+        case list():
+            return f"[{', '.join(_stringify(element) for element in value)}]"
+        case dict():
+            items = ", ".join(
+                f"{_stringify(k)}: {_stringify(v)}" for k, v in value.items()
+            )
+            return f"{'[' + items + ']'}"
+        case str():
+            return f"'{value}'"
+        case int():
+            return f"{value}.0"
+        case _:
+            return str(value)
