@@ -24,6 +24,7 @@ from .Expr import (
     GroupingExpr,
     IndexAssignExpr,
     ArrayExpr,
+    JoinedStringExpr,
     LiteralExpr,
     UnaryExpr,
     CastExpr,
@@ -320,3 +321,8 @@ class Resolver(object):
     def _(self, expr: ArrayExpr):
         for element in expr.elements:
             self.resolve(element)
+
+    @resolve.register
+    def _(self, expr: JoinedStringExpr):
+        for part in expr.parts:
+            self.resolve(part)
