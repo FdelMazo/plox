@@ -44,6 +44,15 @@ class LiteralExpr(Expr):
         return str(self.value)
 
 
+class JoinedStringExpr(Expr):
+    def __init__(self, parts: list[Expr]):
+        self.parts = parts
+
+    def __repr__(self) -> str:
+        parts_str = " + ".join(str(part) for part in self.parts)
+        return f"<{parts_str}>"
+
+
 # unary          → ( "-" | "!" ) expression ;
 class UnaryExpr(Expr):
     def __init__(self, operator: Token, right: Expr):
