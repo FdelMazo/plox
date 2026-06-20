@@ -12,6 +12,8 @@ from termcolor import colored
 from pathlib import Path
 from platformdirs import user_data_dir
 
+from plox.Utils import golden_rule_print
+
 
 class Plox:
     def __init__(self):
@@ -88,7 +90,7 @@ class Plox:
         try:
             lastvalue_produced = self.interpreter.interpret(statements)
             if self.in_repl and lastvalue_produced is not None:
-                print(lastvalue_produced)
+                golden_rule_print(lastvalue_produced)
         except Exception as e:
             if self.debug:
                 traceback.print_exc()
