@@ -252,9 +252,9 @@ class Scanner(object):
         o si no, consume el cierre del string y lo guarda como token.
         Maneja la interpolación de strings, que tiene la forma `${expresion}`.
         Si encuentra una interpolacion, se encarga de empaquetar el string para que los tokens queden ordenados
-        de la forma [ INTERPOLATION_START, STRING, ..., INTERPOLATION_END ].
+        de la forma [ STRING, INTERPOLATION_START, ..., INTERPOLATION_END, STRING ].
         Por ejemplo, para el caso "hola ${nombre}!", los tokens serían:
-        [ INTERPOLATION_START, STRING<'hola '>, IDENTIFIER<nombre>, STRING<'!'>, INTERPOLATION_END ]
+        [ STRING<'hola '>, INTERPOLATION_START, IDENTIFIER<nombre>, INTERPOLATION_END, STRING<'!'> ]
         """
         has_interpolation = False
 
@@ -262,7 +262,8 @@ class Scanner(object):
             if self._lookahead() == "$" and self._lookahead_next() == "{":
                 # Si no es la primera interpolacion, no agregamos offset al literal
                 # Esto skippeaba el char despues de '}' y algo como
-                # "${var} hola ${var2}" resultaba en [ INTERPOLATION_START, IDENTIFIER<var>, STRING<'hola ', IDENTIFIER<var2>, INTERPOLATION_END ]
+                # "${var} hola ${var2}" resultaba en
+                # [ STRING<>, INTERPOLATION_START, IDENTIFIER<var>, INTERPOLATION_END, STRING<'hola '>, ... ]
                 # Notar la falta de espacio antes de 'hola ' en STRING<'hola '>
                 start_offset = 1 if not has_interpolation else 0
                 str_literal = self.source[self.start + start_offset : self.current]
