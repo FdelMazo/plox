@@ -25,6 +25,7 @@ from .Expr import (
     IndexExpr,
     GroupingExpr,
     ArrayExpr,
+    JoinedStringExpr,
     LiteralExpr,
     LogicExpr,
     PostfixExpr,
@@ -243,6 +244,11 @@ class PrettyPrinter:
     @_accept.register
     def _(self, expr: ArrayExpr):
         self._store_expr("[...]", "ArrayExpr")
+
+    @_accept.register
+    def _(self, expr: JoinedStringExpr):
+        self._store_expr("joined string", "JoinedStringExpr")
+        self._branch(Branch.MID, reversed(expr.parts))
 
     # ---------- Helpers ---------- #
 
