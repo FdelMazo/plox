@@ -2,6 +2,7 @@ import pytest
 from plox.Expr import (
     BinaryExpr,
     GroupingExpr,
+    JoinedStringExpr,
     LiteralExpr,
     UnaryExpr,
     AssignmentExpr,
@@ -729,3 +730,160 @@ def test_switch_errors():
     with pytest.raises(SyntaxError) as excinfo:
         Parser(tokens).parse()
     assert "Expected ':'" in str(excinfo.value)
+
+
+def test_string_interpolation_simple():
+    tokens = Scanner('"hola, ${mundo}!";').scan()
+    stmts = Parser(tokens).parse()
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], ExpressionStmt)
+    assert isinstance(stmts[0].expression, JoinedStringExpr)
+    for part in stmts[0].expression.parts:
+        if isinstance(part, LiteralExpr):
+            assert part.value in ["hola, ", "!"]
+        elif isinstance(part, VariableExpr):
+            assert part.name.lexeme == "mundo"
+        else:
+            assert False, f"Unexpected part type: {type(part)}"
+
+
+def test_string_interpolation_with_ternary():
+    tokens = Scanner('"hola, ${condicion ? "amigo" : "desconocido"}!";').scan()
+    stmts = Parser(tokens).parse()
+
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], ExpressionStmt)
+    assert isinstance(stmts[0].expression, JoinedStringExpr)
+    for part in stmts[0].expression.parts:
+        if isinstance(part, LiteralExpr):
+            assert part.value in ["hola, ", "!"]
+        elif isinstance(part, TernaryExpr):
+            assert isinstance(part.condition, VariableExpr)
+            assert part.condition.name.lexeme == "condicion"
+            assert isinstance(part.true_branch, LiteralExpr)
+            assert part.true_branch.value == "amigo"
+            assert isinstance(part.false_branch, LiteralExpr)
+            assert part.false_branch.value == "desconocido"
+        else:
+            assert False, f"Unexpected part type: {type(part)}"
+
+
+def test_string_interpolation_double():
+    tokens = Scanner('"hola, ${mundo} por parte de ${quien}!";').scan()
+    stmts = Parser(tokens).parse()
+
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], ExpressionStmt)
+    assert isinstance(stmts[0].expression, JoinedStringExpr)
+    for part in stmts[0].expression.parts:
+        if isinstance(part, LiteralExpr):
+            assert part.value in ["hola, ", " por parte de ", "!"]
+        elif isinstance(part, VariableExpr):
+            assert part.name.lexeme in ["mundo", "quien"]
+        else:
+            assert False, f"Unexpected part type: {type(part)}"
+
+
+def test_string_interpolation_recursive():
+    tokens = Scanner('"hola, ${"mundo ${quien}!"}";').scan()
+    stmts = Parser(tokens).parse()
+
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], ExpressionStmt)
+    assert isinstance(stmts[0].expression, JoinedStringExpr)
+    for part in stmts[0].expression.parts:
+        if isinstance(part, LiteralExpr):
+            assert part.value in ["hola, ", ""]
+        elif isinstance(part, JoinedStringExpr):
+            inner_parts = part.parts
+            assert len(inner_parts) == 3
+            assert isinstance(inner_parts[0], LiteralExpr)
+            assert inner_parts[0].value == "mundo "
+            assert isinstance(inner_parts[1], VariableExpr)
+            assert inner_parts[1].name.lexeme == "quien"
+            assert isinstance(inner_parts[2], LiteralExpr)
+            assert inner_parts[2].value == "!"
+        else:
+            assert False, f"Unexpected part type: {type(part)}"
+
+
+def test_string_interpolation_nested_100_deep():
+    DEPTH = 10
+    interpolation = '"${' * DEPTH + "x" + '}"' * DEPTH + ";"
+    tokens = Scanner(interpolation).scan()
+    stmts = Parser(tokens).parse()
+
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], ExpressionStmt)
+    assert isinstance(stmts[0].expression, JoinedStringExpr)
+    ref = stmts[0].expression
+    for _ in range(DEPTH - 1):
+        part = ref.parts[1]
+        assert isinstance(part, JoinedStringExpr)
+        ref = part
+    assert isinstance(ref.parts[1], VariableExpr)
+    assert ref.parts[1].name.lexeme == "x"
+
+
+def test_string_interpolation_only_allows_expressions():
+    tokens = Scanner(
+        '"hola, ${fun obtener_nombre() {return "plox";} obtener_nombre()}!";'
+    ).scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected expression, got `FUN` instead" in str(excinfo.value)
+
+    tokens = Scanner('"hola, ${var x = 5;}!";').scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected expression, got `VAR` instead" in str(excinfo.value)
+
+    tokens = Scanner('"hola, ${if (cond) print 1;}!";').scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected expression, got `IF` instead" in str(excinfo.value)
+
+    tokens = Scanner('"hola, ${for (var i = 0; i < 3; i = i + 1) print i;}!";').scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected expression, got `FOR` instead" in str(excinfo.value)
+
+    tokens = Scanner('"hola, ${switch (x) { case 1: print 1; }}!";').scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected expression, got `SWITCH` instead" in str(excinfo.value)
+
+    tokens = Scanner('"hola, ${return 5;}!";').scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected expression, got `RETURN` instead" in str(excinfo.value)
+
+    tokens = Scanner('"hola, ${break;}!";').scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected expression, got `BREAK` instead" in str(excinfo.value)
+
+    tokens = Scanner('"hola, ${continue;}!";').scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected expression, got `CONTINUE` instead" in str(excinfo.value)
+
+    tokens = Scanner('"hola, ${while (cond) print 1;}!";').scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected expression, got `WHILE` instead" in str(excinfo.value)
+
+    tokens = Scanner('"hola, ${ { print 1; } }!";').scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert "Expected expression, got `LEFT_BRACE` instead" in str(excinfo.value)
+
+
+def test_string_interpolation_allow_only_one_expression():
+    tokens = Scanner('"${1 2 3}"').scan()
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens).parse()
+    assert (
+        "Expected '}' after interpolated expression, got `NUMBER<2.0>` instead"
+        in str(excinfo.value)
+    )

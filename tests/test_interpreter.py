@@ -783,3 +783,199 @@ def test_golden_rule(capsys):
     out = capsys.readouterr().out
     assert out == "['a': 1, 'b': 2]\n"
     assert out != "{'a': 1, 'b': 2}\n"
+
+
+def test_string_interpolation_simple(capsys):
+    tokens = Scanner('const mundo = "Mundo"; print "hola, ${mundo}!";').scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'hola, Mundo!'\n"
+
+
+def test_string_interpolation_with_ternary(capsys):
+    tokens = Scanner('print "hola, ${true ? "amigo" : "desconocido"}!";').scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'hola, amigo!'\n"
+
+    tokens = Scanner('print "hola, ${false ? "amigo" : "desconocido"}!";').scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'hola, desconocido!'\n"
+
+
+def test_string_interpolation_double(capsys):
+    tokens = Scanner(
+        'const mundo = "Mundo"; const quien = "Plox"; print "hola, ${mundo} por parte de ${quien}!";'
+    ).scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'hola, Mundo por parte de Plox!'\n"
+
+
+def test_string_interpolation_recursive(capsys):
+    tokens = Scanner(
+        'const mundostr = "Mundo"; const quien = "Plox"; print "hola, ${"mundostr ${quien}!"}";'
+    ).scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'hola, mundostr Plox!'\n"
+
+
+def test_string_interpolation_nested_100_deep(capsys):
+    DEPTH = 10
+    interpolation = '"${' * DEPTH + "x" + '}"' * DEPTH + ";"
+    tokens = Scanner("const x = 10; print" + interpolation).scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'10'\n"
+
+
+def test_string_interpolation_negate_bool(capsys):
+    tokens = Scanner('print "hola, ${!true}!";').scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'hola, false!'\n"
+
+
+def test_string_interpolation_with_array_indexing(capsys):
+    tokens = Scanner(
+        'const arr = [1, 2, 3]; print "el segundo elemento es ${arr[1]}";'
+    ).scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'el segundo elemento es 2'\n"
+
+
+def test_string_interpolation_with_dict_indexing(capsys):
+    tokens = Scanner(
+        'const dict = ["key": "value"]; print "el valor de la clave es ${dict["key"]}";'
+    ).scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'el valor de la clave es value'\n"
+
+
+def test_string_interpolation_with_function_call(capsys):
+    tokens = Scanner(
+        'fun greet(name) { return "hola, ${name}!"; } print greet("Plox");'
+    ).scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'hola, Plox!'\n"
+
+
+def test_string_interpolation_with_nested_function_call(capsys):
+    tokens = Scanner(
+        'fun greet(name) { return "hola, ${name}!"; } print "saludo: ${greet("Plox")}";'
+    ).scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'saludo: hola, Plox!'\n"
+
+
+def test_string_interpolation_with_ternary_and_function_call(capsys):
+    tokens = Scanner(
+        'fun greet(name) { return "hola, ${name}!"; } print "saludo: ${true ? greet("Plox") : "desconocido"}";'
+    ).scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'saludo: hola, Plox!'\n"
+
+
+def test_string_interpolation_with_sum(capsys):
+    tokens = Scanner('const a = 5; const b = 10; print "la suma es ${a + b}";').scan()
+    stmts = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for stmt in stmts:
+        resolver.resolve(stmt)
+
+    interpreter.interpret(stmts)
+    out = capsys.readouterr().out
+
+    assert out == "'la suma es 15'\n"

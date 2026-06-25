@@ -7,7 +7,7 @@ def golden_rule_print(*args, **kwargs):
     print(*transformed_args, **kwargs)  # type: ignore
 
 
-def stringify(value: Any) -> str:
+def stringify(value: Any, skip_quotes=False) -> str:
     """
     Golden rule: Convierte cualquier valor de Python a una representación de cadena que se parezca a cómo se mostraría en Lox.
     """
@@ -24,7 +24,7 @@ def stringify(value: Any) -> str:
             )
             return f"{'[' + items + ']'}"
         case str():
-            return f"'{value}'"
+            return f"'{value}'" if not skip_quotes else value
         case int() | float():
             if isinstance(value, float) and value.is_integer():
                 return str(int(value))

@@ -24,6 +24,7 @@ from .Expr import (
     GroupingExpr,
     IndexAssignExpr,
     ArrayExpr,
+    JoinedStringExpr,
     LiteralExpr,
     UnaryExpr,
     CastExpr,
@@ -557,6 +558,13 @@ class Interpreter(object):
     @evaluate.register
     def _(self, expression: ArrayExpr):
         return [self.evaluate(element) for element in expression.elements]
+
+    @evaluate.register
+    def _(self, expression: JoinedStringExpr):
+        return "".join(
+            stringify(self.evaluate(part), skip_quotes=True)
+            for part in expression.parts
+        )
 
     # ---------- Helpers ---------- #
 
