@@ -209,19 +209,17 @@ class Scanner(object):
     def _is_at_end(self) -> bool:
         return self.current >= len(self.source)
 
-    # Devuelve el caracter actual, sin consumirlo
-    def _lookahead(self) -> str:
+    def _lookahead(self, offset: int = 0) -> str:
+        """
+        Devuelve el caracter actual, sin consumirlo.
+        Si se pasa un offset, devuelve el caracter que está a esa distancia del actual.
+        """
+
         # si llegamos al final de la linea, no hay nada para mirar
-        if self._is_at_end():
+        if self.current + offset >= len(self.source):
             return "\0"
 
-        return self.source[self.current]
-
-    def _lookahead_next(self) -> str:
-        if self.current + 1 >= len(self.source):
-            return "\0"
-
-        return self.source[self.current + 1]
+        return self.source[self.current + offset]
 
     # Consume un caracter y lo devuelve
     def _advance(self) -> str:
@@ -259,7 +257,7 @@ class Scanner(object):
         has_interpolation = False
 
         while string_eof_criteria():
-            if self._lookahead() == "$" and self._lookahead_next() == "{":
+            if self._lookahead() == "$" and self._lookahead(offset=1) == "{":
                 # Si no es la primera interpolacion, no agregamos offset al literal
                 # Esto skippeaba el char despues de '}' y algo como
                 # "${var} hola ${var2}" resultaba en
