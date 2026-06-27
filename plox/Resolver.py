@@ -27,23 +27,12 @@ from .Expr import (
 )
 
 
-class VarInformation:
-    def __init__(self, defined: bool, used: bool):
-        # Guardamos si la variable fue definida y si fue usada
-        self.defined = defined
-        self.used = used
-
-
 class Resolver(object):
     def __init__(self, interpreter: Interpreter):
         # Nos guardamos un stack de scopes, para saber cuan anidados estamos
         # En cada scope tenemos una tabla que nos dice si bajo un nombre tenemos
-        # una variable declarada y usada (ver VarInformation)
-        self.scopes: list[dict[str, VarInformation]] = []
-
-        # Nos guardamos una lista con los warnings generados
-        self.warnings: list[str] = []
-
+        # una variable solo declarada (False) o ya definida (True)
+        self.scopes: list[dict[str, bool]] = []
         # Una referencia al intérprete, para poder resolver las variables
         self.interpreter = interpreter
 
@@ -53,35 +42,23 @@ class Resolver(object):
 
     def end_scope(self):
         # Terminar un scope es desapilar la tabla
-        scope = self.scopes.pop()
-        for name, var_info in scope.items():
-            if name.startswith("_"):
-                # Por convencion, si la variable empieza con "_" omitimos el warning
-                continue
-
-            if var_info.used is False:
-                warning = f'[warning] Variable "{name}" is never used.'
-                self.warnings.append(warning)
+        self.scopes.pop()
 
     def declare(self, name: str):
-        # Declarar una variable es guardarla con defined=False en el tope del stack
+        # Declarar una variable es guardarla bajo False en el tope del stack
         if not self.scopes:
             return
 
         if name in self.scopes[-1]:
             raise NameError(f"Variable `{name}` already exists")
 
-        self.scopes[-1][name] = VarInformation(defined=False, used=False)
+        self.scopes[-1][name] = False
 
     def define(self, name: str):
-        # Definir una variable es guardarla con defined=True en el tope del stack
+        # Declarar una variable es guardarla bajo True en el tope del stack
         if not self.scopes:
             return
-        self.scopes[-1][name] = VarInformation(defined=True, used=False)
-
-    def mark_used(self, var_info: VarInformation):
-        # Marca una variable como usada (le agrega la informacion a VarInformation)
-        var_info.used = True
+        self.scopes[-1][name] = True
 
     @singledispatchmethod
     def resolve(self, arg: Stmt | Expr):
@@ -155,14 +132,10 @@ class Resolver(object):
     @resolve.register
     def _(self, expression: VariableExpr):
         # Si la variable esta declarada e intenta ser referenciada antes de ser definida,
-        # es decir, si defined es False, en vez de ser True,
+        # es decir, si su valor en la tabla es False, en vez de ser True,
         # lanzamos un error
         # Básicamente, el error frente a `var x = x;`
-
-        actual_var_info = (
-            self.scopes[-1].get(expression.name.lexeme, None) if self.scopes else None
-        )
-        if actual_var_info is not None and actual_var_info.defined is False:
+        if self.scopes and self.scopes[-1].get(expression.name.lexeme, None) is False:
             raise NameError(
                 f"Variable `{expression.name.lexeme}` was declared but not defined"
             )
@@ -173,8 +146,6 @@ class Resolver(object):
         for i, scope in enumerate(reversed(self.scopes)):
             if expression.name.lexeme in scope:
                 self.interpreter.resolve_depth(expression, i)
-                # Marcamos la variable como usada
-                self.mark_used(scope[expression.name.lexeme])
                 return
 
     @resolve.register
