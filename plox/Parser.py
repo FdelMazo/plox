@@ -9,7 +9,6 @@ from .Expr import (
     AssignmentExpr,
     LogicExpr,
     CallExpr,
-    PostfixExpr,
 )
 from .Stmt import (
     Stmt,
@@ -436,7 +435,7 @@ class Parser(object):
 
         return expr
 
-    # unary          → ( "!" | "-" ) unary | postfix ;
+    # unary          → ( "!" | "-" ) unary | call ;
     def unary(self) -> Expr:
         # a diferencia de las reglas de expresiones binarias,
         # acá el operador es un prefijo.
@@ -446,22 +445,8 @@ class Parser(object):
             right = self.unary()
             return UnaryExpr(operator, right)
 
-        # Si no tuve recursividad de unarios, entonces tengo una llamada a un prefijo
-        return self.postfix()
-
-    # postfix        → call ( "++" )* ;
-    def postfix(self) -> Expr:
-        # acá el operador es un sufijo
-        # primero chequeamos lo que tenemos a la izquierda, y después seguimos
-        expr = self.call()
-
-        # mientras nos crucemos ++, seguimos parseando
-        # ejemplo: x++, func()++
-        while not self._is_at_end() and self._match(TokenType.PLUS_PLUS):
-            operator = self._previous()
-            expr = PostfixExpr(expr, operator)
-
-        return expr
+        # Si no tuve recursividad de unarios, entonces tengo una llamada a una función
+        return self.call()
 
     # call           → primary ( "(" arguments? ")" )* ;
     # arguments      → expression ( "," expression )* ;

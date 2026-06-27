@@ -10,6 +10,7 @@ class TokenType(Enum):
     RIGHT_BRACE = auto()
     COMMA = auto()
     MINUS = auto()
+    PLUS = auto()
     SEMICOLON = auto()
     STAR = auto()
     PERCENT = auto()
@@ -20,8 +21,6 @@ class TokenType(Enum):
     SLASH = auto()
 
     # tokens de uno o dos caracteres
-    PLUS = auto()
-    PLUS_PLUS = auto()
     BANG = auto()
     BANG_EQUAL = auto()
     EQUAL = auto()

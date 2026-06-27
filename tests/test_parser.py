@@ -5,7 +5,6 @@ from plox.Expr import (
     LiteralExpr,
     UnaryExpr,
     AssignmentExpr,
-    PostfixExpr,
 )
 from plox.Scanner import Scanner
 from plox.Parser import Parser

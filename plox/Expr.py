@@ -37,7 +37,7 @@ class LiteralExpr(Expr):
         elif isinstance(self.value, float):
             return f"<{self.value}>"
         elif isinstance(self.value, bool):
-            return f"<TRUE>" if self.value else "<FALSE>"
+            return "<TRUE>" if self.value else "<FALSE>"
         elif self.value is None:
             return "<NIL>"
 
@@ -94,13 +94,3 @@ class LogicExpr(Expr):
 
     def __repr__(self) -> str:
         return f"({self.left} {self.operator} {self.right})"
-
-
-# postfix         → expression "++" ;
-class PostfixExpr(Expr):
-    def __init__(self, left: Expr, operator: Token):
-        self.left = left
-        self.operator = operator
-
-    def __repr__(self) -> str:
-        return f"Postfix: [{self.left} {self.operator.lexeme}]"
