@@ -16,15 +16,12 @@ from .Stmt import (
     ForStmt,
 )
 from .Expr import (
-    DictExpr,
     Expr,
     AssignmentExpr,
     BinaryExpr,
     CallExpr,
-    IndexAssignExpr,
     IndexExpr,
     GroupingExpr,
-    ArrayExpr,
     LiteralExpr,
     LogicExpr,
     PostfixExpr,
@@ -191,13 +188,6 @@ class PrettyPrinter:
         self._branch(Branch.LAST, [expr.index])
 
     @_accept.register
-    def _(self, expr: IndexAssignExpr):
-        self._store_expr("[]=", "IndexAssignExpr")
-        self._branch(Branch.MID, [expr.target])
-        self._branch(Branch.MID, [expr.index])
-        self._branch(Branch.LAST, [expr.value])
-
-    @_accept.register
     def _(self, expr: GroupingExpr):
         self._store_expr("()", "GroupingExpr")
         self._branch(Branch.LAST, [expr.expression])
@@ -235,14 +225,6 @@ class PrettyPrinter:
     @_accept.register
     def _(self, expr: VariableExpr):
         self._store_expr(expr.name.lexeme, "VariableExpr")
-
-    @_accept.register
-    def _(self, expr: DictExpr):
-        self._store_expr("{...}", "DictExpr")
-
-    @_accept.register
-    def _(self, expr: ArrayExpr):
-        self._store_expr("[...]", "ArrayExpr")
 
     # ---------- Helpers ---------- #
 
