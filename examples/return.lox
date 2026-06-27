@@ -1,9 +1,0 @@
-// run in --line-by-line mode!!
-
-// Caso feliz: return dentro de una función
-fun saludar() { return "hola"; }
-
-print saludar();
-
-// Caso de error: return global
-return "Esto no funciona";

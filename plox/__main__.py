@@ -68,11 +68,11 @@ class Plox:
                 if self.show_warnings:
                     for warning in resolver.warnings:
                         print(colored(warning, "yellow"))
+
             except Exception as e:
                 if self.debug:
                     traceback.print_exc()
                 print(colored(f"Resolve Error: {e}", "light_red"))
-                return
 
         # en modo resolve, imprimimos los scopes locales del intérprete
         if self.mode == "resolve":
