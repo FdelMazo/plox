@@ -103,15 +103,4 @@ class PostfixExpr(Expr):
         self.operator = operator
 
     def __repr__(self) -> str:
-        return f"({self.left}{self.operator})"
-
-
-# ternary        → expresion "?" expression ":" expression ;
-class TernaryExpr(Expr):
-    def __init__(self, condition: Expr, true_branch: Expr, false_branch: Expr):
-        self.condition = condition
-        self.true_branch = true_branch
-        self.false_branch = false_branch
-
-    def __repr__(self) -> str:
-        return f"({self.condition} ? {self.true_branch} : {self.false_branch})"
+        return f"Postfix: [{self.left} {self.operator.lexeme}]"

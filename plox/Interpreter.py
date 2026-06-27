@@ -22,7 +22,6 @@ from .Expr import (
     AssignmentExpr,
     LogicExpr,
     CallExpr,
-    TernaryExpr,
 )
 from .Function import Function, ReturnValue
 from .Token import TokenType
@@ -336,16 +335,6 @@ class Interpreter(object):
             )
 
         return callee(self, arguments)
-
-    @evaluate.register
-    def _(self, expression: TernaryExpr):
-        condition = self.evaluate(expression.condition)
-        if self.is_truthy(condition):
-            # si condition es truthy, evaluamos la rama verdadera
-            return self.evaluate(expression.true_branch)
-
-        # si condition es falsy, evaluamos la rama falsa
-        return self.evaluate(expression.false_branch)
 
     # ---------- Helpers ---------- #
 

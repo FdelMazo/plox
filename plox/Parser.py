@@ -10,7 +10,6 @@ from .Expr import (
     LogicExpr,
     CallExpr,
     PostfixExpr,
-    TernaryExpr,
 )
 from .Stmt import (
     Stmt,
@@ -330,11 +329,9 @@ class Parser(object):
     def expression(self) -> Expr:
         return self.assignment()
 
-    # assignment     → IDENTIFIER "=" assignment | conditional ;
+    # assignment     → IDENTIFIER "=" assignment | logic_or ;
     def assignment(self) -> Expr:
-        expr = (
-            self.conditional()
-        )  # una conditional tiene mayor precedencia que una asignacion
+        expr = self.logic_or()
 
         # En una asignación tenemos dos partes: el nombre a la izquierda, y el valor a la derecha.
         # La expresión de la izquierda (el lvalue) no es una expresión que resuelve a un valor,
@@ -351,30 +348,6 @@ class Parser(object):
 
             value = self.assignment()
             return AssignmentExpr(expr.name, value)
-
-        return expr
-
-    # conditional   → logic_or ( "?" assignment ":" assignment )? ;
-    # El ternario tiene menor precedencia que logic_or (y todo lo que está por encima de logic_or)
-    # y mayor precedencia que la asignación. Por eso vive entre assignment y logic_or.
-    def conditional(self) -> Expr:
-        expr = self.logic_or()
-
-        # Si me crucé un "?", parseo las dos branches de la expresión ternaria
-        if self._match(TokenType.QUESTION):
-
-            # permitimos que la branch true pueda ser otra asignacion
-            true_branch = self.assignment()
-            if not self._match(TokenType.COLON):
-
-                # si no me crucé un ":", tengo un error
-                raise SyntaxError(
-                    f"Expected ':' after ternary true-branch, got `{self._lookahead()}` instead"
-                )
-
-            # permitimos que la branch false pueda ser otra asignacion
-            false_branch = self.assignment()
-            expr = TernaryExpr(expr, true_branch, false_branch)
 
         return expr
 

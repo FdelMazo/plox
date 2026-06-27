@@ -75,10 +75,6 @@ class Scanner(object):
                 self.add_token(TokenType.STAR)
             case ";":
                 self.add_token(TokenType.SEMICOLON)
-            case "?":
-                self.add_token(TokenType.QUESTION)
-            case ":":
-                self.add_token(TokenType.COLON)
             case "%":
                 self.add_token(TokenType.PERCENT)
             case "/":
@@ -112,6 +108,7 @@ class Scanner(object):
                         raise Exception(f"Unterminated comment: `{self.lexeme()}`")
                 else:
                     self.add_token(TokenType.SLASH)
+
             # tokens de uno o dos caracteres
             case "+":
                 self.add_token(
