@@ -38,8 +38,7 @@ class VarInformation:
         # Guardamos si la variable fue definida, si fue usada y si es constante
         self.defined = defined
         self.used = used
-        self.is_constant = is_constant  # xD
-
+        self.is_constant = is_constant
 
 class Resolver(object):
     def __init__(self, interpreter: Interpreter):
@@ -81,9 +80,7 @@ class Resolver(object):
         if name in self.scopes[-1]:
             raise NameError(f"Variable `{name}` already exists")
 
-        self.scopes[-1][name] = VarInformation(
-            defined=False, used=False, is_constant=is_constant
-        )
+        self.scopes[-1][name] = VarInformation(defined=False, used=False, is_constant=is_constant)
 
     def define(self, name: str):
         # Definir una variable es guardarla con defined=True, preservando el resto de la info

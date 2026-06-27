@@ -473,9 +473,8 @@ def test_power():
     assert isinstance(expr.right.right, LiteralExpr)
     assert expr.right.right.value == 4.0
 
-
 def test_index():
-    tokens = Scanner('"hola"[3]').scan()
+    tokens = Scanner("\"hola\"[3]").scan()
     expr = Parser(tokens).expression()
     assert isinstance(expr, IndexExpr)
 
@@ -497,7 +496,6 @@ def test_index():
     assert isinstance(expr.callee, IndexExpr)
     assert isinstance(expr.callee.target, CallExpr)
 
-
 def test_const_decl():
     tokens = Scanner("const x = 5;").scan()
     stmts = Parser(tokens).parse()
@@ -508,7 +506,6 @@ def test_const_decl():
     assert stmt.name.lexeme == "x"
     assert isinstance(stmt.initializer, LiteralExpr)
     assert stmt.initializer.value == 5.0
-
 
 def test_const_decl_error():
     tokens = Scanner("const x;").scan()

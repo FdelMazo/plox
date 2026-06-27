@@ -31,4 +31,3 @@ fi
 if [ -n "$STAGED_PY_FILES" ]; then
     git add $STAGED_PY_FILES
 fi
-

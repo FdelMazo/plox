@@ -88,11 +88,7 @@ class Interpreter(object):
     def _(self, statement: VarDecl):
         # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
         if statement.initializer is not None:
-            self.env.define(
-                statement.name.lexeme,
-                self.evaluate(statement.initializer),
-                statement.is_constant,
-            )
+            self.env.define(statement.name.lexeme, self.evaluate(statement.initializer), statement.is_constant)
         else:
             self.env.define(statement.name.lexeme, statement.initializer)
 
@@ -213,7 +209,7 @@ class Interpreter(object):
     @evaluate.register
     def _(self, expression: CastExpr):
         value = self.evaluate(expression.expression)
-
+        
         match expression.type_to_cast.token_type:
             case TokenType.NUMBER_CAST:
                 return self._cast_to_number(value)
@@ -222,9 +218,7 @@ class Interpreter(object):
             case TokenType.STRING_CAST:
                 return self._cast_to_string(value)
             case _:
-                raise RuntimeError(
-                    f"Unknown cast type: `{expression.type_to_cast.lexeme}`"
-                )
+                raise RuntimeError(f"Unknown cast type: `{expression.type_to_cast.lexeme}`")
 
     @evaluate.register
     def _(self, expression: BinaryExpr):
@@ -380,13 +374,17 @@ class Interpreter(object):
         # Si lo que se trata de indexar no es un string, levantamos un error
         # A futuro, en caso de que mas tipos sean indexables, habría que extender el chequeo
         if not self.is_string(target):
-            raise RuntimeError(f"Only strings support indexing, got: `{target}`")
+            raise RuntimeError(
+                f"Only strings support indexing, got: `{target}`"
+            )
 
         index = self.evaluate(expression.index)
 
         # Revisamos que se esté usando un número de índice y que el mismo no tenga parte fraccionaria ni sea negativo
         if not self.is_number(index) or int(index) != index or index < 0:
-            raise RuntimeError(f"Index must be a positive whole number, got: `{index}`")
+            raise RuntimeError(
+                f"Index must be a positive whole number, got: `{index}`"
+            )
 
         index = int(index)
 
@@ -428,7 +426,9 @@ class Interpreter(object):
                 left.name.lexeme, newvalue
             )
 
-        oldvalue = getvalue()  # la funcion lambda para obtener el valor viejo depende de si la variable se encuentra en nuestro diccionario de scope local o no
+        oldvalue = (
+            getvalue()
+        )  # la funcion lambda para obtener el valor viejo depende de si la variable se encuentra en nuestro diccionario de scope local o no
 
         # el operador ++ solo funciona sobre números
         if not self.is_number(oldvalue):
@@ -477,28 +477,22 @@ class Interpreter(object):
             s = value.strip()
             if not s:
                 raise RuntimeError("Cannot cast empty string to number")
-
+            
             # Solo dígitos y un punto decimal opcional
             # Los signos se manejan por separado en el Scanner, no como parte del literal
             dot_count = 0
             for c in s:
-                if c == ".":
+                if c == '.':
                     dot_count += 1
                     if dot_count > 1:
-                        raise RuntimeError(
-                            f"Cannot cast string '{value}' to number: invalid format"
-                        )
+                        raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
                 elif not c.isdigit():
-                    raise RuntimeError(
-                        f"Cannot cast string '{value}' to number: invalid format"
-                    )
-
+                    raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
+            
             # Rechazar si empieza o termina con punto
-            if s.startswith(".") or s.endswith("."):
-                raise RuntimeError(
-                    f"Cannot cast string '{value}' to number: invalid format"
-                )
-
+            if s.startswith('.') or s.endswith('.'):
+                raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
+            
             return float(s)
         elif value is None:
             raise RuntimeError("Cannot cast nil to number")
