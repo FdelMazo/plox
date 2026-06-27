@@ -1,4 +1,3 @@
-// run in --line-by-line mode!!
 print "Función sin argumentos";
 fun returnthree() { return 3; }
 print returnthree;
@@ -28,17 +27,17 @@ print add(1, 2, 3);
 
 print "";
 
-print "Errores de aridad";
-add(1,2,3,4);
-add(1,2);
+// print "Errores de aridad";
+// add(1,2,3,4);
+// add(1,2);
 
-print "";
+// print "";
 
-print "Intentar llamar algo que no es una función";
-var x = "x";
-x();
+// print "Intentar llamar algo que no es una función";
+// var x = "x";
+// x();
 
-print "";
+// print "";
 
 print "Un poco de currying";
 fun fn() {
