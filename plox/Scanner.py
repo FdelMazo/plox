@@ -1,5 +1,3 @@
-from typing import Callable
-
 from .Token import Token, TokenType, TokenKeywords
 
 
@@ -144,25 +142,38 @@ class Scanner(object):
 
             case "'":
                 # consumimos la cadena hasta el proximo ' o hasta el fin de linea
-                self._scan_string(
-                    string_eof_criteria=lambda: (
-                        not self._is_at_end()
-                        and not self._lookahead() == "'"
-                        and not self._lookahead() == "\n"
-                    ),
-                    terminated_string_criteria=lambda: (
-                        self._is_at_end() or self._lookahead() == "\n"
-                    ),
-                )
+                while (
+                    not self._is_at_end()
+                    and not self._lookahead() == "'"
+                    and not self._lookahead() == "\n"
+                ):
+                    self._advance()
+
+                if self._is_at_end() or self._lookahead() == "\n":
+                    # si llegamos al final de la linea, sin cerrar la cadena, es un error
+                    raise Exception(f"Unterminated string: `{self.lexeme()}`")
+
+                self._advance()  # consumimos el cierre de la cadena
+
+                # la cadena la guardamos sin las comillas
+                strvalue = self.source[self.start + 1 : self.current - 1]
+                self.add_token(TokenType.STRING, literal=strvalue)
 
             # string multilinea
             case '"':
-                self._scan_string(
-                    string_eof_criteria=lambda: (
-                        not self._is_at_end() and not self._lookahead() == '"'
-                    ),
-                    terminated_string_criteria=lambda: self._is_at_end(),
-                )
+                # consumimos la cadena hasta el proximo "
+                while not self._is_at_end() and not self._lookahead() == '"':
+                    self._advance()
+
+                if self._is_at_end():
+                    # si llegamos al final del archivo, sin cerrar la cadena, es un error
+                    raise Exception(f"Unterminated string: `{self.lexeme()}`")
+
+                self._advance()  # consumimos el cierre de la cadena
+
+                # la cadena la guardamos sin las comillas
+                strvalue = self.source[self.start + 1 : self.current - 1]
+                self.add_token(TokenType.STRING, literal=strvalue)
 
             case _ if c in "0123456789":
                 # consumimos el número hasta que no sea un dígito o un punto para decimales
@@ -209,17 +220,13 @@ class Scanner(object):
     def _is_at_end(self) -> bool:
         return self.current >= len(self.source)
 
-    def _lookahead(self, offset: int = 0) -> str:
-        """
-        Devuelve el caracter actual, sin consumirlo.
-        Si se pasa un offset, devuelve el caracter que está a esa distancia del actual.
-        """
-
+    # Devuelve el caracter actual, sin consumirlo
+    def _lookahead(self) -> str:
         # si llegamos al final de la linea, no hay nada para mirar
-        if self.current + offset >= len(self.source):
+        if self._is_at_end():
             return "\0"
 
-        return self.source[self.current + offset]
+        return self.source[self.current]
 
     # Consume un caracter y lo devuelve
     def _advance(self) -> str:
@@ -240,73 +247,3 @@ class Scanner(object):
 
         self._advance()
         return True
-
-    def _scan_string(
-        self, string_eof_criteria: Callable, terminated_string_criteria: Callable
-    ):
-        """
-        Escanea un string hasta que se deje de cumplir "string_eof_criteria"
-        Una vez que se deje de cumplir, chequea si se cumplió "terminated_string_criteria" para lanzar un error de string sin cerrar,
-        o si no, consume el cierre del string y lo guarda como token.
-        Maneja la interpolación de strings, que tiene la forma `${expresion}`.
-        Si encuentra una interpolacion, se encarga de empaquetar el string para que los tokens queden ordenados
-        de la forma [ STRING, INTERPOLATION_START, ..., INTERPOLATION_END, STRING ].
-        Por ejemplo, para el caso "hola ${nombre}!", los tokens serían:
-        [ STRING<'hola '>, INTERPOLATION_START, IDENTIFIER<nombre>, INTERPOLATION_END, STRING<'!'> ]
-        """
-        has_interpolation = False
-
-        while string_eof_criteria():
-            if self._lookahead() == "$" and self._lookahead(offset=1) == "{":
-                # Si no es la primera interpolacion, no agregamos offset al literal
-                # Esto skippeaba el char despues de '}' y algo como
-                # "${var} hola ${var2}" resultaba en
-                # [ STRING<>, INTERPOLATION_START, IDENTIFIER<var>, INTERPOLATION_END, STRING<'hola '>, ... ]
-                # Notar la falta de espacio antes de 'hola ' en STRING<'hola '>
-                start_offset = 1 if not has_interpolation else 0
-                str_literal = self.source[self.start + start_offset : self.current]
-                self.add_token(TokenType.STRING, literal=str_literal)
-
-                self.add_token(TokenType.INTERPOLATION_START)
-                has_interpolation = True
-
-                # Salteamos '${'
-                self._advance()
-                self._advance()
-                self.start = self.current
-
-                brace_depth = 1
-                while brace_depth > 0 and not self._is_at_end():
-                    char = self._lookahead()
-
-                    if char == "{":
-                        brace_depth += 1
-                    elif char == "}":
-                        brace_depth -= 1
-
-                    if brace_depth > 0:
-                        # Escaneamos los tokens contenidos dentro de la interpolacion
-                        self.scan_token()
-                        self.start = self.current
-                    else:
-                        self.add_token(TokenType.INTERPOLATION_END)
-                        self._advance()
-                        self.start = self.current
-
-                if brace_depth > 0:
-                    raise Exception(f"Unterminated interpolation: `{self.lexeme()}`")
-
-                continue
-
-            self._advance()
-
-        if terminated_string_criteria():
-            # si llegamos al final del archivo, sin cerrar la cadena, es un error
-            raise Exception(f"Unterminated string: `{self.lexeme()}`")
-
-        self._advance()  # consumimos el cierre de la cadena
-
-        # la cadena la guardamos sin las comillas
-        start_offset = 1 if not has_interpolation else 0
-        strvalue = self.source[self.start + start_offset : self.current - 1]
-        self.add_token(TokenType.STRING, literal=strvalue)

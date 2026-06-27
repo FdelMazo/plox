@@ -6,7 +6,6 @@ from .Expr import (
     GroupingExpr,
     IndexAssignExpr,
     ArrayExpr,
-    JoinedStringExpr,
     LiteralExpr,
     UnaryExpr,
     CastExpr,
@@ -721,35 +720,8 @@ class Parser(object):
         if self._match(TokenType.NIL):
             return LiteralExpr(None)
 
-        if self._match(TokenType.STRING):
-            string_literal = LiteralExpr(self._previous().literal)
-
-            if self._lookahead().token_type != TokenType.INTERPOLATION_START:
-                return string_literal
-
-            # En caso de interpolacion arrancamos un JoinedStringExpr
-            parts: list[Expr] = [string_literal]
-
-            while self._match(TokenType.INTERPOLATION_START):
-                parts.append(self.expression())
-
-                if not self._match(TokenType.INTERPOLATION_END):
-                    raise SyntaxError(
-                        f"Expected '}}' after interpolated expression, got `{self._lookahead()}` instead"
-                    )
-
-                # Le tiene que seguir un str aunque sea vacio
-                if not self._match(TokenType.STRING):
-                    raise SyntaxError(
-                        f"Expected string segment after interpolation, got `{self._lookahead()}` instead"
-                    )
-
-                parts.append(LiteralExpr(self._previous().literal))
-
-            return JoinedStringExpr(parts)
-
         # Si es un token literal, lo convertimos en una expresión literal con el valor del token
-        if self._match(TokenType.NUMBER):
+        if self._match(TokenType.NUMBER, TokenType.STRING):
             return LiteralExpr(self._previous().literal)
 
         # Si es un token de un identificador, lo convertimos en una expresión de una variable

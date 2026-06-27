@@ -59,9 +59,6 @@ class TokenType(Enum):
     BREAK = auto()
     CONTINUE = auto()
 
-    INTERPOLATION_START = auto()
-    INTERPOLATION_END = auto()
-
     # type casting tokens
     BOOL_CAST = auto()
     NUMBER_CAST = auto()
