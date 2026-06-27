@@ -315,54 +315,6 @@ def test_len_function():
 
     assert "Argument of `len` must be a string" in str(excinfo.value)
 
-def test_switch(capsys):
-    tokens = Scanner("switch (1) { case 1: print 'one'; case 2: print 'two'; }").scan()
-    Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "one\n"
-
-    tokens = Scanner("switch (2) { case 1: print 'one'; case 2: print 'two'; }").scan()
-    Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "two\n"
-
-    tokens = Scanner("switch ('hello') { case 'hello': print 'matched'; }").scan()
-    Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "matched\n"
-
-    # no match and no default — no output
-    tokens = Scanner("switch (99) { case 1: print 'one'; }").scan()
-    Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == ""
-
-    # no match falls through to default
-    tokens = Scanner("switch (99) { case 1: print 'one'; default: print 'other'; }").scan()
-    Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "other\n"
-
-    # default only
-    tokens = Scanner("switch (99) { default: print 'default'; }").scan()
-    Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "default\n"
-
-    # no fallthrough — only the matching case runs
-    tokens = Scanner("switch (1) { case 1: print 'a'; case 1: print 'b'; }").scan()
-    Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "a\n"
-
-    # multiple statements in a case body
-    tokens = Scanner("switch (1) { case 1: print 'x'; print 'y'; }").scan()
-    Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "x\ny\n"
-
-    # subject is an expression, not just a literal
-    tokens = Scanner("switch (1 + 1) { case 1: print 'one'; case 2: print 'two'; }").scan()
-    Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "two\n"
-
-    # switch on a variable
-    tokens = Scanner("var x = 3; switch (x) { case 3: print 'three'; default: print 'other'; }").scan()
-    Interpreter().interpret(Parser(tokens).parse())
-    assert capsys.readouterr().out == "three\n"
-
 
 def test_const():
     tokens = Scanner("const x = 42;").scan()

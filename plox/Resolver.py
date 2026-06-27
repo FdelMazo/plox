@@ -12,7 +12,6 @@ from .Stmt import (
     IfStmt,
     WhileStmt,
     ReturnStmt,
-    SwitchStmt,
     BreakStmt,
     ContinueStmt,
     ForStmt,
@@ -172,17 +171,6 @@ class Resolver(object):
         self.resolve(statement.condition)
         self.resolve(statement.body)
 
-    @resolve.register
-    def _(self, statement: SwitchStmt):
-        self.resolve(statement.subject)
-        for case_value, case_body in statement.cases:
-            self.resolve(case_value)
-            for stmt in case_body:
-                self.resolve(stmt)
-        if statement.default is not None:
-            for stmt in statement.default:
-                self.resolve(stmt)
-    
     @resolve.register
     def _(self, statement: ForStmt):
         # El for abre su propio scope para el inicializador

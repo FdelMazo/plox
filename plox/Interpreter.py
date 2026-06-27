@@ -1,6 +1,6 @@
 from functools import singledispatchmethod
 from typing import Union, cast
-from .Token import Token
+
 from .Stmt import (
     Stmt,
     ExpressionStmt,
@@ -11,7 +11,6 @@ from .Stmt import (
     IfStmt,
     WhileStmt,
     ReturnStmt,
-    SwitchStmt,
     BreakStmt,
     ContinueStmt,
     ForStmt,
@@ -173,17 +172,6 @@ class Interpreter(object):
     @execute.register
     def _(self, statement: BlockStmt):
         return self.execute_block(statement.statements, Env(enclosing=self.env))
-
-    @execute.register
-    def _(self, statement: SwitchStmt):
-        for case_value, case_body in statement.cases:
-            if self.evaluate_case(case_value):
-                for stmt in case_body:
-                    self.execute(stmt)
-                return
-        if statement.default is not None:
-            for stmt in statement.default:
-                self.execute(stmt)
 
     def execute_block(self, statements: list[Stmt], block_env: Env):
         # Para ejecutar un bloque de statements, tenemos que crear un nuevo entorno
@@ -502,9 +490,6 @@ class Interpreter(object):
         if value is None or value is False:
             return False
         return True
-
-    def evaluate_case(self, subject):
-        return self.is_truthy(self.evaluate(subject))
 
     # Devuelve si los valores recibidos son un número según Lox
     def is_number(self, *values):
