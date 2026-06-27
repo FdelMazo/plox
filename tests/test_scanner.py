@@ -230,7 +230,7 @@ def test_remove_multiline_comments():
 
 
 def test_single_char_tokens():
-    tokens = Scanner("(){},-+;*/%:?**").scan()
+    tokens = Scanner("(){},-+;*/%:?").scan()
     tokens_type = [token.token_type for token in tokens]
 
     expected_tokens_type = [
@@ -247,7 +247,6 @@ def test_single_char_tokens():
         TokenType.PERCENT,
         TokenType.COLON,
         TokenType.QUESTION,
-        TokenType.STAR_STAR,
         TokenType.EOF,
     ]
 

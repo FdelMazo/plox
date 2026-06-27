@@ -32,7 +32,6 @@ class TokenType(Enum):
     LESS_EQUAL = auto()
     QUESTION = auto()
     COLON = auto()
-    STAR_STAR = auto()
 
     # literales
     IDENTIFIER = auto()
