@@ -23,7 +23,6 @@ from .Expr import (
     LogicExpr,
     CallExpr,
     TernaryExpr,
-    PostfixExpr,
 )
 
 
@@ -198,7 +197,3 @@ class Resolver(object):
         self.resolve(expression.condition)
         self.resolve(expression.true_branch)
         self.resolve(expression.false_branch)
-
-    @resolve.register
-    def _(self, expr: PostfixExpr):
-        self.resolve(expr.left)

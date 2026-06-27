@@ -23,7 +23,6 @@ from .Expr import (
     LogicExpr,
     CallExpr,
     TernaryExpr,
-    PostfixExpr,
 )
 from .Function import Function, ReturnValue
 from .Token import TokenType
@@ -347,42 +346,6 @@ class Interpreter(object):
 
         # si condition es falsy, evaluamos la rama falsa
         return self.evaluate(expression.false_branch)
-
-    @evaluate.register
-    def _(self, expression: PostfixExpr):
-        # TODO: this cast is not ok
-        left = cast(VariableExpr | AssignmentExpr, expression.left)
-
-        # definimos funciones lambda para obtener el valor viejo y asignar el nuevo
-        if (
-            left in self.local_scope_depths
-        ):  # si la variable se encuentra en nuestro diccionario de scope local, la buscamos y asignamos con esa profundidad
-            depth = self.local_scope_depths[left]
-            getvalue = lambda: self.env.get(left.name.lexeme, depth)
-            assignvalue = lambda newvalue: self.env.assign(
-                left.name.lexeme, newvalue, depth
-            )
-        else:  # en caso contrario, la buscamos y asignamos dinámicamente en el entorno global
-            getvalue = lambda: self.globals.get(left.name.lexeme)
-            assignvalue = lambda newvalue: self.globals.assign(
-                left.name.lexeme, newvalue
-            )
-
-        oldvalue = (
-            getvalue()
-        )  # la funcion lambda para obtener el valor viejo depende de si la variable se encuentra en nuestro diccionario de scope local o no
-
-        # el operador ++ solo funciona sobre números
-        if not self.is_number(oldvalue):
-            raise RuntimeError(f"Operand of ++ must be a number, got: `{oldvalue}++`")
-
-        newvalue = cast(float, oldvalue) + 1
-        assignvalue(
-            newvalue
-        )  # la funcion lambda para asignar el valor nuevo depende de si la variable se encuentra en nuestro diccionario de scope local o no
-
-        # devolvemos el valor viejo
-        return oldvalue
 
     # ---------- Helpers ---------- #
 
