@@ -36,4 +36,5 @@ En cada branch del repo hay distintas implementaciones de Lox:
 - `barebones` -> Intérprete mínimo de expresiones (números, booleanos, no mucho más), con lo visto hasta el capítulo 7 de Crafting Interpreters.
 - `tree-walk` -> Intérprete completo de statements. Es lo que hay en `barebones` más lo visto en los capítulos 8 a 10 del libro.
 - `full-tree-walk` -> Intérprete completo de statements, con resolvedor de scopes estáticos antes de la ejecución. Es lo que hay en `tree-walk` más lo visto en el capítulo 11 del libro.
-- `main` -> Versión Final. Es el intérprete completo junto a ideas que surjan en clase.
+- `main` -> Versión Final. Es el intérprete completo, pulido para agregarle testing, fixearle bugs que se hayan encontrado en clase, etc.
+- `frank-*` -> Frankenstein de ideas de lo que se haya mergeado en algún cuatrimestre por parte de los alumnos
