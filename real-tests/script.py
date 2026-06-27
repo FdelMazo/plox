@@ -26,6 +26,9 @@ for lox_file in filter(lambda f: f.endswith(".lox"), sorted(os.listdir(currentdi
     print()
 
     if "ERROR".lower() in out.lower():
+        print(" -------- ")
+        print("|  ERROR  |")
+        print(" -------- ")
         sys.exit(1)
 
 print(" -------- ")
