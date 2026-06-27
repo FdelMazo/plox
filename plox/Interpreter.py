@@ -18,7 +18,6 @@ from .Expr import (
     GroupingExpr,
     LiteralExpr,
     UnaryExpr,
-    CastExpr,
     VariableExpr,
     AssignmentExpr,
     LogicExpr,
@@ -29,13 +28,11 @@ from .Expr import (
 from .Function import Function, ReturnValue
 from .Token import TokenType
 from .Env import Env
-from .BuiltinFunctions import TypeFunction
 
 
 class Interpreter(object):
     def __init__(self):
         self.globals = Env()
-        self._populate_native_functions()
         self.env = self.globals
 
         # De mano del resolvedor (Resolver.py), ahora el intérprete sabe
@@ -60,10 +57,6 @@ class Interpreter(object):
     # antes de la ejecución del programa
     def resolve_depth(self, expression: VariableExpr | AssignmentExpr, depth: int):
         self.local_scope_depths[expression] = depth
-
-    # Incorpora al intérprete funciones nativas
-    def _populate_native_functions(self):
-        self.globals.define("type", TypeFunction())
 
     # ---------- Ejecutadores de Statements ---------- #
 
@@ -203,20 +196,6 @@ class Interpreter(object):
                 return not self.is_truthy(right)
             case _:
                 raise RuntimeError(f"Unknown unary operator: `{expression.operator}`")
-
-    @evaluate.register
-    def _(self, expression: CastExpr):
-        value = self.evaluate(expression.expression)
-        
-        match expression.type_to_cast.token_type:
-            case TokenType.NUMBER_CAST:
-                return self._cast_to_number(value)
-            case TokenType.BOOL_CAST:
-                return self._cast_to_bool(value)
-            case TokenType.STRING_CAST:
-                return self._cast_to_string(value)
-            case _:
-                raise RuntimeError(f"Unknown cast type: `{expression.type_to_cast.lexeme}`")
 
     @evaluate.register
     def _(self, expression: BinaryExpr):
@@ -428,65 +407,3 @@ class Interpreter(object):
     # Devuelve si los valores recibidos son una cadena según Lox
     def is_string(self, *values):
         return all(type(value) is str for value in values)
-
-    # ---------- Type Casting ---------- #
-
-    def _cast_to_number(self, value):
-        """
-        bool -> 1 (true) /  0 (false)
-        number -> number
-        string -> sintaxis válida de literales numéricos del Scanner: [dígitos].[dígitos]
-        nil -> error
-        """
-        if isinstance(value, bool):
-            return 1.0 if value else 0.0
-        elif self.is_number(value):
-            return float(value)
-        elif self.is_string(value):
-            s = value.strip()
-            if not s:
-                raise RuntimeError("Cannot cast empty string to number")
-            
-            # Solo dígitos y un punto decimal opcional
-            # Los signos se manejan por separado en el Scanner, no como parte del literal
-            dot_count = 0
-            for c in s:
-                if c == '.':
-                    dot_count += 1
-                    if dot_count > 1:
-                        raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
-                elif not c.isdigit():
-                    raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
-            
-            # Rechazar si empieza o termina con punto
-            if s.startswith('.') or s.endswith('.'):
-                raise RuntimeError(f"Cannot cast string '{value}' to number: invalid format")
-            
-            return float(s)
-        elif value is None:
-            raise RuntimeError("Cannot cast nil to number")
-        else:
-            raise RuntimeError(f"Cannot cast {value} to number")
-
-    def _cast_to_bool(self, value):
-        # Mantengo el mismo criterio de truthiness que en is_truthy
-        return self.is_truthy(value)
-
-    def _cast_to_string(self, value):
-        """
-        true -> "true"
-        false -> "false"
-        nil -> "nil"
-        number -> str de Python
-        string -> string
-        """
-        if isinstance(value, bool):
-            return "true" if value else "false"
-        elif value is None:
-            return "nil"
-        elif self.is_number(value):
-            return str(float(value))
-        elif self.is_string(value):
-            return value
-        else:
-            raise RuntimeError(f"Cannot cast {value} to string")

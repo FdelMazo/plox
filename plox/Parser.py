@@ -5,7 +5,6 @@ from .Expr import (
     GroupingExpr,
     LiteralExpr,
     UnaryExpr,
-    CastExpr,
     VariableExpr,
     AssignmentExpr,
     LogicExpr,
@@ -475,7 +474,7 @@ class Parser(object):
             expr = BinaryExpr(expr, operator, right)
         return expr
 
-    # unary          → ( "!" | "-" | "++" | "bool" | "number" | "string" ) unary | postfix ;
+    # unary          → ( "!" | "-" | "++" ) unary | postfix ;
     def unary(self) -> Expr:
         # a diferencia de las reglas de expresiones binarias,
         # acá el operador es un prefijo.
@@ -484,12 +483,6 @@ class Parser(object):
             operator = self._previous()
             right = self.unary()
             return UnaryExpr(operator, right)
-
-        # Type casting 
-        if self._match(TokenType.BOOL_CAST, TokenType.NUMBER_CAST, TokenType.STRING_CAST):
-            type_token = self._previous()
-            right = self.unary() # permitimos anidación de castings también, como bool number "123" -> bool(number("123"))
-            return CastExpr(type_token, right)
 
         if self._match(TokenType.PLUS_PLUS):
             operator = self._previous()

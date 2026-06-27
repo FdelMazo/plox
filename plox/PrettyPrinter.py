@@ -22,7 +22,6 @@ from .Expr import (
     LogicExpr,
     PostfixExpr,
     UnaryExpr,
-    CastExpr,
     VariableExpr,
 )
 
@@ -184,11 +183,6 @@ class PrettyPrinter:
     def _(self, expr: UnaryExpr):
         self._store_expr(expr.operator.lexeme, "UnaryExpr")
         self._branch(Branch.LAST, [expr.right])
-
-    @_accept.register
-    def _(self, expr: CastExpr):
-        self._store_expr(f"<{expr.type_to_cast.lexeme}>", "CastExpr")
-        self._branch(Branch.LAST, [expr.expression])
 
     @_accept.register
     def _(self, expr: VariableExpr):
