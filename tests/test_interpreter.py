@@ -185,6 +185,7 @@ def test_casting():
         value = Interpreter().evaluate(expr)
         assert value == expected
 
+
 def test_casting_errors():
     # Casting string no numérico a number
     tokens = Scanner('number "abc"').scan()
@@ -236,84 +237,3 @@ def test_type_function_with_casting():
         expr = Parser(tokens).expression()
         value = Interpreter().evaluate(expr)
         assert value == expected, f"type({src}) returned {value}, expected {expected}"
-
-
-def test_index():
-    tests = [
-        ('"string"[0]', "s"),
-        ('"string"[5]', "g"),
-        ('"plox"[2]', "o"),
-        ('"plox"[2.00]', "o"),
-        ('"plox"[1.5 - (1.5 % 1)]', "l"),
-        ('"plox"[2][0]', "o"),
-        ('"test"[0] + "test"[1]', "te"),
-    ]
-
-    for src, expected in tests:
-        tokens = Scanner(src).scan()
-        expr = Parser(tokens).expression()
-        value = Interpreter().evaluate(expr)
-        assert value == expected
-    
-    tokens = Scanner('"test"[1.5]').scan()
-    expr = Parser(tokens).expression()
-    with pytest.raises(RuntimeError) as excinfo:
-        Interpreter().evaluate(expr)
-
-    assert "Index must be a positive whole number" in str(excinfo.value)
-
-    tokens = Scanner('"test"["error"]').scan()
-    expr = Parser(tokens).expression()
-    with pytest.raises(RuntimeError) as excinfo:
-        Interpreter().evaluate(expr)
-
-    assert "Index must be a positive whole number" in str(excinfo.value)
-
-    tokens = Scanner('"test"[-1]').scan()
-    expr = Parser(tokens).expression()
-    with pytest.raises(RuntimeError) as excinfo:
-        Interpreter().evaluate(expr)
-
-    assert "Index must be a positive whole number" in str(excinfo.value)
-
-    tokens = Scanner('"test"[12]').scan()
-    expr = Parser(tokens).expression()
-    with pytest.raises(RuntimeError) as excinfo:
-        Interpreter().evaluate(expr)
-
-    assert "Index out of range" in str(excinfo.value)
-
-def test_len_function():
-    tests = [
-        ('len("")', 0),
-        ('len("hola")', 4),
-        ('len("con espacios")', 12)
-    ]
-
-    for src, expected in tests:
-        tokens = Scanner(src).scan()
-        expr = Parser(tokens).expression()
-        value = Interpreter().evaluate(expr)
-        assert value == expected
-    
-    tokens = Scanner('len(1)').scan()
-    expr = Parser(tokens).expression()
-    with pytest.raises(RuntimeError) as excinfo:
-        Interpreter().evaluate(expr)
-
-    assert "Argument of `len` must be a string" in str(excinfo.value)
-
-    tokens = Scanner('len(true)').scan()
-    expr = Parser(tokens).expression()
-    with pytest.raises(RuntimeError) as excinfo:
-        Interpreter().evaluate(expr)
-
-    assert "Argument of `len` must be a string" in str(excinfo.value)
-
-    tokens = Scanner('len(nil)').scan()
-    expr = Parser(tokens).expression()
-    with pytest.raises(RuntimeError) as excinfo:
-        Interpreter().evaluate(expr)
-
-    assert "Argument of `len` must be a string" in str(excinfo.value)
-

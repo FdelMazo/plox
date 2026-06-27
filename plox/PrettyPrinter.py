@@ -17,7 +17,6 @@ from .Expr import (
     AssignmentExpr,
     BinaryExpr,
     CallExpr,
-    IndexExpr,
     GroupingExpr,
     LiteralExpr,
     LogicExpr,
@@ -155,12 +154,6 @@ class PrettyPrinter:
         self._store_expr("@", "CallExpr")
         self._branch(Branch.MID, reversed(expr.arguments))
         self._branch(Branch.LAST, [expr.callee])
-
-    @_accept.register
-    def _(self, expr: IndexExpr):
-        self._store_expr("[]", "IndexExpr")
-        self._branch(Branch.MID, [expr.target])
-        self._branch(Branch.LAST, [expr.index])
 
     @_accept.register
     def _(self, expr: GroupingExpr):

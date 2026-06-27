@@ -67,10 +67,6 @@ class Scanner(object):
                 self.add_token(TokenType.LEFT_BRACE)
             case "}":
                 self.add_token(TokenType.RIGHT_BRACE)
-            case "[":
-                self.add_token(TokenType.LEFT_BRACKET)
-            case "]":
-                self.add_token(TokenType.RIGHT_BRACKET)
             case ",":
                 self.add_token(TokenType.COMMA)
             case "-":

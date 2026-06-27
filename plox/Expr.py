@@ -76,16 +76,6 @@ class CallExpr(Expr):
         return f"fn<{self.callee}({args})>"
 
 
-# index          → primary "[" expression "]" ;
-class IndexExpr(Expr):
-    def __init__(self, target: Expr, index: Expr):
-        self.target = target
-        self.index = index
-
-    def __repr__(self) -> str:
-        return f"<{self.target}[{self.index}]>"
-
-
 # variable       → IDENTIFIER ;
 class VariableExpr(Expr):
     def __init__(self, name: Token):

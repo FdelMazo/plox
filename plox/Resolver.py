@@ -23,7 +23,6 @@ from .Expr import (
     AssignmentExpr,
     LogicExpr,
     CallExpr,
-    IndexExpr,
     TernaryExpr,
     PostfixExpr,
 )
@@ -227,11 +226,6 @@ class Resolver(object):
         self.resolve(expression.callee)
         for arg in expression.arguments:
             self.resolve(arg)
-
-    @resolve.register
-    def _(self, expression: IndexExpr):
-        self.resolve(expression.target)
-        self.resolve(expression.index)
 
     @resolve.register
     def _(self, expression: TernaryExpr):

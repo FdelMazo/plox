@@ -10,7 +10,6 @@ from .Expr import (
     AssignmentExpr,
     LogicExpr,
     CallExpr,
-    IndexExpr,
     PostfixExpr,
     TernaryExpr,
 )
@@ -543,52 +542,35 @@ class Parser(object):
 
         return expr
 
-    # call           → primary ( ("(" arguments? ")")  | "[" expression "]")* ;
+    # call           → primary ( "(" arguments? ")" )* ;
     # arguments      → expression ( "," expression )* ;
     def call(self) -> Expr:
         expr = self.primary()
 
-        while (
-            not self._is_at_end() 
-            and self._lookahead().token_type in [TokenType.LEFT_PAREN, TokenType.LEFT_BRACKET]
-        ):
-            # Si me cruzo un paréntesis abierto, tengo una llamada a función
-            # y tengo que parsear los argumentos
-            if self._match(TokenType.LEFT_PAREN):
-                arguments: list[Expr] = []
+        # Si me cruzo un paréntesis abierto, tengo una llamada a función
+        # y tengo que parsear los argumentos
+        while self._match(TokenType.LEFT_PAREN):
+            arguments: list[Expr] = []
 
-                # Mientras no me cruce un paréntesis de cierre, sigo parseando argumentos
-                while (
-                    not self._is_at_end()
-                    and self._lookahead().token_type != TokenType.RIGHT_PAREN
-                ):
-                    # Consumo el primer argumento
+            # Mientras no me cruce un paréntesis de cierre, sigo parseando argumentos
+            while (
+                not self._is_at_end()
+                and self._lookahead().token_type != TokenType.RIGHT_PAREN
+            ):
+                # Consumo el primer argumento
+                arguments.append(self.expression())
+
+                # Consumo un argumento por cada coma que tengo adelante
+                while not self._is_at_end() and self._match(TokenType.COMMA):
                     arguments.append(self.expression())
 
-                    # Consumo un argumento por cada coma que tengo adelante
-                    while not self._is_at_end() and self._match(TokenType.COMMA):
-                        arguments.append(self.expression())
+            # Si o sí tengo que cerrar el paréntesis abierto
+            if not self._match(TokenType.RIGHT_PAREN):
+                raise SyntaxError(
+                    f"Expected ')' after function arguments, got `{self._lookahead()}` instead"
+                )
 
-                # Si o sí tengo que cerrar el paréntesis abierto
-                if not self._match(TokenType.RIGHT_PAREN):
-                    raise SyntaxError(
-                        f"Expected ')' after function arguments, got `{self._lookahead()}` instead"
-                    )
-
-                expr = CallExpr(expr, arguments)
-
-            # Si me cruzo un corchete abierto, tengo una operación de índice
-            elif self._match(TokenType.LEFT_BRACKET):
-                # Consumo el índice
-                index = self.expression()
-
-                # Si o sí tengo que cerrar el corchete abierto
-                if not self._match(TokenType.RIGHT_BRACKET):
-                    raise SyntaxError(
-                        f"Expected ']' after index expression, got `{self._lookahead()}` instead"
-                    )
-
-                expr = IndexExpr(expr, index)
+            expr = CallExpr(expr, arguments)
 
         return expr
 
