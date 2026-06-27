@@ -13,14 +13,6 @@ class ReturnValue(Exception):
         self.value = value
 
 
-class BreakSignal(Exception):
-    pass
-
-
-class ContinueSignal(Exception):
-    pass
-
-
 class Function(object):
     def __init__(
         self,

@@ -22,7 +22,6 @@ from plox.Stmt import (
     ReturnStmt,
     IfStmt,
     WhileStmt,
-    ForStmt,
 )
 from plox.Expr import VariableExpr
 
@@ -342,42 +341,43 @@ def test_for():
     assert len(stmts) == 1
     stmt = stmts[0]
 
-    # El for ahora es un ForStmt propio (no desugareado)
-    assert isinstance(stmt, ForStmt)
-    assert isinstance(stmt.initializer, VarDecl)
-    assert stmt.initializer.name.lexeme == "i"
-    assert isinstance(stmt.condition, BinaryExpr)
-    assert stmt.condition.operator.token_type == TokenType.LESS
-    assert isinstance(stmt.increment, AssignmentExpr)
-    assert isinstance(stmt.body, BlockStmt)
-    assert isinstance(stmt.body.statements[0], PrintStmt)
+    assert isinstance(stmt, BlockStmt)
+    assert isinstance(stmt.statements[0], VarDecl)
+    assert stmt.statements[0].name.lexeme == "i"
+    assert isinstance(stmt.statements[1], WhileStmt)
+    ws = stmt.statements[1]
+    assert isinstance(ws.condition, BinaryExpr)
+    assert ws.condition.operator.token_type == TokenType.LESS
 
-    # for sin inicializador: el campo initializer es None
+    assert isinstance(ws.body, BlockStmt)
+    assert isinstance(ws.body.statements[0], BlockStmt)
+    assert isinstance(ws.body.statements[0].statements[0], PrintStmt)
+    assert isinstance(ws.body.statements[1], ExpressionStmt)
+    assert isinstance(ws.body.statements[1].expression, AssignmentExpr)
+
     tokens = Scanner("for ( ; i < 3 ; i = i + 1) { print 0; }").scan()
     stmts = Parser(tokens).parse()
     assert len(stmts) == 1
-    stmt = stmts[0]
-    assert isinstance(stmt, ForStmt)
-    assert stmt.initializer is None
-    assert isinstance(stmt.condition, BinaryExpr)
+    assert isinstance(stmts[0], WhileStmt)
 
-    # for sin condición: condition es None (el intérprete lo trata como true)
     tokens = Scanner("for (var i = 0 ;  ; i = i + 1) { print 0; }").scan()
     stmts = Parser(tokens).parse()
+    assert isinstance(stmts[0], BlockStmt)
     stmt = stmts[0]
-    assert isinstance(stmt, ForStmt)
-    assert stmt.condition is None
-    assert isinstance(stmt.initializer, VarDecl)
+    assert isinstance(stmt.statements[0], VarDecl)
+    assert isinstance(stmt.statements[1], WhileStmt)
+    assert isinstance(stmt.statements[1].condition, LiteralExpr)
+    assert stmt.statements[1].condition.value is True
 
-    # for sin incremento: increment es None
     tokens = Scanner("for (var i = 0 ; i < 3 ; ) { print 0; }").scan()
     stmts = Parser(tokens).parse()
+    assert isinstance(stmts[0], BlockStmt)
     stmt = stmts[0]
-    assert isinstance(stmt, ForStmt)
-    assert stmt.increment is None
-    assert isinstance(stmt.body, BlockStmt)
-    assert len(stmt.body.statements) == 1
-    assert isinstance(stmt.body.statements[0], PrintStmt)
+    assert isinstance(stmt.statements[1], WhileStmt)
+    inner_body = stmt.statements[1].body
+    assert isinstance(inner_body, BlockStmt)
+    assert len(inner_body.statements) == 1
+    assert isinstance(inner_body.statements[0], PrintStmt)
 
 
 def test_postfix_inc():
