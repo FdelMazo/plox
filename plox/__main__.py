@@ -1,6 +1,5 @@
 import traceback
 import argparse
-from plox.PrettyPrinter import PrettyPrinter
 from plox.Scanner import Scanner
 from plox.Parser import Parser
 from plox.Resolver import Resolver
@@ -19,12 +18,6 @@ class Plox:
         self.show_warnings = False
         self.mode = None  # "scanning" | "parsing" | "resolve"
         self.interpreter = Interpreter()
-        self.printer = PrettyPrinter(
-            branch_f=lambda s: colored(s, "white"),
-            expr_f=lambda s: colored(s, "light_yellow"),
-            stmt_f=lambda s: colored(s, "red"),
-            type_f=lambda s: colored(s, "light_blue"),
-        )
         self.in_repl = True
 
     def run(self, source: str):
@@ -57,7 +50,6 @@ class Plox:
             for stmt in statements:
                 print(colored(repr(stmt), "light_blue"))
             print()
-            self.printer.print(statements)
             return
 
         resolver = Resolver(self.interpreter)
@@ -68,6 +60,7 @@ class Plox:
                 if self.debug:
                     traceback.print_exc()
                 print(colored(f"Resolve Error: {e}", "light_red"))
+                return
 
         # en modo resolve, imprimimos los scopes locales del intérprete
         if self.mode == "resolve":
