@@ -16,10 +16,3 @@
 var true false nil // palabras reservadas
 trueman xxx yyy // identificadores
 ` // caracter invalido
-1 + 2 /* comentario multilinea */
-/* comentario al inicio */ var x = 10
-1 + /* este comentario no se cierra
-1 /* **** ****** * */ 2
-1/*c*/+/*d*/2
-1 /* nested /* asd */ comments */ 2
-/* nested /* sin */ cerrar
