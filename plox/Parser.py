@@ -46,10 +46,6 @@ class Parser(object):
         # si me cruzo un var, parseo una variable declaration
         if self._match(TokenType.VAR):
             return self.variable_declaration()
-        
-        # si me cruzo un const, parseo una variable declaration
-        if self._match(TokenType.CONST):
-            return self.variable_declaration(is_constant=True)
 
         # si me cruzo un fun, parseo una function declaration
         if self._match(TokenType.FUN):
@@ -307,8 +303,8 @@ class Parser(object):
         body = self.block()
         return FunDecl(functionname, parameters, body)
 
-    # varDecl        → ( "var" | "const" ) IDENTIFIER ( "=" expression )? ";" ;
-    def variable_declaration(self, is_constant: bool = False) -> VarDecl:
+    # varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+    def variable_declaration(self) -> VarDecl:
         if not self._match(TokenType.IDENTIFIER):
             raise SyntaxError(
                 f"Expected variable declaration, got `{self._lookahead()}` instead"
@@ -316,14 +312,8 @@ class Parser(object):
 
         variablename = self._previous()
 
-        # Const deben inicializarse sí o sí. `const x;` no es válido
-        if is_constant and self._lookahead().token_type != TokenType.EQUAL:
-            raise SyntaxError(
-                f"Constant `{variablename.lexeme}` must be initialized at declaration"
-            )
-            
         # Si no se especifica un valor para la variable, se le asigna Nil
-        if self._match(TokenType.EQUAL):  # var x = valor; o const x = valor;
+        if self._match(TokenType.EQUAL):  # var x = valor;
             variablevalue = self.expression()
         else:  # var x;
             variablevalue = None
@@ -334,7 +324,7 @@ class Parser(object):
                 f"Expected ';' after variable declaration, got `{self._lookahead()}` instead"
             )
 
-        return VarDecl(variablename, variablevalue, is_constant)
+        return VarDecl(variablename, variablevalue)
 
     # ---------- Reglas de Producción de Expresiones ---------- #
 

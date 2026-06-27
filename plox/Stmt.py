@@ -33,16 +33,14 @@ class BlockStmt(Stmt):
         return f"{{ {'; '.join(str(stmt) for stmt in self.statements)} }}"
 
 
-# varDecl        → ("var" | "const") IDENTIFIER ( "=" expression )? ";" ;
+# varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 class VarDecl(Stmt):
-    def __init__(self, name: Token, initializer: Expr | None, is_constant: bool = False):
+    def __init__(self, name: Token, initializer: Expr | None):
         self.name = name
         self.initializer = initializer
-        self.is_constant = is_constant
 
     def __repr__(self) -> str:
-        keyword = "CONST" if self.is_constant else "VAR"
-        return f"{keyword} {self.name.lexeme} = {self.initializer}"
+        return f"VAR {self.name.lexeme} = {self.initializer}"
 
 
 # funDecl        → "fun" IDENTIFIER "(" parameters? ")" blockStmt ;
