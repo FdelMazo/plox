@@ -2,7 +2,7 @@ from .Expr import Expr
 from .Token import Token
 
 
-class Stmt(object):
+class Stmt:
     pass
 
 
@@ -73,9 +73,7 @@ class IfStmt(Stmt):
 
     def __repr__(self) -> str:
         if self.elseBranch is None:
-            return (
-                f"IF {self.condition} THEN {self.thenBranch}"
-            )
+            return f"IF {self.condition} THEN {self.thenBranch}"
         return f"IF {self.condition} THEN {self.thenBranch} ELSE {self.elseBranch}"
 
 

@@ -1,33 +1,33 @@
 from functools import singledispatchmethod
 
-from .Stmt import (
-    Stmt,
-    ExpressionStmt,
-    PrintStmt,
-    VarDecl,
-    FunDecl,
-    BlockStmt,
-    IfStmt,
-    WhileStmt,
-    ReturnStmt,
-)
+from .Env import Env
 from .Expr import (
-    Expr,
+    AssignmentExpr,
     BinaryExpr,
+    CallExpr,
+    Expr,
     GroupingExpr,
     LiteralExpr,
+    LogicExpr,
     UnaryExpr,
     VariableExpr,
-    AssignmentExpr,
-    LogicExpr,
-    CallExpr,
 )
 from .Function import Function, ReturnValue
+from .Stmt import (
+    BlockStmt,
+    ExpressionStmt,
+    FunDecl,
+    IfStmt,
+    PrintStmt,
+    ReturnStmt,
+    Stmt,
+    VarDecl,
+    WhileStmt,
+)
 from .Token import TokenType
-from .Env import Env
 
 
-class Interpreter(object):
+class Interpreter:
     def __init__(self):
         self.globals = Env()
         self.env = self.globals
@@ -72,9 +72,7 @@ class Interpreter(object):
     def _(self, statement: VarDecl):
         # Ejecutar una declaración de una variable es solamente agregar el binding al entorno
         if statement.initializer is not None:
-            self.env.define(
-                statement.name.lexeme, self.evaluate(statement.initializer)
-            )
+            self.env.define(statement.name.lexeme, self.evaluate(statement.initializer))
         else:
             self.env.define(statement.name.lexeme, statement.initializer)
 

@@ -1,11 +1,11 @@
 from typing import Optional
 
 
-class Env(object):
+class Env:
     def __init__(self, *, enclosing: Optional["Env"] = None):
         self.values: dict[str, object] = {}
         # El entorno global es el único que no tiene enclosing
-        self.enclosing: Optional["Env"] = enclosing
+        self.enclosing: Env | None = enclosing
 
     def __repr__(self) -> str:
         all_values = str(self.values)
