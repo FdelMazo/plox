@@ -1,12 +1,6 @@
-import sys
-import subprocess
 import os
-
-# Recibe por argumento el comando para ejecutar el intérprete de Lox, por ejemplo:
-# `python3 ./script.py plox`
-# `python3 ./script.py ploxb`
-# `python3 ./script.py "go run glox"`
-# `python3 ./script.py "npm run jslox"`
+import subprocess
+import sys
 
 LOX_BINARY = sys.argv[1].split() if len(sys.argv) > 1 else ["plox"]
 
