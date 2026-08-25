@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .Interpreter import Interpreter
 
-from .Stmt import FunDecl
 from .Env import Env
+from .Stmt import FunDecl
 
 
 class ReturnValue(Exception):
@@ -13,7 +13,7 @@ class ReturnValue(Exception):
         self.value = value
 
 
-class Function(object):
+class Function:
     def __init__(
         self,
         declaration: FunDecl,

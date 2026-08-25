@@ -2,7 +2,7 @@ from .Expr import Expr
 from .Token import Token
 
 
-class Stmt(object):
+class Stmt:
     pass
 
 

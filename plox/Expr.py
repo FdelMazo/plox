@@ -1,7 +1,7 @@
 from .Token import Token, TokenLiteralType
 
 
-class Expr(object):
+class Expr:
     pass
 
 

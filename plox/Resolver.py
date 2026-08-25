@@ -1,31 +1,31 @@
 from functools import singledispatchmethod
 
-from .Interpreter import Interpreter
-from .Stmt import (
-    Stmt,
-    ExpressionStmt,
-    PrintStmt,
-    VarDecl,
-    FunDecl,
-    BlockStmt,
-    IfStmt,
-    WhileStmt,
-    ReturnStmt,
-)
 from .Expr import (
-    Expr,
+    AssignmentExpr,
     BinaryExpr,
+    CallExpr,
+    Expr,
     GroupingExpr,
     LiteralExpr,
+    LogicExpr,
     UnaryExpr,
     VariableExpr,
-    AssignmentExpr,
-    LogicExpr,
-    CallExpr,
+)
+from .Interpreter import Interpreter
+from .Stmt import (
+    BlockStmt,
+    ExpressionStmt,
+    FunDecl,
+    IfStmt,
+    PrintStmt,
+    ReturnStmt,
+    Stmt,
+    VarDecl,
+    WhileStmt,
 )
 
 
-class Resolver(object):
+class Resolver:
     def __init__(self, interpreter: Interpreter):
         # Nos guardamos un stack de scopes, para saber cuan anidados estamos
         # En cada scope tenemos una tabla que nos dice si bajo un nombre tenemos
