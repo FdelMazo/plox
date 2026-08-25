@@ -1,7 +1,7 @@
-from .Token import Token, TokenType, TokenKeywords
+from .Token import Token, TokenKeywords, TokenType
 
 
-class Scanner(object):
+class Scanner:
     def __init__(self, source: str):
         # nos vamos a ir guardando los tokens, que son el texto crudo acompañado de su significado
         self.tokens: list[Token] = []
@@ -84,7 +84,7 @@ class Scanner(object):
                 # si es un comentario, lo ignoramos
                 if self._match("/"):
                     # consumimos el resto de la linea
-                    while not self._lookahead() == "\n" and not self._is_at_end():
+                    while self._lookahead() != "\n" and not self._is_at_end():
                         self._advance()
                 # si es un comentario multilinea, lo ignoramos
                 # se permiten comentarios anidados de n niveles del estilo /* /* ... */ */
@@ -132,7 +132,7 @@ class Scanner(object):
             # literales
             case '"':
                 # consumimos la cadena hasta el proximo "
-                while not self._is_at_end() and not self._lookahead() == '"':
+                while not self._is_at_end() and self._lookahead() != '"':
                     self._advance()
 
                 if self._is_at_end():
@@ -194,7 +194,7 @@ class Scanner(object):
     # Es solo una combinación de advance y lookahead
     def _match(self, expected: str) -> bool:
         lookahead = self._lookahead()
-        if not lookahead == expected:
+        if lookahead != expected:
             return False
 
         self._advance()

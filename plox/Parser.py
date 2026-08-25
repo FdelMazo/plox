@@ -1,29 +1,29 @@
-from .Token import Token, TokenType
 from .Expr import (
-    Expr,
+    AssignmentExpr,
     BinaryExpr,
+    CallExpr,
+    Expr,
     GroupingExpr,
     LiteralExpr,
+    LogicExpr,
     UnaryExpr,
     VariableExpr,
-    AssignmentExpr,
-    LogicExpr,
-    CallExpr,
 )
 from .Stmt import (
-    Stmt,
-    PrintStmt,
-    ExpressionStmt,
     BlockStmt,
-    VarDecl,
+    ExpressionStmt,
     FunDecl,
     IfStmt,
-    WhileStmt,
+    PrintStmt,
     ReturnStmt,
+    Stmt,
+    VarDecl,
+    WhileStmt,
 )
+from .Token import Token, TokenType
 
 
-class Parser(object):
+class Parser:
     def __init__(self, tokens: list[Token]):
         self.tokens = tokens  # la lista de tokens ya escaneados
         self.current = 0  # el token en el que estamos parados
@@ -192,7 +192,7 @@ class Parser(object):
             initializer = self.expression_statement()
 
         # Después del inicializador, espero una expresión de condicion, y un ;
-        if not self._lookahead().token_type == TokenType.SEMICOLON:
+        if self._lookahead().token_type != TokenType.SEMICOLON:
             condition = self.expression()
         else:
             condition = None
@@ -202,7 +202,7 @@ class Parser(object):
             )
 
         # Y después de la condición, espero una expresión de incremento, y un )
-        if not self._lookahead().token_type == TokenType.RIGHT_PAREN:
+        if self._lookahead().token_type != TokenType.RIGHT_PAREN:
             increment = self.expression()
         else:
             increment = None
@@ -237,7 +237,7 @@ class Parser(object):
 
         # Si no me cruzo un punto y coma, parseo la expresión que me
         # da el valor de retorno
-        if not self._lookahead().token_type == TokenType.SEMICOLON:
+        if self._lookahead().token_type != TokenType.SEMICOLON:
             value = self.expression()
 
         # Después de eso, si o sí tengo que encontrar un punto y coma

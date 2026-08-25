@@ -1,33 +1,33 @@
 from functools import singledispatchmethod
 
-from .Stmt import (
-    Stmt,
-    ExpressionStmt,
-    PrintStmt,
-    VarDecl,
-    FunDecl,
-    BlockStmt,
-    IfStmt,
-    WhileStmt,
-    ReturnStmt,
-)
+from .Env import Env
 from .Expr import (
-    Expr,
+    AssignmentExpr,
     BinaryExpr,
+    CallExpr,
+    Expr,
     GroupingExpr,
     LiteralExpr,
+    LogicExpr,
     UnaryExpr,
     VariableExpr,
-    AssignmentExpr,
-    LogicExpr,
-    CallExpr,
 )
 from .Function import Function, ReturnValue
+from .Stmt import (
+    BlockStmt,
+    ExpressionStmt,
+    FunDecl,
+    IfStmt,
+    PrintStmt,
+    ReturnStmt,
+    Stmt,
+    VarDecl,
+    WhileStmt,
+)
 from .Token import TokenType
-from .Env import Env
 
 
-class Interpreter(object):
+class Interpreter:
     def __init__(self):
         self.globals = Env()
         self.env = self.globals
