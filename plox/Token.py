@@ -1,5 +1,4 @@
 from enum import Enum, auto
-from typing import Union
 
 
 class TokenType(Enum):
@@ -57,10 +56,10 @@ class TokenType(Enum):
 
 
 # Los literales admitidos son numeros, cadenas, true, false y null
-TokenLiteralType = Union[float, str, bool, None]
+TokenLiteralType = float | str | bool | None
 
 
-class Token(object):
+class Token:
     def __init__(
         self, token_type: TokenType, *, lexeme: str, literal: TokenLiteralType
     ):

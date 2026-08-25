@@ -1,17 +1,14 @@
-#!/usr/bin/env python3
-
-import sys
 import argparse
-from plox.Scanner import Scanner
-from plox.Parser import Parser
-from plox.Interpreter import Interpreter
+from pathlib import Path
 
+from platformdirs import user_data_dir
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from termcolor import colored
-from pathlib import Path
-from platformdirs import user_data_dir
 
+from plox.Interpreter import Interpreter
+from plox.Parser import Parser
+from plox.Scanner import Scanner
 
 history_file = Path(user_data_dir("plox", ensure_exists=True)) / ".plox_history"
 promptsession: PromptSession[str] = PromptSession(history=FileHistory(history_file))

@@ -1,7 +1,7 @@
 from .Token import Token, TokenLiteralType
 
 
-class Expr(object):
+class Expr:
     pass
 
 
@@ -37,11 +37,11 @@ class LiteralExpr(Expr):
         elif isinstance(self.value, float):
             return f"<{self.value}>"
         elif isinstance(self.value, bool):
-            return f"<TRUE>" if self.value else "<FALSE>"
+            return "<TRUE>" if self.value else "<FALSE>"
         elif self.value is None:
             return "<NIL>"
 
-        return self.value
+        return str(self.value)
 
 
 # unary          → ( "-" | "!" ) expression ;

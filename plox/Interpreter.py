@@ -1,10 +1,10 @@
 from functools import singledispatchmethod
 
-from .Expr import Expr, BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr
+from .Expr import BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr
 from .Token import TokenType
 
 
-class Interpreter(object):
+class Interpreter:
     def __init__(self):
         pass
 

@@ -1,8 +1,8 @@
+from .Expr import BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr
 from .Token import Token, TokenType
-from .Expr import Expr, BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr
 
 
-class Parser(object):
+class Parser:
     def __init__(self, tokens: list[Token]):
         self.tokens = tokens  # la lista de tokens ya escaneados
         self.current = 0  # el token en el que estamos parados
