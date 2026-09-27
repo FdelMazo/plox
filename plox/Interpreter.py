@@ -287,9 +287,9 @@ class Interpreter:
                     )
                 return left <= right
             case TokenType.EQUAL_EQUAL:
-                return left == right
+                return self.is_equal(left, right)
             case TokenType.BANG_EQUAL:
-                return left != right
+                return not self.is_equal(left, right)
             case _:
                 raise RuntimeError(f"Unknown binary operator: `{expression.operator}`")
 
@@ -344,6 +344,12 @@ class Interpreter:
         if value is None or value is False:
             return False
         return True
+
+    # Compara si dos valores son iguales. En caso de ser de distinto tipo, devuelve False
+    def is_equal(self, left, right):
+        if type(left) is not type(right):
+            return False
+        return left == right
 
     # Devuelve si los valores recibidos son un número según Lox
     def is_number(self, *values):
