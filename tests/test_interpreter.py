@@ -65,6 +65,26 @@ def test_various_expressions():
         assert value == expected
 
 
+def test_equality_between_types():
+    tests = [
+        ("true == 1", False),
+        ("false == 0", False),
+        ("true != 1", True),
+        ("false != 0", True),
+        ('true == "true"', False),
+        ("nil == false", False),
+        ("1 == 1", True),
+        ("true == true", True),
+        ("nil == nil", True),
+    ]
+
+    for src, expected in tests:
+        tokens = Scanner(src).scan()
+        expr = Parser(tokens).expression()
+        value = Interpreter().evaluate(expr)
+        assert value is expected
+
+
 def test_errors():
     tokens = Scanner('"aaa" + 5').scan()
     expr = Parser(tokens).expression()
