@@ -12,6 +12,7 @@ for lox_file in filter(lambda f: f.endswith(".lox"), sorted(os.listdir(currentdi
     result = subprocess.run(
         [*LOX_BINARY, os.path.join(currentdir, lox_file)],
         stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         stdin=subprocess.DEVNULL,
     )
 
