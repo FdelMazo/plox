@@ -70,7 +70,7 @@ class Interpreter:
     def _(self, statement: PrintStmt):
         # Ejecutar un print statement es evaluar la expresión e imprimir el resultado
         value = self.evaluate(statement.expression)
-        print(value)
+        print(self.stringify(value))
 
     @execute.register
     def _(self, statement: VarDecl):
@@ -185,7 +185,7 @@ class Interpreter:
                 # El operador - solo funciona sobre números
                 if not self.is_number(right):
                     raise RuntimeError(
-                        f"Operand of - must be a number, got: `-{right}`"
+                        f"Operand of - must be a number, got: `-{self.stringify(right)}`"
                     )
                 return -right
             case TokenType.BANG:
@@ -231,59 +231,59 @@ class Interpreter:
                 # Es decir, en Lox, "a" + 1 es un error. (en JavaScript, por ejemplo, sería "a1").
                 if not self.is_number(left, right) and not self.is_string(left, right):
                     raise RuntimeError(
-                        f"Operands of + must be either numbers or strings, got: `{left} + {right}`"
+                        f"Operands of + must be either numbers or strings, got: `{self.stringify(left)} + {self.stringify(right)}`"
                     )
                 return left + right
             case TokenType.MINUS:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of - must be numbers, got: `{left} - {right}`"
+                        f"Operands of - must be numbers, got: `{self.stringify(left)} - {self.stringify(right)}`"
                     )
                 return left - right
             case TokenType.STAR:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of * must be numbers, got: `{left} * {right}`"
+                        f"Operands of * must be numbers, got: `{self.stringify(left)} * {self.stringify(right)}`"
                     )
                 return left * right
             case TokenType.SLASH:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of / must be numbers, got: `{left} / {right}`"
+                        f"Operands of / must be numbers, got: `{self.stringify(left)} / {self.stringify(right)}`"
                     )
                 elif right == 0:
-                    raise RuntimeError(f"Division by {right} is not allowed")
+                    raise RuntimeError(f"Division by {self.stringify(right)} is not allowed")
                 return left / right
             case TokenType.PERCENT:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of % must be numbers, got: `{left} % {right}`"
+                        f"Operands of % must be numbers, got: `{self.stringify(left)} % {self.stringify(right)}`"
                     )
                 elif right == 0:
-                    raise RuntimeError(f"Modulo by {right} is not allowed")
+                    raise RuntimeError(f"Modulo by {self.stringify(right)} is not allowed")
                 return left % right
             case TokenType.GREATER:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of > must be numbers, got: `{left} > {right}`"
+                        f"Operands of > must be numbers, got: `{self.stringify(left)} > {self.stringify(right)}`"
                     )
                 return left > right
             case TokenType.GREATER_EQUAL:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of >= must be numbers, got: `{left} >= {right}`"
+                        f"Operands of >= must be numbers, got: `{self.stringify(left)} >= {self.stringify(right)}`"
                     )
                 return left >= right
             case TokenType.LESS:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of < must be numbers, got: `{left} < {right}`"
+                        f"Operands of < must be numbers, got: `{self.stringify(left)} < {self.stringify(right)}`"
                     )
                 return left < right
             case TokenType.LESS_EQUAL:
                 if not self.is_number(left, right):
                     raise RuntimeError(
-                        f"Operands of <= must be numbers, got: `{left} <= {right}`"
+                        f"Operands of <= must be numbers, got: `{self.stringify(left)} <= {self.stringify(right)}`"
                     )
                 return left <= right
             case TokenType.EQUAL_EQUAL:
@@ -325,7 +325,7 @@ class Interpreter:
 
         # Si el llamado no es una función, levantamos un error
         if not callable(callee):
-            raise RuntimeError(f"Cannot call non-callable object: `{callee}`")
+            raise RuntimeError(f"Cannot call non-callable object: `{self.stringify(callee)}`")
 
         # Si no se cumple la aridad, levantamos un error
         if len(arguments) != callee.arity:
@@ -358,3 +358,16 @@ class Interpreter:
     # Devuelve si los valores recibidos son una cadena según Lox
     def is_string(self, *values):
         return all(type(value) is str for value in values)
+
+    # Devuelve una representación en cadena de un valor según Lox
+    def stringify(self, value) -> str:
+        if value is None:
+            return "nil"
+        if type(value) is bool:
+            return "true" if value else "false"
+        if type(value) is str:
+            return value
+        if type(value) is float:
+            text = str(value)
+            return text[:-2] if text.endswith(".0") else text
+        return str(value)
