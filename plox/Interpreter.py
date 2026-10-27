@@ -368,6 +368,7 @@ class Interpreter:
         if type(value) is str:
             return value
         if type(value) is float:
-            text = str(value)
-            return text[:-2] if text.endswith(".0") else text
+            if value.is_integer():
+                return str(int(value))
+            return str(value)
         return str(value)

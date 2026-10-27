@@ -9,6 +9,7 @@ def test_stringify_basic_values():
         (True, "true"),
         (False, "false"),
         (0.0, "0"),
+        (-0.0, "0"),
         (2.0, "2"),
         (-2.0, "-2"),
         (2.5, "2.5"),
