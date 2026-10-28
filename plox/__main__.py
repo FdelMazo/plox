@@ -77,7 +77,7 @@ class Plox:
         try:
             lastvalue_produced = self.interpreter.interpret(statements)
             if self.in_repl and lastvalue_produced is not None:
-                print(lastvalue_produced)
+                print(self.interpreter.stringify(lastvalue_produced))
         except Exception as e:
             if self.debug:
                 traceback.print_exc()
