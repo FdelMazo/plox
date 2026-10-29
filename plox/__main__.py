@@ -12,6 +12,8 @@ from plox.Parser import Parser
 from plox.Resolver import Resolver
 from plox.Scanner import Scanner
 
+EXIT_CODE_INTERRUPTED = 130
+
 
 class Plox:
     def __init__(self):
@@ -163,7 +165,11 @@ class Plox:
 
 def main():
     plox = Plox()
-    plox.main()
+    try:
+        plox.main()
+    except KeyboardInterrupt:
+        print()
+        raise SystemExit(EXIT_CODE_INTERRUPTED)
 
 
 if __name__ == "__main__":
