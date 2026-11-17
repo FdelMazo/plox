@@ -33,6 +33,8 @@ class Resolver:
         self.scopes: list[dict[str, bool]] = []
         # Una referencia al intérprete, para poder resolver las variables
         self.interpreter = interpreter
+        # Mantenemos un flag para saber si estamos dentro de una funcion o no, para poder lanzar un error si se intenta usar return fuera de una funcion
+        self.inside_function = False
 
     def begin_scope(self):
         # Empezar un scope es apilar una tabla
@@ -68,9 +70,11 @@ class Resolver:
     def _(self, statement: BlockStmt):
         # Los bloques arrancan su propio scope
         self.begin_scope()
-        for stmt in statement.statements:
-            self.resolve(stmt)
-        self.end_scope()
+        try:
+            for stmt in statement.statements:
+                self.resolve(stmt)
+        finally:
+            self.end_scope()
 
     @resolve.register
     def _(self, statement: VarDecl):
@@ -90,13 +94,19 @@ class Resolver:
         # fun nombre() { <scope nuevo> }
         self.declare(statement.name.lexeme)
         self.define(statement.name.lexeme)
+        previous = self.inside_function
+        self.inside_function = True
         self.begin_scope()
-        for param in statement.parameters:
-            self.declare(param.lexeme)
-            self.define(param.lexeme)
-        for stmt in statement.body:
-            self.resolve(stmt)
-        self.end_scope()
+        try:
+            for param in statement.parameters:
+                self.declare(param.lexeme)
+                self.define(param.lexeme)
+            for stmt in statement.body:
+                self.resolve(stmt)
+        finally:
+            self.end_scope()
+            # Restauramos el estado anterior por si estamos dentro de una función anidada
+            self.inside_function = previous
 
     ## El resto de los statements son triviales de resolver
 
@@ -110,6 +120,8 @@ class Resolver:
 
     @resolve.register
     def _(self, statement: ReturnStmt):
+        if not self.inside_function:
+            raise SyntaxError("No se puede usar return fuera de una función.")
         if statement.value is not None:
             self.resolve(statement.value)
 
