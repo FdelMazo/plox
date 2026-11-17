@@ -1,4 +1,11 @@
+from typing import TYPE_CHECKING
+
 from .Token import Token, TokenLiteralType
+
+# Stmt importa Expr, así que no podemos importar Stmt acá sin un import circular.
+# Lo importamos solo para el chequeo de tipos (mypy), no en tiempo de ejecución
+if TYPE_CHECKING:
+    from .Stmt import Stmt
 
 
 class Expr:
@@ -94,3 +101,10 @@ class LogicExpr(Expr):
 
     def __repr__(self) -> str:
         return f"({self.left} {self.operator} {self.right})"
+
+# lambda        → "fun" "(" parameters? ")" block ;
+class FunctionExpr(Expr):
+    def __init__(self, parameters: list[Token], body: list["Stmt"]):
+        self.parameters = parameters
+        self.body = body
+
