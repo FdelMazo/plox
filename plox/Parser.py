@@ -3,6 +3,7 @@ from .Expr import (
     BinaryExpr,
     CallExpr,
     Expr,
+    FunctionExpr,
     GroupingExpr,
     LiteralExpr,
     LogicExpr,
@@ -43,7 +44,10 @@ class Parser:
         if self._match(TokenType.VAR):
             return self.variable_declaration()
 
-        # si me cruzo un fun, parseo una function declaration
+        # si me cruzo un fun, parseo una function declaration.
+        # Un statement que empieza con `fun` es SIEMPRE una declaración: `fun () {};` es un error
+        # de sintaxis. Para usar una función anónima como statement hay que envolverla en
+        # paréntesis: `(fun () {});`. Así no hay ambigüedad entre declaración y expresión.
         if self._match(TokenType.FUN):
             return self.function_declaration()
 
@@ -256,16 +260,24 @@ class Parser:
         # Después del fun, viene el nombre de la función
         if not self._match(TokenType.IDENTIFIER):
             raise SyntaxError(
-                f"Expected function declaration, got `{self._lookahead()}` instead"
+                f"Expected function name, got `{self._lookahead()}` instead "
+                "(wrap anonymous functions in parentheses to use them as a statement)"
             )
 
         functionname = self._previous()
+        parameters, body = self._function_rest()
+        return FunDecl(functionname, parameters, body)
+
+    # Parsea lo que viene después de `fun` (o de `fun nombre`):
+    #   "(" parameters? ")" block
+    # Lo comparten la declaración de funciones y las funciones anónimas
+    def _function_rest(self) -> tuple[list[Token], list[Stmt]]:
         parameters: list[Token] = []
 
-        # Después del nombre de la función, vienen los argumentos entre paréntesis
+        # Después de `fun` o del nombre, vienen los parámetros entre paréntesis
         if not self._match(TokenType.LEFT_PAREN):
             raise SyntaxError(
-                f"Expected '(' after function name, got `{self._lookahead()}` instead"
+                f"Expected '(' after 'fun' or function name, got `{self._lookahead()}` instead"
             )
 
         # Mientras no me cruce un paréntesis de cierre, sigo parseando argumentos
@@ -297,7 +309,7 @@ class Parser:
             )
 
         body = self.block()
-        return FunDecl(functionname, parameters, body)
+        return parameters, body
 
     # varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
     def variable_declaration(self) -> VarDecl:
@@ -490,6 +502,9 @@ class Parser:
             return LiteralExpr(True)
         if self._match(TokenType.NIL):
             return LiteralExpr(None)
+        if self._match(TokenType.FUN):
+            parameters, body = self._function_rest()
+            return FunctionExpr(parameters, body)
 
         # Si es un token literal, lo convertimos en una expresión literal con el valor del token
         if self._match(TokenType.NUMBER, TokenType.STRING):

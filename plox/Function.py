@@ -4,6 +4,7 @@ if TYPE_CHECKING:
     from .Interpreter import Interpreter
 
 from .Env import Env
+from .Expr import FunctionExpr
 from .Stmt import FunDecl
 
 
@@ -16,11 +17,15 @@ class ReturnValue(Exception):
 class Function:
     def __init__(
         self,
-        declaration: FunDecl,
+        declaration: FunDecl | FunctionExpr,
         closure_env: Env,
+        name: str | None = None,
     ):
+        # Solo nos interesan los parámetros y el cuerpo de la declaración.
+        # El nombre es opcional: las funciones anónimas no tienen
         self.closure_env = closure_env
         self.declaration = declaration
+        self.name = name
         self.arity = len(declaration.parameters)
 
     # La invocación! La parte mas linda. El código toma vida
@@ -44,4 +49,5 @@ class Function:
 
     def __repr__(self) -> str:
         params = ", ".join(param.lexeme for param in self.declaration.parameters)
-        return f"<fn {self.declaration.name.lexeme}({params})>"
+        name = self.name if self.name is not None else "anonymous"
+        return f"<fn {name}({params})>"
