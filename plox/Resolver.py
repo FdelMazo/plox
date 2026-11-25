@@ -5,6 +5,7 @@ from .Expr import (
     BinaryExpr,
     CallExpr,
     Expr,
+    FunctionExpr,
     GroupingExpr,
     LiteralExpr,
     LogicExpr,
@@ -23,6 +24,7 @@ from .Stmt import (
     VarDecl,
     WhileStmt,
 )
+from .Token import Token
 
 
 class Resolver:
@@ -94,14 +96,19 @@ class Resolver:
         # fun nombre() { <scope nuevo> }
         self.declare(statement.name.lexeme)
         self.define(statement.name.lexeme)
+        self.resolve_function(statement.parameters, statement.body)
+
+    # Resuelve el cuerpo de una función, con nombre o anónima:
+    # abre un scope nuevo con los parámetros y resuelve el cuerpo adentro
+    def resolve_function(self, parameters: list[Token], body: list[Stmt]):
         previous = self.inside_function
         self.inside_function = True
         self.begin_scope()
         try:
-            for param in statement.parameters:
+            for param in parameters:
                 self.declare(param.lexeme)
                 self.define(param.lexeme)
-            for stmt in statement.body:
+            for stmt in body:
                 self.resolve(stmt)
         finally:
             self.end_scope()
@@ -202,3 +209,9 @@ class Resolver:
         self.resolve(expression.callee)
         for arg in expression.arguments:
             self.resolve(arg)
+
+    @resolve.register
+    def _(self, expression: FunctionExpr):
+        # Una función anónima no tiene nombre que declarar:
+        # solo resolvemos sus parámetros y su cuerpo en un scope nuevo
+        self.resolve_function(expression.parameters, expression.body)

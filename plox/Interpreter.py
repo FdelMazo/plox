@@ -6,6 +6,7 @@ from .Expr import (
     BinaryExpr,
     CallExpr,
     Expr,
+    FunctionExpr,
     GroupingExpr,
     LiteralExpr,
     LogicExpr,
@@ -84,7 +85,7 @@ class Interpreter:
     def _(self, statement: FunDecl):
         # Ejecutar una declaración de una variable es solamente...
         # 1. Construir la función
-        fun = Function(statement, self.env)
+        fun = Function(statement, self.env, statement.name.lexeme)
         # 2. Atarla a su nombre
         self.env.define(statement.name.lexeme, fun)
 
@@ -312,6 +313,13 @@ class Interpreter:
 
         # En ambos casos, si no cortocircuitamos, evaluamos el segundo operando
         return self.evaluate(expression.right)
+
+    @evaluate.register
+    def _(self, expression: FunctionExpr):
+        # Una función anónima es la mitad de una declaración de función:
+        # construimos la función capturando el entorno actual (su closure),
+        # pero no la atamos a ningún nombre. La función ES el valor de la expresión
+        return Function(expression, self.env)
 
     @evaluate.register
     def _(self, expression: CallExpr):
